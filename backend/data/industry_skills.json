@@ -1,0 +1,35 @@
+{
+    "AI/ML": [
+        "Python",
+        "Linear Algebra",
+        "Machine Learning",
+        "Git",
+        "Projects",
+        "TensorFlow",
+        "Statistics"
+    ],
+    "Cybersecurity": [
+        "Networking Basics",
+        "Linux",
+        "Cryptography",
+        "Ethical Hacking",
+        "Python",
+        "OWASP"
+    ],
+    "Web Development": [
+        "HTML/CSS",
+        "JavaScript",
+        "React",
+        "Node.js",
+        "Databases",
+        "Git"
+    ],
+    "Networking": [
+        "OSI Model",
+        "TCP/IP",
+        "Routing",
+        "Switching",
+        "Cisco CCNA",
+        "Linux"
+    ]
+}
