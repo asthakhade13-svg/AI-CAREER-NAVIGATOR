@@ -37,18 +37,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes
+from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes, basic_info_routes, adaptive_quiz_routes
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to First-Generation Career Navigator AI Backend"}
 
 # Include routers
-app.include_router(quiz_routes.router,           prefix="/api/v1/quiz",           tags=["Quiz"])
-app.include_router(recommendation_routes.router, prefix="/api/v1/recommendation", tags=["Recommendation"])
-app.include_router(roadmap_routes.router,        prefix="/api/v1/roadmap",        tags=["Roadmap"])
-app.include_router(progress_routes.router,       prefix="/api/v1/progress",       tags=["Progress"])
-app.include_router(chatbot_routes.router,        prefix="/api/v1/chatbot",        tags=["Chatbot"])
+app.include_router(basic_info_routes.router,        prefix="/api/v1/basic_info",         tags=["Basic Info"])
+app.include_router(adaptive_quiz_routes.router,     prefix="/api/v1/quiz/adaptive",      tags=["Adaptive Quiz"])
+app.include_router(quiz_routes.router,              prefix="/api/v1/quiz",               tags=["Quiz"])
+app.include_router(recommendation_routes.router,    prefix="/api/v1/recommendation",     tags=["Recommendation"])
+app.include_router(roadmap_routes.router,           prefix="/api/v1/roadmap",            tags=["Roadmap"])
+app.include_router(progress_routes.router,          prefix="/api/v1/progress",           tags=["Progress"])
+app.include_router(chatbot_routes.router,           prefix="/api/v1/chatbot",            tags=["Chatbot"])
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=settings.PORT, reload=settings.DEBUG)

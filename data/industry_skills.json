@@ -1,12 +1,35 @@
 {
+    "Web Development": [
+        "HTML/CSS",
+        "JavaScript",
+        "React",
+        "Node.js",
+        "Databases",
+        "Git"
+    ],
+    "Full Stack Development": [
+        "Frontend Basics",
+        "Backend Basics",
+        "Databases",
+        "APIs",
+        "Git",
+        "DevOps Basics"
+    ],
     "AI/ML": [
         "Python",
         "Linear Algebra",
         "Machine Learning",
         "Git",
-        "Projects",
-        "TensorFlow",
+        "TensorFlow/PyTorch",
         "Statistics"
+    ],
+    "Data Science": [
+        "Python",
+        "SQL",
+        "Data Analysis",
+        "Statistics",
+        "Data Visualization",
+        "Machine Learning"
     ],
     "Cybersecurity": [
         "Networking Basics",
@@ -16,14 +39,6 @@
         "Python",
         "OWASP"
     ],
-    "Web Development": [
-        "HTML/CSS",
-        "JavaScript",
-        "React",
-        "Node.js",
-        "Databases",
-        "Git"
-    ],
     "Networking": [
         "OSI Model",
         "TCP/IP",
@@ -31,5 +46,94 @@
         "Switching",
         "Cisco CCNA",
         "Linux"
+    ],
+    "Cloud Computing": [
+        "Linux",
+        "AWS/Azure/GCP",
+        "Virtualization",
+        "Cloud Security",
+        "Networking Basics",
+        "Docker"
+    ],
+    "DevOps": [
+        "Linux",
+        "Docker",
+        "CI/CD",
+        "Kubernetes",
+        "Scripting (Python/Bash)",
+        "Git"
+    ],
+    "Blockchain": [
+        "Cryptography",
+        "Smart Contracts (Solidity)",
+        "Ethereum Basics",
+        "Go/Rust",
+        "Distributed Systems"
+    ],
+    "IoT": [
+        "C/C++",
+        "Microcontrollers",
+        "Sensors & Actuators",
+        "Wireless Protocols",
+        "Linux Basics",
+        "Electronics"
+    ],
+    "Embedded Systems": [
+        "C/C++",
+        "RTOS",
+        "Microprocessors",
+        "Hardware Debugging",
+        "Assembly Language"
+    ],
+    "AR/VR": [
+        "C#",
+        "Unity/Unreal Engine",
+        "3D Modeling Basics",
+        "Graphics Programming",
+        "UI Design"
+    ],
+    "UI/UX": [
+        "User Research",
+        "Wireframing",
+        "Figma",
+        "Prototyping",
+        "Visual Design",
+        "Interaction Design"
+    ],
+    "Product Management": [
+        "Product Strategy",
+        "Agile Methodology",
+        "Market Research",
+        "Data Analytics",
+        "Communication"
+    ],
+    "Quantum Computing": [
+        "Quantum Mechanics",
+        "Linear Algebra",
+        "Qiskit/Cirq",
+        "Python",
+        "Quantum Algorithms"
+    ],
+    "Bioinformatics": [
+        "Python/R",
+        "Genomics",
+        "Sequence Alignment",
+        "Biostatistics",
+        "Molecular Biology Basics"
+    ],
+    "FinTech": [
+        "SQL",
+        "Python",
+        "Financial Markets Basics",
+        "API Integration",
+        "Secure Coding",
+        "Data Analytics"
+    ],
+    "HealthTech": [
+        "Data Privacy (HIPAA)",
+        "Python/Java",
+        "SQL",
+        "HL7/FHIR Standards",
+        "Healthcare Systems Basics"
     ]
 }

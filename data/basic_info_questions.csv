@@ -1,0 +1,64 @@
+question_id,section,question,question_type,options
+1,Basic Information,"Full Name",text,
+2,Basic Information,"Email Address",email,
+3,Basic Information,"Gender",mcq,"Male|Female|Non-Binary|Prefer not to say"
+4,Basic Information,"Age",number,
+5,Basic Information,"Current Year/Semester",mcq,"1st Year|2nd Year|3rd Year|4th Year|Other"
+6,Basic Information,"City/State",text,
+7,Basic Information,"Are you a first year college student?",mcq,"Yes|No"
+8,Academic Background,"Current CGPA/Percentage",number,
+9,Academic Background,"Favorite Subject",text,
+10,Academic Background,"Least Favorite Subject",text,
+11,Academic Background,"How would you rate your academic performance?",mcq,"Excellent|Good|Average|Below Average"
+12,Academic Background,"How many hours do you study outside class per week?",mcq,"0-5|6-10|11-20|20+"
+13,Technical Knowledge Assessment,"Rate your programming knowledge (1-5)",rating,"1|2|3|4|5"
+14,Technical Knowledge Assessment,"Which programming languages do you know?",checkbox,"C|C++|Java|Python|JavaScript|Others"
+15,Technical Knowledge Assessment,"Have you built any projects?",mcq,"Yes|No"
+16,Technical Knowledge Assessment,"Number of projects completed",mcq,"0|1-2|3-5|6-10|10+"
+17,Technical Knowledge Assessment,"Knowledge of Data Structures (1-5)",rating,"1|2|3|4|5"
+18,Technical Knowledge Assessment,"Knowledge of Algorithms (1-5)",rating,"1|2|3|4|5"
+19,Technical Knowledge Assessment,"Knowledge of Database (1-5)",rating,"1|2|3|4|5"
+20,Technical Knowledge Assessment,"Knowledge of Web Development (1-5)",rating,"1|2|3|4|5"
+21,Technical Knowledge Assessment,"Knowledge of AI/ML (1-5)",rating,"1|2|3|4|5"
+22,Technical Knowledge Assessment,"Knowledge of Cloud Computing (1-5)",rating,"1|2|3|4|5"
+23,Technical Knowledge Assessment,"Knowledge of Cybersecurity (1-5)",rating,"1|2|3|4|5"
+24,Technical Knowledge Assessment,"Git/GitHub experience",mcq,"Beginner|Intermediate|Advanced|Never Used"
+25,Skills Assessment,"Rate your Problem Solving skill (1-5)",rating,"1|2|3|4|5"
+26,Skills Assessment,"Rate your Logical Thinking skill (1-5)",rating,"1|2|3|4|5"
+27,Skills Assessment,"Rate your Communication Skills (1-5)",rating,"1|2|3|4|5"
+28,Skills Assessment,"Rate your Leadership Skills (1-5)",rating,"1|2|3|4|5"
+29,Skills Assessment,"Rate your Teamwork skill (1-5)",rating,"1|2|3|4|5"
+30,Skills Assessment,"Rate your Creativity (1-5)",rating,"1|2|3|4|5"
+31,Skills Assessment,"Rate your Time Management (1-5)",rating,"1|2|3|4|5"
+32,Skills Assessment,"Rate your Decision Making (1-5)",rating,"1|2|3|4|5"
+33,Skills Assessment,"Rate your Adaptability (1-5)",rating,"1|2|3|4|5"
+34,Skills Assessment,"Rate your Public Speaking (1-5)",rating,"1|2|3|4|5"
+35,Interests,"Which activities do you enjoy most?",checkbox,"Coding|Designing|Teaching|Writing|Management|Research|Business"
+36,Interests,"Which field interests you most?",mcq,"Software Development|AI/ML|Data Science|Cybersecurity|Cloud Computing|DevOps|UI/UX Design|Product Management|Entrepreneurship|Research"
+37,Interests,"What motivates you the most?",mcq,"High Salary|Innovation|Job Security|Social Impact|Entrepreneurship|Leadership"
+38,Personality & Work Style,"Do you prefer",mcq,"Working Alone|Working in Teams|Both"
+39,Personality & Work Style,"Do you enjoy solving complex problems?",mcq,"Yes|No"
+40,Personality & Work Style,"Do you enjoy interacting with people?",mcq,"Yes|No"
+41,Personality & Work Style,"Do you like creative work?",mcq,"Yes|No"
+42,Personality & Work Style,"Are you comfortable taking leadership roles?",mcq,"Yes|No"
+43,Career Awareness,"Do you know your desired career path?",mcq,"Yes|No|Not Sure"
+44,Career Awareness,"Which careers are you considering?",text,
+45,Career Awareness,"Have you done any internships?",mcq,"Yes|No"
+46,Career Awareness,"Have you participated in hackathons?",mcq,"Yes|No"
+47,Career Awareness,"Have you earned any certifications?",mcq,"Yes|No"
+48,Career Awareness,"Do you have a LinkedIn profile?",mcq,"Yes|No"
+49,Career Awareness,"Do you follow industry trends regularly?",mcq,"Yes|No"
+50,Learning & Growth,"How often do you learn new skills?",mcq,"Weekly|Monthly|Occasionally|Rarely"
+51,Learning & Growth,"Preferred learning method",mcq,"Videos|Reading|Hands-on Projects|Mentorship"
+52,Learning & Growth,"Biggest obstacle in your career growth?",mcq,"Lack of Guidance|Lack of Skills|Lack of Time|Financial Issues|Lack of Confidence"
+53,Learning & Growth,"What skill do you want to learn next?",text,
+54,Aptitude & Reasoning,"Rate your mathematical ability (1-5)",rating,"1|2|3|4|5"
+55,Aptitude & Reasoning,"Rate your analytical thinking (1-5)",rating,"1|2|3|4|5"
+56,Aptitude & Reasoning,"Rate your attention to detail (1-5)",rating,"1|2|3|4|5"
+57,Aptitude & Reasoning,"Rate your critical thinking (1-5)",rating,"1|2|3|4|5"
+58,Aptitude & Reasoning,"Rate your learning speed (1-5)",rating,"1|2|3|4|5"
+59,Goals,"Short-term career goal (1-2 years)",text,
+60,Goals,"Long-term career goal (5 years)",text,
+61,Goals,"Dream Company/Organization",text,
+62,Goals,"Expected career role",text,
+63,Goals,"Any additional information about your interests or goals?",textarea,
