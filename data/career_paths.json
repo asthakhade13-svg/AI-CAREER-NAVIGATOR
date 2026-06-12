@@ -1,0 +1,22 @@
+{
+    "AI/ML": {
+        "description": "Building intelligent systems that learn from data.",
+        "growth": "High",
+        "roles": ["Machine Learning Engineer", "Data Scientist", "AI Researcher"]
+    },
+    "Cybersecurity": {
+        "description": "Protecting systems, networks, and programs from digital attacks.",
+        "growth": "Very High",
+        "roles": ["Security Analyst", "Penetration Tester", "Security Engineer"]
+    },
+    "Web Development": {
+        "description": "Building and maintaining websites.",
+        "growth": "Steady",
+        "roles": ["Frontend Developer", "Backend Developer", "Full Stack Developer"]
+    },
+    "Networking": {
+        "description": "Designing, implementing, and managing computer networks.",
+        "growth": "Steady",
+        "roles": ["Network Engineer", "Systems Administrator"]
+    }
+}
