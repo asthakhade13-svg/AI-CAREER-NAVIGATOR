@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from models.basic_info_model import QuestionnaireSubmit, QuestionnaireResponse
 from services.basic_info_service import get_basic_info_questions, classify_student_profile
+from services.adaptive_quiz_service import _get_available_fields
 from database import db
 import logging
 
@@ -18,6 +19,19 @@ async def api_get_questions():
     except Exception as e:
         logger.error(f"Error fetching questionnaire questions: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch questionnaire.")
+
+@router.get("/career_fields")
+async def api_get_career_fields():
+    """
+    Return a sorted list of all unique career fields available in the adaptive question bank.
+    The frontend uses this to populate the career interest picker in the questionnaire.
+    """
+    try:
+        fields = sorted(_get_available_fields())
+        return {"career_fields": fields}
+    except Exception as e:
+        logger.error(f"Error fetching career fields: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch career fields.")
 
 @router.post("/evaluate", response_model=QuestionnaireResponse)
 async def api_evaluate_profile(request: QuestionnaireSubmit):
@@ -52,3 +66,4 @@ async def api_evaluate_profile(request: QuestionnaireSubmit):
     except Exception as e:
         logger.error(f"Error evaluating profile: {e}")
         raise HTTPException(status_code=500, detail="Failed to evaluate profile.")
+

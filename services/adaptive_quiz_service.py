@@ -101,15 +101,19 @@ def _load_questions() -> pd.DataFrame:
             _questions_df = pd.read_csv(CSV_PATH)
             # Normalize column names
             _questions_df.columns = [c.strip().lower().replace(" ", "_") for c in _questions_df.columns]
+            # Filter valid difficulties
+            _questions_df["difficulty"] = _questions_df["difficulty"].astype(str).str.strip()
+            _questions_df = _questions_df[_questions_df["difficulty"].isin(["Easy", "Medium", "Hard"])].copy()
             # Ensure correct_answer is uppercase
-            _questions_df["correct_answer"] = _questions_df["correct_answer"].str.strip().str.upper()
-            _questions_df["difficulty"] = _questions_df["difficulty"].str.strip()
-            _questions_df["career_field"] = _questions_df["career_field"].str.strip()
+            _questions_df["correct_answer"] = _questions_df["correct_answer"].astype(str).str.strip().str.upper()
+            _questions_df["career_field"] = _questions_df["career_field"].astype(str).str.strip()
+            _questions_df["question_id"] = _questions_df["question_id"].astype(int)
             logger.info(f"Adaptive questions loaded: {len(_questions_df)} rows")
         except Exception as e:
             logger.error(f"Failed to load adaptive_questions.csv: {e}")
             _questions_df = pd.DataFrame()
     return _questions_df
+
 
 
 def _get_available_fields() -> List[str]:
@@ -185,6 +189,68 @@ def _adjust_difficulty(current: str, is_correct: bool) -> str:
     return DIFFICULTY_DOWN[current]
 
 
+# ─── Interest → Career Field Mapping ─────────────────────────────────────────
+# Maps Q36 questionnaire answer options to canonical career_field values in the CSV.
+INTEREST_TO_FIELD: Dict[str, List[str]] = {
+    # Q36 choices (exact strings the frontend sends)
+    "Software Development":   ["Full Stack Development", "Backend Development", "Frontend Development", "Web Development"],
+    "AI/ML":                  ["Machine Learning", "AI Development", "Data Science", "Artificial Intelligence"],
+    "Data Science":           ["Data Science", "Data Analytics", "Machine Learning"],
+    "Cybersecurity":          ["Cybersecurity", "Network Security", "Ethical Hacking"],
+    "Cloud Computing":        ["Cloud Computing", "DevOps Engineering", "Cloud Architecture"],
+    "DevOps":                 ["DevOps Engineering", "Cloud Computing", "Site Reliability Engineering"],
+    "UI/UX Design":           ["UI Design", "UX Design", "UI/UX Design", "Motion UI Development"],
+    "Product Management":     ["Product Management", "Agile Project Management", "IT Consulting"],
+    "Entrepreneurship":       ["FinTech Engineering", "EdTech Engineering", "Web Development"],
+    "Research":               ["Artificial Intelligence", "Quantum Computing", "Computational Linguistics"],
+    # Activity interests from Q35 (Coding, Designing, etc.) as fallbacks
+    "Coding":                 ["Web Development", "Backend Development", "Full Stack Development"],
+    "Designing":              ["UI Design", "Motion UI Development", "UX Design"],
+    "Teaching":               ["EdTech Engineering", "E-Learning Development"],
+    "Writing":                ["Technical Writing", "Content Management Systems"],
+    "Management":             ["IT Consulting", "Agile Project Management", "Product Management"],
+    "Business":               ["FinTech Engineering", "CRM Development", "ERP Development"],
+}
+
+
+def _map_interest_to_field(interest_field: Optional[str], all_fields: List[str]) -> str:
+    """
+    Given the raw interest string from the questionnaire, return the best
+    matching career_field that actually exists in the question bank.
+    Tries INTEREST_TO_FIELD mapping first, then partial-string matching,
+    then falls back to a random field.
+    """
+    if not interest_field:
+        return random.choice(all_fields)
+
+    # 1. Exact match
+    if interest_field in all_fields:
+        return interest_field
+
+    # 2. Mapping lookup
+    candidates = INTEREST_TO_FIELD.get(interest_field, [])
+    for candidate in candidates:
+        if candidate in all_fields:
+            return candidate
+
+    # 3. Partial / case-insensitive substring match
+    lower = interest_field.lower()
+    for field in all_fields:
+        if lower in field.lower() or field.lower() in lower:
+            return field
+
+    # 4. Keyword match (split on spaces)
+    for keyword in lower.split():
+        if len(keyword) >= 3:  # skip tiny words
+            for field in all_fields:
+                if keyword in field.lower():
+                    return field
+
+    # 5. Random fallback
+    logger.warning(f"Could not map interest '{interest_field}' to any known field; picking random.")
+    return random.choice(all_fields)
+
+
 # ─── Session Management ───────────────────────────────────────────────────────
 def start_adaptive_session(
     student_id: str,
@@ -209,10 +275,9 @@ def start_adaptive_session(
 
     # Build a rotation of career fields — start with student's interest, then rotate others
     all_fields = _get_available_fields()
-    if interest_field and interest_field in all_fields:
-        primary = [interest_field]
-    else:
-        primary = ["Web Development"]  # sensible default
+    primary_field = _map_interest_to_field(interest_field, all_fields)
+    logger.info(f"Interest '{interest_field}' → mapped to field '{primary_field}'")
+    primary = [primary_field]
 
     other_fields = [f for f in all_fields if f not in primary]
     random.shuffle(other_fields)

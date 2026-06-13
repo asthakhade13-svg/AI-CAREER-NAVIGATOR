@@ -41,16 +41,10 @@ def get_basic_info_questions() -> List[Dict[str, Any]]:
             
         # Format as list of sections to preserve ordering
         ordered_sections = [
-            "Basic Information",
-            "Academic Background",
-            "Technical Knowledge Assessment",
-            "Skills Assessment",
+            "Personal Information",
+            "Programming Skills",
+            "Technical Knowledge",
             "Interests",
-            "Personality & Work Style",
-            "Career Awareness",
-            "Learning & Growth",
-            "Aptitude & Reasoning",
-            "Goals"
         ]
         
         result = []
@@ -138,13 +132,23 @@ def classify_student_profile(student_id: str, answers: Dict[str, Any]) -> Questi
     email = str(get_ans(2, "")).strip()
     current_year = str(get_ans(5, "1st Year")).strip()
     
-    interests_ans = get_ans(35)
     interests = []
+    primary_field = get_ans(36)
+    if primary_field:
+        interests.append(str(primary_field).strip())
+
+    interests_ans = get_ans(35)
     if interests_ans:
         if isinstance(interests_ans, list):
-            interests = interests_ans
+            for i in interests_ans:
+                val = str(i).strip()
+                if val and val not in interests:
+                    interests.append(val)
         elif isinstance(interests_ans, str):
-            interests = [i.strip() for i in interests_ans.split("|") if i.strip()]
+            for i in interests_ans.split("|"):
+                val = i.strip()
+                if val and val not in interests:
+                    interests.append(val)
             
     fav_subject = str(get_ans(9, "Computer Science")).strip()
     motivation = str(get_ans(37, "Innovation")).strip()
