@@ -1,22 +1,92 @@
 {
-    "AI/ML": {
-        "description": "Building intelligent systems that learn from data.",
+    "Web Development": {
+        "description": "Building and maintaining websites and web applications.",
+        "growth": "Steady",
+        "roles": ["Frontend Developer", "Backend Developer", "Web Architect"]
+    },
+    "Full Stack Development": {
+        "description": "Developing both client and server software.",
         "growth": "High",
+        "roles": ["Full Stack Engineer", "Software Developer", "Technical Lead"]
+    },
+    "AI/ML": {
+        "description": "Building intelligent systems that learn from data and automate decisions.",
+        "growth": "Very High",
         "roles": ["Machine Learning Engineer", "Data Scientist", "AI Researcher"]
     },
-    "Cybersecurity": {
-        "description": "Protecting systems, networks, and programs from digital attacks.",
-        "growth": "Very High",
-        "roles": ["Security Analyst", "Penetration Tester", "Security Engineer"]
+    "Data Science": {
+        "description": "Extracting insights and knowledge from structured and unstructured data.",
+        "growth": "High",
+        "roles": ["Data Analyst", "Data Engineer", "Data Scientist"]
     },
-    "Web Development": {
-        "description": "Building and maintaining websites.",
-        "growth": "Steady",
-        "roles": ["Frontend Developer", "Backend Developer", "Full Stack Developer"]
+    "Cybersecurity": {
+        "description": "Protecting systems, networks, programs, and data from digital attacks.",
+        "growth": "Very High",
+        "roles": ["Security Analyst", "Penetration Tester", "Security Architect"]
     },
     "Networking": {
         "description": "Designing, implementing, and managing computer networks.",
         "growth": "Steady",
-        "roles": ["Network Engineer", "Systems Administrator"]
+        "roles": ["Network Engineer", "Network Administrator", "Systems Engineer"]
+    },
+    "Cloud Computing": {
+        "description": "Managing and delivering computing services over the Internet.",
+        "growth": "High",
+        "roles": ["Cloud Architect", "Cloud Engineer", "Systems Administrator"]
+    },
+    "DevOps": {
+        "description": "Unifying software development and software operation for fast delivery.",
+        "growth": "High",
+        "roles": ["DevOps Engineer", "Site Reliability Engineer", "Platform Developer"]
+    },
+    "Blockchain": {
+        "description": "Developing secure, decentralized ledger systems and smart contracts.",
+        "growth": "High",
+        "roles": ["Blockchain Developer", "Smart Contract Engineer", "Cryptographer"]
+    },
+    "IoT": {
+        "description": "Connecting physical objects to the internet to collect and share data.",
+        "growth": "Steady",
+        "roles": ["IoT Solutions Architect", "Firmware Engineer", "IoT System Developer"]
+    },
+    "Embedded Systems": {
+        "description": "Designing specialized computer systems that perform dedicated functions within larger systems.",
+        "growth": "Steady",
+        "roles": ["Embedded Software Engineer", "Firmware Developer", "Hardware Integration Engineer"]
+    },
+    "AR/VR": {
+        "description": "Creating immersive virtual and augmented reality experiences.",
+        "growth": "High",
+        "roles": ["AR/VR Developer", "Unity/Unreal Engine Developer", "3D Graphics Programmer"]
+    },
+    "UI/UX": {
+        "description": "Designing user interfaces and user experiences to make software easy and delightful to use.",
+        "growth": "Steady",
+        "roles": ["UI Designer", "UX Researcher", "Product Designer"]
+    },
+    "Product Management": {
+        "description": "Guiding the life cycle of a product from conception to launch and optimization.",
+        "growth": "Steady",
+        "roles": ["Product Manager", "Associate Product Manager", "Technical Product Manager"]
+    },
+    "Quantum Computing": {
+        "description": "Developing algorithms and software for quantum computers.",
+        "growth": "High",
+        "roles": ["Quantum Software Engineer", "Quantum Physicist", "Research Scientist"]
+    },
+    "Bioinformatics": {
+        "description": "Applying computer science and statistics to biological data like genetics.",
+        "growth": "High",
+        "roles": ["Bioinformatician", "Computational Biologist", "Data Analyst"]
+    },
+    "FinTech": {
+        "description": "Building modern financial technologies, payment processors, and banking systems.",
+        "growth": "High",
+        "roles": ["FinTech Developer", "Financial Software Engineer", "Quantitative Developer"]
+    },
+    "HealthTech": {
+        "description": "Creating technology-driven solutions for healthcare systems and patient care.",
+        "growth": "High",
+        "roles": ["HealthTech Software Engineer", "Medical Systems Analyst", "Biomedical Software Developer"]
     }
 }

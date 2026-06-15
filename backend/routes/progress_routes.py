@@ -13,7 +13,7 @@ async def get_student_progress(student_id: str):
     """
     try:
         progress_col = db.get_collection("progress_logs")
-        progress = progress_col.find_one({"student_id": student_id})
+        progress = progress_col.find_one({"student_id": student_id}) if progress_col else None
 
         if not progress:
             # Return mock data if not found (for demonstration)

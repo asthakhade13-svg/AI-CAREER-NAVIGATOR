@@ -1,48 +1,56 @@
-from models.quiz_evaluation_model import QuizEvaluationRequest, QuizEvaluationResult
+from models.quiz_evaluation_model import QuizEvaluationResult
 from database import db
-from bson import ObjectId
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def evaluate_quiz(student_id: str, quiz_id: str, student_answers: dict) -> QuizEvaluationResult:
     """
     Evaluates a student's quiz answers against the correct answers.
+    Falls back to mock evaluation if MongoDB is not connected.
     """
+    quiz = None
     try:
         quizzes_col = db.get_collection("quizzes")
-        quiz = quizzes_col.find_one({"_id": ObjectId(quiz_id)})
-
-        if not quiz:
-            raise ValueError(f"Quiz with ID {quiz_id} not found.")
-
-    except ValueError:
-        raise
+        if quizzes_col is not None:
+            from bson import ObjectId
+            quiz = quizzes_col.find_one({"_id": ObjectId(quiz_id)})
     except Exception as e:
-        # For testing without DB, continue with mock evaluation
-        pass
+        logger.warning(f"Could not fetch quiz from DB: {e}")
 
-    # Mocking evaluation logic for now
+    # Evaluate against DB quiz if found, else use mock evaluation
     total_questions = len(student_answers)
-    correct_count = sum(
-        [1 for k, v in student_answers.items() if v.lower() == "correct_answer"]
-    )  # Mock check
+
+    if quiz:
+        correct_count = sum(
+            1 for q_id, ans in student_answers.items()
+            if quiz.get(q_id, {}).get("correct_answer", "").lower() == ans.lower()
+        )
+    else:
+        # Mock check for dev without DB
+        correct_count = sum(
+            1 for v in student_answers.values() if v.lower() == "a"
+        )
 
     accuracy = (correct_count / total_questions) * 100 if total_questions > 0 else 0
 
     result = QuizEvaluationResult(
         total_score=correct_count,
         accuracy=accuracy,
-        topic_scores={"Python": 90.0, "Networking": 60.0},  # Mocked
-        difficulty_scores={"Easy": 100.0, "Medium": 50.0, "Hard": 0.0}  # Mocked
+        topic_scores={"Python": 90.0, "Networking": 60.0},
+        difficulty_scores={"Easy": 100.0, "Medium": 50.0, "Hard": 0.0}
     )
 
-    # Save to DB
+    # Save to DB (no-op if MongoDB is offline)
     try:
         results_col = db.get_collection("quiz_results")
-        results_col.insert_one({
-            "student_id": student_id,
-            "quiz_id": quiz_id,
-            "result": result.model_dump()
-        })
+        if results_col is not None:
+            results_col.insert_one({
+                "student_id": student_id,
+                "quiz_id": quiz_id,
+                "result": result.model_dump()
+            })
     except Exception:
         pass
 

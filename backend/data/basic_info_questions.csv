@@ -1,0 +1,19 @@
+question_id,section,question,question_type,options
+1,Personal Information,"Full Name",text,
+2,Personal Information,"Email Address",email,
+5,Personal Information,"Current Year/Semester",mcq,"1st Year|2nd Year|3rd Year|4th Year|Other"
+9,Personal Information,"Favorite Subject in College",text,
+13,Programming Skills,"Rate your programming knowledge (1–5)",rating,"1|2|3|4|5"
+14,Programming Skills,"Which programming languages do you know?",checkbox,"C|C++|Java|Python|JavaScript|Others"
+15,Programming Skills,"Have you built any projects?",mcq,"Yes|No"
+16,Programming Skills,"Number of projects completed",mcq,"0|1-2|3-5|6-10|10+"
+17,Technical Knowledge,"Knowledge of Data Structures (1–5)",rating,"1|2|3|4|5"
+18,Technical Knowledge,"Knowledge of Algorithms (1–5)",rating,"1|2|3|4|5"
+19,Technical Knowledge,"Knowledge of Databases (1–5)",rating,"1|2|3|4|5"
+20,Technical Knowledge,"Knowledge of Web Development (1–5)",rating,"1|2|3|4|5"
+21,Technical Knowledge,"Knowledge of AI / Machine Learning (1–5)",rating,"1|2|3|4|5"
+22,Technical Knowledge,"Knowledge of Cloud Computing (1–5)",rating,"1|2|3|4|5"
+23,Technical Knowledge,"Knowledge of Cybersecurity (1–5)",rating,"1|2|3|4|5"
+24,Technical Knowledge,"Git / GitHub experience level",mcq,"Beginner|Intermediate|Advanced|Never Used"
+35,Interests,"Which activities do you enjoy most? (Select all that apply)",checkbox,"Coding|Designing|Teaching|Writing|Management|Research|Business"
+36,Interests,"Which career field interests you most? (Choose from all available quiz topics)",career_field_picker,

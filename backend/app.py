@@ -1,51 +1,79 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 from config import settings
 from database import Database
 
-from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes
+# Resolve frontend directory path
+FRONTEND_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+INDEX_FILE   = os.path.join(FRONTEND_DIR, "index.html")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Modern lifespan event handler — replaces deprecated on_event."""
+    # ── Startup ──────────────────────────────────────────────────────────────
+    Database.connect_db()           # graceful — won't crash if Mongo is offline
+    os.makedirs("output", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
+    os.makedirs("models_saved", exist_ok=True)
+    yield
+    # ── Shutdown ─────────────────────────────────────────────────────────────
+    Database.close_db()
+
 
 app = FastAPI(
     title="First-Generation Career Navigator AI Backend",
     description="AI-powered career guidance platform for B.Tech CS students",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-# CORS Middleware
+# CORS — allow all origins for local development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, restrict this
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup_db_client():
-    Database.connect_db()
+from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes, basic_info_routes, adaptive_quiz_routes
 
-    # Ensure output directory exists
-    os.makedirs("output", exist_ok=True)
-    os.makedirs("data", exist_ok=True)
-    os.makedirs("models_saved", exist_ok=True)
+# ── Health check (used by frontend ping) ─────────────────────────────────────
+@app.get("/health")
+def health_check():
+    return JSONResponse({"status": "ok", "version": "1.0.0"})
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    Database.close_db()
-
+# ── Serve frontend index.html at root ─────────────────────────────────────────
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to First-Generation Career Navigator AI Backend"}
+def serve_frontend():
+    if os.path.exists(INDEX_FILE):
+        # no-cache so browser always gets latest index.html on restart
+        return FileResponse(
+            INDEX_FILE,
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+        )
+    return JSONResponse({"message": "Welcome to First-Generation Career Navigator AI Backend"})
 
-# Include routers
-app.include_router(quiz_routes.router, prefix="/api/v1/quiz", tags=["Quiz"])
-app.include_router(recommendation_routes.router, prefix="/api/v1/recommendation", tags=["Recommendation"])
-app.include_router(roadmap_routes.router, prefix="/api/v1/roadmap", tags=["Roadmap"])
-app.include_router(progress_routes.router, prefix="/api/v1/progress", tags=["Progress"])
-app.include_router(chatbot_routes.router, prefix="/api/v1/chatbot", tags=["Chatbot"])
+# Include API routers
+app.include_router(basic_info_routes.router,        prefix="/api/v1/basic_info",         tags=["Basic Info"])
+app.include_router(adaptive_quiz_routes.router,     prefix="/api/v1/quiz/adaptive",      tags=["Adaptive Quiz"])
+app.include_router(quiz_routes.router,              prefix="/api/v1/quiz",               tags=["Quiz"])
+app.include_router(recommendation_routes.router,    prefix="/api/v1/recommendation",     tags=["Recommendation"])
+app.include_router(roadmap_routes.router,           prefix="/api/v1/roadmap",            tags=["Roadmap"])
+app.include_router(progress_routes.router,          prefix="/api/v1/progress",           tags=["Progress"])
+app.include_router(chatbot_routes.router,           prefix="/api/v1/chatbot",            tags=["Chatbot"])
+
+# Mount frontend assets (assumes assets like CSS/JS are in frontend directory)
+# This is placed at the end so it doesn't shadow explicit API routes
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=settings.PORT, reload=settings.DEBUG)
