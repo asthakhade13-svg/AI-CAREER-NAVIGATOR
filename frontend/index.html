@@ -282,14 +282,15 @@ nav{
   background:rgba(255,255,255,0.52);
   border:1px solid rgba(255,255,255,0.82);
   border-radius:28px;
-  padding:56px 52px 48px;
+  padding:52px 52px 44px;
   backdrop-filter:blur(48px);
   -webkit-backdrop-filter:blur(48px);
   box-shadow:
     0 40px 90px rgba(100,140,200,0.14),
     0 0 0 1px rgba(255,255,255,0.60),
     inset 0 1px 0 rgba(255,255,255,0.90);
-  position:relative;overflow:hidden;
+  /* overflow visible so pulse rings on the button are not clipped */
+  position:relative;overflow:visible;
 }
 
 /* Shimmer top-edge accent */
@@ -337,7 +338,7 @@ nav{
   100% { background-position: 200% center; }
 }
 .grad-pastel{
-  background: linear-gradient(90deg, #0c6b85 0%, #6d28d9 28%, #0369a1 52%, #9333ea 76%, #0c6b85 100%);
+  background: linear-gradient(90deg, #FFCD7F 0%, #C5FF7F 50%, #FFCD7F 100%);
   background-size: 220% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -352,24 +353,113 @@ nav{
 /* Hero title */
 .intro-title{
   font-family:var(--font-heading);
-  font-size:clamp(2.8rem,7vw,5rem);
+  font-size:clamp(2rem,5.5vw,3.8rem);
   font-weight:700;
-  line-height:1.05;
+  line-height:1.15;
   letter-spacing:0.04em;
-  margin-bottom:22px;
+  margin-bottom:18px;
   display:flex;flex-wrap:wrap;gap:0.3em;
   justify-content:center;
   position:relative;z-index:1;
   text-shadow: 0 0 20px rgba(213, 246, 251, 0.15);
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:default;
+}
+
+/* Hero subtitle — sits clearly below the title, above the button */
+.intro-sub{
+  font-family:var(--font-body);
+  font-size:clamp(.88rem,2vw,1rem);
+  color:var(--text-muted);
+  line-height:1.75;
+  letter-spacing:.02em;
+  margin-bottom:28px;
+  padding:0 4px;
+  position:relative;z-index:1;
+  opacity:0; /* revealed by GSAP */
+  transform:translateY(10px);
+}
+
+/* Hero image banner — styled to crop a vertical image into a beautiful sky window */
+.hero-img-container{
+  width:100%;
+  max-width:480px;
+  height:140px;
+  margin:0 auto 22px;
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;z-index:1;
+  box-shadow:
+    0 10px 30px rgba(100,130,200,0.12),
+    0 0 0 1px rgba(255,255,255,0.5);
+  border:1px solid rgba(255,255,255,0.7);
+  opacity:0; /* revealed by GSAP */
+  transform:translateY(12px);
+}
+.hero-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 60%; /* focuses on the bright sun/sky area */
+  display:block;
+  transition:transform 1.2s ease;
+}
+.hero-img-container:hover .hero-img{
+  transform:scale(1.04);
+}
+
+/* Floating inspirational quote */
+.hero-quote{
+  position:relative;z-index:1;
+  margin:10px auto 26px;
+  max-width:500px;
+  text-align:center;
+  opacity:0; /* revealed by GSAP */
+  transform:translateY(8px);
+  animation:quoteFloat 5s ease-in-out infinite;
+}
+@keyframes quoteFloat{
+  0%,100%{transform:translateY(0px)}
+  50%{transform:translateY(-5px)}
+}
+.hero-quote-text{
+  font-family:var(--font-heading);
+  font-size:clamp(1.1rem,2.5vw,1.35rem);
+  font-weight:500;
+  font-style:italic;
+  letter-spacing:.02em;
+  line-height:1.5;
+  background:linear-gradient(90deg,#0e7490,#7c3aed,#059669,#0e7490);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:quoteShimmer 4s linear infinite;
+}
+@keyframes quoteShimmer{
+  0%{background-position:0% center}
+  100%{background-position:200% center}
+}
+.hero-quote-line{
+  display:block;
+  width:36px;
+  height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(14,116,144,.45),transparent);
+  margin:6px auto 0;
+  border-radius:2px;
 }
 
 /* ═══════════════════════════════════════════════════════
    YOUR JOURNEY BUTTON
 ═══════════════════════════════════════════════════════ */
 .journey-btn-wrap{
-  position:relative;z-index:1;
+  position:relative;z-index:2;
   display:flex;flex-direction:column;align-items:center;
-  gap:12px;margin-bottom:22px;
+  gap:10px;
+  /* Extra top padding so button never overlaps the subtitle text */
+  padding-top:8px;
+  margin-bottom:20px;
 }
 
 .journey-btn{
@@ -916,17 +1006,25 @@ nav{
 @media(max-width:640px){
   nav{padding:14px 18px}
   .nav-coords{display:none}
-  .intro-menu-glass{padding:36px 24px 32px}
-  .intro-title{font-size:clamp(2rem,10vw,2.8rem)}
+  .intro-menu-glass{padding:32px 20px 28px}
+  .intro-title{font-size:clamp(1.7rem,9vw,2.4rem);line-height:1.2;margin-bottom:14px}
+  .intro-sub{font-size:.85rem;margin-bottom:22px}
+  .journey-btn{padding:14px 28px 14px 16px;font-size:1rem}
   .question-card{padding:22px 16px}
   .q-group{padding:16px 14px}
   .result-wrap,.cs-result-wrap{padding:0 4px}
   .quiz-container,.q-container{padding:0}
   .rec-card{padding:14px 14px}
+  .hero-img-container{height:105px;margin-bottom:14px}
+  .hero-quote{max-width:90%;margin-bottom:14px}
+  .hero-quote-text{font-size:.95rem;line-height:1.45}
 }
 @media(max-width:420px){
   .intro-secondary-row{flex-direction:column}
   .intro-btn-secondary{flex:none}
+  .intro-title{font-size:clamp(1.5rem,8vw,2rem)}
+  .intro-sub{font-size:.82rem;margin-bottom:18px}
+  .hero-img-container{height:85px;margin-bottom:12px}
 }
 </style>
 </head>
@@ -966,12 +1064,19 @@ nav{
         AI CAREER NAVIGATOR
       </div>
 
-      <!-- Hero title -->
-      <h1 class="intro-title">
-        <span class="grad-pastel text-glow" id="hero-word-1">Discover</span>
-        <span class="grad-pastel text-glow" id="hero-word-2">Your</span>
-        <span class="grad-pastel text-glow" id="hero-word-3">Path</span>
-      </h1>
+
+
+      <!-- Floating quote — fills space between title and image -->
+      <div class="hero-quote" id="hero-quote">
+        <p class="hero-quote-text">"Keep your face always toward the sunshine—and shadows will fall behind you"</p>
+        <span class="hero-quote-line"></span>
+      </div>
+
+      <!-- Hero image/banner -->
+      <div class="hero-img-container">
+        <img src="hero-image.jpg" alt="Career Navigator sky path" class="hero-img">
+      </div>
+
 
       <p class="intro-sub" id="hero-sub">
         An intelligent adaptive assessment that maps your unique skills &amp; passions
@@ -993,12 +1098,6 @@ nav{
         <p class="journey-hint">Click to begin your personalised career assessment</p>
       </div>
 
-      <!-- Backend status badge -->
-      <div id="backend-status-bar">
-        <span id="backend-dot"></span>
-        <span id="backend-status-text">Connecting to server…</span>
-      </div>
-
       <!-- Error banner -->
       <div id="start-error-banner">
         <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
@@ -1012,12 +1111,6 @@ nav{
           inside the <code>backend/</code> folder.
         </p>
         <button class="retry-btn" onclick="startQuestionnaire()">↺ Retry Connection</button>
-      </div>
-
-      <!-- Secondary actions -->
-      <div class="intro-secondary-row">
-        <button class="intro-btn-secondary">📚 About Platform</button>
-        <button class="intro-btn-secondary">✨ Explore Features</button>
       </div>
 
     </div><!-- /.intro-menu-glass -->
@@ -1272,9 +1365,9 @@ function animateHeroText(){
     if(!el) return;
     const text = el.textContent;
     el.innerHTML = text.split('').map(c =>
-      `<span class="letter" style="display:inline-block;will-change:transform,opacity">${c === ' ' ? '&nbsp;' : c}</span>`
+      `<span class="letter-container" style="display:inline-block;will-change:transform,opacity">${c === ' ' ? '&nbsp;' : `<span class="letter-inner" style="display:inline-block;will-change:transform">${c}</span>`}</span>`
     ).join('');
-    gsap.from(el.querySelectorAll('.letter'), {
+    gsap.from(el.querySelectorAll('.letter-container'), {
       opacity: 0,
       y: 22,
       filter: 'blur(8px)',
@@ -1285,15 +1378,20 @@ function animateHeroText(){
     });
   });
 
+  // ── Quote float in (above image, after title) ──
+  gsap.to('#hero-quote', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 1.35 });
+
+  // ── Hero image reveal ──
+  gsap.to('.hero-img-container', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: 1.50 });
+  gsap.from('.hero-img-container', { y: 15, filter: 'blur(4px)', duration: 0.8, ease: 'power2.out', delay: 1.50 });
+
   // ── Subtitle rise & reveal ──
-  gsap.to('#hero-sub', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out', delay: 1.55 });
-  gsap.from('#hero-sub', { y: 18, filter: 'blur(5px)', duration: 0.85, ease: 'power2.out', delay: 1.55 });
+  gsap.to('#hero-sub', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out', delay: 1.70 });
+  gsap.from('#hero-sub', { y: 18, filter: 'blur(5px)', duration: 0.85, ease: 'power2.out', delay: 1.70 });
 
   // ── Journey button burst in ──
   gsap.from('#journey-btn-wrap', { opacity: 0, y: 20, scale: 0.92, duration: 0.75, ease: 'back.out(1.6)', delay: 2.0 });
   gsap.from('.journey-hint', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.4 });
-  gsap.from('#backend-status-bar', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.6 });
-  gsap.from('.intro-secondary-row', { opacity: 0, y: 8, duration: 0.55, ease: 'power2.out', delay: 2.75 });
 
   // ── Title sparkle burst on reveal ──
   setTimeout(() => {
@@ -1334,24 +1432,43 @@ function startIdleFloat(){
     });
   });
 
-  // ── Individual letter micro-float ──
-  document.querySelectorAll('.intro-title .letter').forEach((el, i) => {
-    gsap.to(el, {
-      y: gsap.utils.random(-4, 4),
-      x: gsap.utils.random(-1.5, 1.5),
-      rotation: gsap.utils.random(-0.5, 0.5),
-      duration: gsap.utils.random(5, 8),
+  // ── Individual letter micro-float & hover interaction ──
+  document.querySelectorAll('.intro-title .letter-container').forEach((container, i) => {
+    // 1. Parent container floats continuously
+    gsap.to(container, {
+      y: gsap.utils.random(-5, 5),
+      x: gsap.utils.random(-2, 2),
+      rotation: gsap.utils.random(-1, 1),
+      duration: gsap.utils.random(4, 6),
       repeat: -1, yoyo: true, ease: 'sine.inOut',
-      delay: Math.random() * 3
+      delay: Math.random() * 2
     });
-    if(Math.random() < 0.25){
-      gsap.to(el, {
-        filter: 'drop-shadow(0 0 12px rgba(91,33,182,.45))',
-        duration: 2 + Math.random() * 2,
-        repeat: -1, yoyo: true, ease: 'sine.inOut',
-        delay: Math.random() * 4
+
+    // 2. Inner span animates scale/glow on hover (amber/peach glow: rgba(255, 205, 127, 0.85))
+    const inner = container.querySelector('.letter-inner');
+    if (!inner) return;
+
+    container.addEventListener('mouseenter', () => {
+      gsap.to(inner, {
+        y: -10,
+        scale: 1.25,
+        filter: 'drop-shadow(0 0 15px rgba(255, 205, 127, 0.85))',
+        duration: 0.3,
+        ease: 'power2.out',
+        overwrite: 'auto'
       });
-    }
+    });
+
+    container.addEventListener('mouseleave', () => {
+      gsap.to(inner, {
+        y: 0,
+        scale: 1,
+        duration: 0.4,
+        ease: 'power2.out',
+        overwrite: 'auto',
+        clearProps: 'filter,scale,transform'
+      });
+    });
   });
 
   // ── Journey button breathe float ──
@@ -1383,25 +1500,28 @@ function startIdleFloat(){
   floatMainCard();
 }
 
-// ── Button hover sparkle trail ──
+// ── Button hover sparkle trail (with event delegation for basic info & quiz elements) ──
 function initButtonSparkles(){
   if(REDUCED) return;
   const colors = ['rgba(12,107,133,.8)','rgba(109,40,217,.7)','rgba(5,150,105,.65)','rgba(180,83,9,.6)'];
-  document.querySelectorAll('#your-journey-btn, .intro-btn-secondary, .btn').forEach(btn => {
-    btn.addEventListener('mousemove', e => {
-      for (let i = 0; i < 3; i++) {
-        const el = document.createElement('div');
-        el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${3+Math.random()*5}px;height:${3+Math.random()*5}px;border-radius:50%;background:${colors[Math.floor(Math.random()*colors.length)]};left:${e.clientX}px;top:${e.clientY}px;box-shadow:0 0 8px currentColor;opacity:0.95`;
-        document.body.appendChild(el);
-        gsap.to(el, {
-          x: gsap.utils.random(-28, 28),
-          y: gsap.utils.random(-40, -10),
-          opacity: 0, scale: 0.1, duration: 0.9 + Math.random() * 0.4,
-          ease: 'power2.out',
-          onComplete: () => el.remove()
-        });
-      }
-    });
+  const selector = '#your-journey-btn, .btn, .opt-pill, .rating-btn, .check-pill, .career-pill, .option-btn, .q-close-btn, #quiz-back-btn, #questionnaire-back-btn, .q-input, .q-textarea, .career-picker-search, #q-group-35, #q-group-36';
+  
+  document.body.addEventListener('mousemove', e => {
+    const target = e.target.closest(selector);
+    if(!target) return;
+    
+    for (let i = 0; i < 3; i++) {
+      const el = document.createElement('div');
+      el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${3+Math.random()*5}px;height:${3+Math.random()*5}px;border-radius:50%;background:${colors[Math.floor(Math.random()*colors.length)]};left:${e.clientX}px;top:${e.clientY}px;box-shadow:0 0 8px currentColor;opacity:0.95`;
+      document.body.appendChild(el);
+      gsap.to(el, {
+        x: gsap.utils.random(-28, 28),
+        y: gsap.utils.random(-40, -10),
+        opacity: 0, scale: 0.1, duration: 0.9 + Math.random() * 0.4,
+        ease: 'power2.out',
+        onComplete: () => el.remove()
+      });
+    }
   });
 }
 
@@ -1410,20 +1530,27 @@ function setBackendStatus(online){
   const dot=document.getElementById('backend-dot');
   const txt=document.getElementById('backend-status-text');
   const bar=document.getElementById('backend-status-bar');
-  if(!dot||!txt||!bar)return;
-  bar.style.opacity='1';
+  if(bar) bar.style.opacity='1';
   if(online){
-    dot.style.background='#059669';
-    dot.style.boxShadow='0 0 7px rgba(5,150,105,.55)';
-    txt.textContent='Backend online · Port 8000';
-    txt.style.color='#059669';
+    if(dot){
+      dot.style.background='#059669';
+      dot.style.boxShadow='0 0 7px rgba(5,150,105,.55)';
+    }
+    if(txt){
+      txt.textContent='Backend online · Port 8000';
+      txt.style.color='#059669';
+    }
     const btn=document.getElementById('your-journey-btn');
     if(btn){btn.disabled=false;btn.style.opacity='1';}
   }else{
-    dot.style.background='#dc2626';
-    dot.style.boxShadow='0 0 7px rgba(220,38,38,.45)';
-    txt.textContent='Backend offline — start the server!';
-    txt.style.color='#dc2626';
+    if(dot){
+      dot.style.background='#dc2626';
+      dot.style.boxShadow='0 0 7px rgba(220,38,38,.45)';
+    }
+    if(txt){
+      txt.textContent='Backend offline — start the server!';
+      txt.style.color='#dc2626';
+    }
     const btn=document.getElementById('your-journey-btn');
     if(btn){btn.style.opacity='0.65';}
   }
@@ -1440,13 +1567,13 @@ async function pingBackend(){
 
 window.addEventListener('load', () => {
   animateHeroText();
-  startIdleFloat();
+  setTimeout(startIdleFloat, 1800);
   initButtonSparkles();
   setTimeout(pingBackend, 800);
 });
 
 // ── Rotate nav coords ──
-const coords = ["RA 05h 34m · DEC +22° 00'", "RA 12h 21m · DEC -15° 30'", "RA 18h 45m · DEC +66° 12'"];
+const coords = ["RA 05h 34m · DEC +22° 00'", "RA 12h 21m · DEC -15° 30'"];
 let ci = 0;
 setInterval(() => {
   ci = (ci + 1) % coords.length;
