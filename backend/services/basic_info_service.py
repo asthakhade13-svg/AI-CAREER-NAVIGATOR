@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 from models.basic_info_model import QuestionModel, QuestionnaireResponse, ProfileSummary
 
 logger = logging.getLogger(__name__)
@@ -41,10 +41,9 @@ def get_basic_info_questions() -> List[Dict[str, Any]]:
             
         # Format as list of sections to preserve ordering
         ordered_sections = [
-            "Personal Information",
-            "Programming Skills",
-            "Technical Knowledge",
-            "Interests",
+            "Personality & Aptitude",
+            "Career Goals & Preferences",
+            "Existing Technical Exposure",
         ]
         
         result = []
@@ -61,111 +60,271 @@ def get_basic_info_questions() -> List[Dict[str, Any]]:
 
 def classify_student_profile(student_id: str, answers: Dict[str, Any]) -> QuestionnaireResponse:
     """
-    Classifies a student's technical level based on interest questionnaire.
-    Returns whether they should take 'general' or 'cs' quiz.
+    Evaluates a student's profile based on the 3-layer assessment architecture.
+    Calculates final suitability scores for 10 career domains and recommends the Top 3.
     """
-    # Normalize keys: answers could be key 'q13' or '13'
     def get_ans(q_num: int, default=None):
         val = answers.get(f"q{q_num}")
         if val is None:
             val = answers.get(str(q_num))
         return default if val is None else val
 
-    # 1. Rating sum (Q13, Q17-23)
-    rating_questions = [13, 17, 18, 19, 20, 21, 22, 23]
-    rating_sum = 0
-    for rq in rating_questions:
-        ans_val = get_ans(rq)
-        try:
-            rating_sum += int(ans_val) if ans_val is not None else 1
-        except (ValueError, TypeError):
-            rating_sum += 1
+    # Helper to map Likert scale and rating answers to numerical scale (1.0 to 5.0)
+    def to_val(q_num: int) -> float:
+        ans_val = get_ans(q_num)
+        if ans_val is None:
+            return 3.0 # neutral default
+        
+        ans_str = str(ans_val).strip().lower()
+        if "strongly disagree" in ans_str:
+            return 1.0
+        elif "disagree" in ans_str:
+            return 2.0
+        elif "neutral" in ans_str:
+            return 3.0
+        elif "strongly agree" in ans_str:
+            return 5.0
+        elif "agree" in ans_str:
+            return 4.0
+        
+        # Rating categories for placement importance
+        if "not important" in ans_str:
+            return 1.0
+        elif "somewhat important" in ans_str:
+            return 2.0
+        elif "important" in ans_str and "very" not in ans_str:
+            return 4.0
+        elif "very important" in ans_str:
+            return 5.0
 
-    # 2. Languages points (Q14)
-    lang_ans = get_ans(14)
+        try:
+            return float(ans_val)
+        except (ValueError, TypeError):
+            return 3.0
+
+    # Helper to convert a 1-5 rating/Likert value to a 0-100 percentage
+    def scale_1_5_to_100(val: float) -> float:
+        return ((val - 1.0) / 4.0) * 100.0
+
+    # ── Layer 1: Personality & Aptitude Traits (50% weight) ──
+    analytical_thinking = scale_1_5_to_100((to_val(1) + to_val(2)) / 2.0)
+    creativity          = scale_1_5_to_100((to_val(3) + to_val(4)) / 2.0)
+    curiosity           = scale_1_5_to_100((to_val(5) + to_val(6)) / 2.0)
+    attention_to_detail = scale_1_5_to_100((to_val(7) + to_val(8)) / 2.0)
+    communication       = scale_1_5_to_100((to_val(9) + to_val(10)) / 2.0)
+    leadership          = scale_1_5_to_100((to_val(11) + to_val(12)) / 2.0)
+    building_mindset    = scale_1_5_to_100((to_val(13) + to_val(14)) / 2.0)
+    research_mindset    = scale_1_5_to_100((to_val(15) + to_val(16)) / 2.0)
+    user_empathy        = scale_1_5_to_100((to_val(17) + to_val(18)) / 2.0)
+
+    # ── Layer 2: Career Goals & Preferences (30% weight) ──
+    placement_focus     = scale_1_5_to_100((to_val(19) + to_val(20)) / 2.0)
+    technical_expertise = scale_1_5_to_100((to_val(21) + to_val(22)) / 2.0)
+    research_orient     = scale_1_5_to_100((to_val(23) + to_val(24)) / 2.0)
+    entrepreneurship    = scale_1_5_to_100((to_val(25) + to_val(26)) / 2.0)
+    leadership_mgmt     = scale_1_5_to_100((to_val(27) + to_val(28)) / 2.0)
+
+    # ── Layer 3: Existing Skills (20% weight) ──
+    # Q29: Programming rating (1-5)
+    prog_rating = scale_1_5_to_100(to_val(29))
+    
+    # Q30: Languages list
+    lang_ans = get_ans(30)
     lang_count = 0
     if lang_ans:
         if isinstance(lang_ans, list):
             lang_count = len(lang_ans)
         elif isinstance(lang_ans, str):
             lang_count = len([l.strip() for l in lang_ans.split("|") if l.strip()])
-    lang_points = min(lang_count, 5) # limit to 5 points max
+    langs_score = min(lang_count / 3.0, 1.0) * 100.0 # 3+ languages gives 100%
 
-    # 3. Project points (Q15, Q16)
-    proj_built = str(get_ans(15, "")).strip().lower()
-    proj_points = 0
-    if proj_built == "yes":
-        proj_points += 2
-        proj_count_ans = str(get_ans(16, "")).strip()
-        if proj_count_ans in ["1-2"]:
-            proj_points += 1
-        elif proj_count_ans in ["3-5"]:
-            proj_points += 2
-        elif proj_count_ans in ["6-10"]:
-            proj_points += 3
-        elif proj_count_ans in ["10+"]:
-            proj_points += 4
+    # Q31: Projects Built (Yes/No)
+    proj_built = str(get_ans(31, "")).strip().lower()
+    proj_built_score = 100.0 if "yes" in proj_built else 0.0
 
-    # 4. Git experience (Q24)
-    git_exp = str(get_ans(24, "")).strip().lower()
-    git_points = 0
-    if "beginner" in git_exp:
-        git_points += 1
+    # Q32: Number of projects completed ("0"|"1-2"|"3-5"|"5+")
+    proj_count_ans = str(get_ans(32, "")).strip()
+    if proj_count_ans == "0":
+        proj_count_score = 0.0
+    elif proj_count_ans == "1-2":
+        proj_count_score = 50.0
+    elif proj_count_ans == "3-5":
+        proj_count_score = 85.0
+    elif proj_count_ans == "5+":
+        proj_count_score = 100.0
+    else:
+        proj_count_score = 0.0
+
+    # Q33: Git/GitHub experience
+    git_exp = str(get_ans(33, "")).strip().lower()
+    if "never" in git_exp:
+        git_score = 0.0
+    elif "beginner" in git_exp:
+        git_score = 33.0
     elif "intermediate" in git_exp:
-        git_points += 2
+        git_score = 66.0
     elif "advanced" in git_exp:
-        git_points += 3
+        git_score = 100.0
+    else:
+        git_score = 0.0
 
-    # Calculate final technical familiarity score
-    technical_score = rating_sum + lang_points + proj_points + git_points
+    # Overall Existing Technical Exposure Score (0-100%)
+    existing_skills_score = (prog_rating + langs_score + proj_built_score + proj_count_score + git_score) / 5.0
 
-    # Route decision: Threshold is 15 points
-    if technical_score >= 15:
+    # ── Derived Traits for Domain Mapping ──
+    # Problem Solving is a mix of Analytical Thinking and raw Programming/DSA experience
+    problem_solving = 0.6 * analytical_thinking + 0.4 * prog_rating
+    # Technical Depth is a mix of Technical Expertise goals and Programming experience
+    technical_depth = 0.6 * technical_expertise + 0.4 * prog_rating
+
+    # ── Calculate suitability scores for all 10 domains ──
+    domain_configs = {
+        "AI/ML": {
+            "traits": {"Analytical Thinking": 0.35, "Curiosity": 0.25, "Research Mindset": 0.25, "Technical Depth": 0.15},
+            "goals": {"Research Orientation": 0.60, "Technical Expertise": 0.40}
+        },
+        "Data Science": {
+            "traits": {"Analytical Thinking": 0.40, "Research Mindset": 0.30, "Attention to Detail": 0.20, "Curiosity": 0.10},
+            "goals": {"Research Orientation": 0.40, "Technical Expertise": 0.60}
+        },
+        "Cyber Security": {
+            "traits": {"Attention to Detail": 0.35, "Problem Solving": 0.30, "Curiosity": 0.20, "Technical Depth": 0.15},
+            "goals": {"Technical Expertise": 0.70, "Placement Focus": 0.30}
+        },
+        "Web Development": {
+            "traits": {"Building Mindset": 0.35, "Problem Solving": 0.25, "Creativity": 0.20, "User Empathy": 0.20},
+            "goals": {"Placement Focus": 0.60, "Technical Expertise": 0.40}
+        },
+        "App Development": {
+            "traits": {"Building Mindset": 0.40, "Problem Solving": 0.35, "Creativity": 0.15, "User Empathy": 0.10},
+            "goals": {"Placement Focus": 0.50, "Technical Expertise": 0.30, "Entrepreneurship": 0.20}
+        },
+        "UI/UX Design": {
+            "traits": {"Creativity": 0.40, "User Empathy": 0.40, "Communication": 0.20},
+            "goals": {"Placement Focus": 0.50, "Leadership": 0.50}
+        },
+        "Cloud Computing": {
+            "traits": {"Problem Solving": 0.40, "Technical Depth": 0.30, "Analytical Thinking": 0.20, "Attention to Detail": 0.10},
+            "goals": {"Technical Expertise": 0.60, "Placement Focus": 0.40}
+        },
+        "DevOps": {
+            "traits": {"Problem Solving": 0.35, "Technical Depth": 0.30, "Attention to Detail": 0.20, "Building Mindset": 0.15},
+            "goals": {"Technical Expertise": 0.60, "Placement Focus": 0.40}
+        },
+        "Game Development": {
+            "traits": {"Creativity": 0.35, "Building Mindset": 0.35, "Problem Solving": 0.20, "Curiosity": 0.10},
+            "goals": {"Technical Expertise": 0.50, "Entrepreneurship": 0.30, "Placement Focus": 0.20}
+        },
+        "Software Engineering": {
+            "traits": {"Problem Solving": 0.35, "Analytical Thinking": 0.30, "Building Mindset": 0.20, "Technical Depth": 0.15},
+            "goals": {"Placement Focus": 0.50, "Technical Expertise": 0.30, "Leadership": 0.20}
+        }
+    }
+
+    trait_scores_calculated = {
+        "Analytical Thinking": analytical_thinking,
+        "Creativity": creativity,
+        "Curiosity": curiosity,
+        "Attention to Detail": attention_to_detail,
+        "Communication": communication,
+        "Leadership": leadership,
+        "Building Mindset": building_mindset,
+        "Research Mindset": research_mindset,
+        "User Empathy": user_empathy,
+        "Problem Solving": problem_solving,
+        "Technical Depth": technical_depth
+    }
+
+    goal_scores_calculated = {
+        "Placement Focus": placement_focus,
+        "Technical Expertise": technical_expertise,
+        "Research Orientation": research_orient,
+        "Entrepreneurship": entrepreneurship,
+        "Leadership": leadership_mgmt
+    }
+
+    career_scores = []
+    for domain, weights in domain_configs.items():
+        t_score = sum(trait_scores_calculated[t] * w for t, w in weights["traits"].items())
+        g_score = sum(goal_scores_calculated[g] * w for g, w in weights["goals"].items())
+        final_score = 0.50 * t_score + 0.30 * g_score + 0.20 * existing_skills_score
+        career_scores.append((domain, final_score))
+
+    career_scores.sort(key=lambda x: x[1], reverse=True)
+    top_3 = career_scores[:3]
+
+    sorted_traits = sorted(trait_scores_calculated.items(), key=lambda x: x[1], reverse=True)
+    dominant_traits = [t[0] for t in sorted_traits[:4]]
+
+    recommended_careers = []
+    for rank, (domain, score) in enumerate(top_3):
+        required = set(domain_configs[domain]["traits"].keys())
+        intersection = [dt for dt in dominant_traits if dt in required]
+        if not intersection:
+            intersection = list(required)[:2]
+        
+        bullets = [f"Aligned with your {it}" for it in intersection[:3]]
+        if domain in ["AI/ML", "Data Science"] and research_orient > 60:
+            bullets.append("Matches your research and innovation orientation")
+        elif placement_focus > 60:
+            bullets.append("Strongly fits your campus placement focus")
+
+        recommended_careers.append({
+            "domain": domain,
+            "score": round(score, 1),
+            "reason": " • ".join(bullets)
+        })
+
+    if existing_skills_score >= 35.0:
         starting_quiz = "cs"
-        reason = f"Based on your profile, you scored {technical_score} on Technical Familiarity (ratings: {rating_sum}/40, languages: {lang_count}, projects: {proj_points}, git: {git_points}). This indicates experienced baseline knowledge in core CS subjects."
+        route_reason = "baseline technical skills indicate experienced exposure."
     else:
         starting_quiz = "general"
-        reason = f"Based on your profile, you scored {technical_score} on Technical Familiarity (ratings: {rating_sum}/40, languages: {lang_count}, projects: {proj_points}, git: {git_points}). This suggests starting with the General Quiz to establish fundamental computing competencies."
+        route_reason = "establishing fundamental computing competencies."
 
-    # Extract details for profile summary
-    full_name = str(get_ans(1, "Anonymous")).strip()
-    email = str(get_ans(2, "")).strip()
-    current_year = str(get_ans(5, "1st Year")).strip()
-    
-    interests = []
-    primary_field = get_ans(36)
-    if primary_field:
-        interests.append(str(primary_field).strip())
+    reason_text = (
+        f"The recommendation engine evaluated your profile and identified your top career paths. "
+        f"You are routed to the '{starting_quiz}' quiz starting tier, as your technical exposure score is "
+        f"{round(existing_skills_score, 1)}% ({route_reason})."
+    )
 
-    interests_ans = get_ans(35)
-    if interests_ans:
-        if isinstance(interests_ans, list):
-            for i in interests_ans:
-                val = str(i).strip()
-                if val and val not in interests:
-                    interests.append(val)
-        elif isinstance(interests_ans, str):
-            for i in interests_ans.split("|"):
-                val = i.strip()
-                if val and val not in interests:
-                    interests.append(val)
-            
-    fav_subject = str(get_ans(9, "Computer Science")).strip()
-    motivation = str(get_ans(37, "Innovation")).strip()
+    # ── Full trait score export for adaptive quiz seeding ──
+    all_trait_scores = {
+        # Personality & Aptitude (Layer 1)
+        "analytical_thinking": round(analytical_thinking, 1),
+        "creativity": round(creativity, 1),
+        "curiosity": round(curiosity, 1),
+        "attention_to_detail": round(attention_to_detail, 1),
+        "communication": round(communication, 1),
+        "leadership": round(leadership, 1),
+        "building_mindset": round(building_mindset, 1),
+        "research_mindset": round(research_mindset, 1),
+        "user_empathy": round(user_empathy, 1),
+        # Career Goals (Layer 2)
+        "placement_focus": round(placement_focus, 1),
+        "technical_expertise": round(technical_expertise, 1),
+        "research_orientation": round(research_orient, 1),
+        "entrepreneurship": round(entrepreneurship, 1),
+        "leadership_management": round(leadership_mgmt, 1),
+        # Existing Skills (Layer 3)
+        "existing_skills": round(existing_skills_score, 1),
+    }
 
     profile_summary = ProfileSummary(
-        full_name=full_name,
-        email=email,
-        current_year=current_year,
-        interests=interests,
-        favorite_subject=fav_subject,
-        primary_motivation=motivation
+        full_name="Student",
+        email="",
+        current_year="1st Year",
+        interests=dominant_traits,
+        favorite_subject="Core CSE",
+        primary_motivation="Career Navigation"
     )
 
     return QuestionnaireResponse(
         student_id=student_id,
-        technical_score=float(technical_score),
+        technical_score=float(existing_skills_score),
         starting_quiz=starting_quiz,
-        reason=reason,
-        profile_summary=profile_summary
+        reason=reason_text,
+        profile_summary=profile_summary,
+        recommended_careers=recommended_careers,
+        trait_scores=all_trait_scores
     )
