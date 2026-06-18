@@ -1897,7 +1897,6 @@ function renderQuestionnaireSection(){
     const currentLayer=currentSectionIdx<third?0:currentSectionIdx<third*2?1:2;
     chip.classList.toggle('active',assignedLayer===currentLayer);
     chip.classList.toggle('done',assignedLayer<currentLayer);
-    chip.classList.toggle('',assignedLayer>currentLayer);
   });
 
   const isLast=currentSectionIdx===total-1;
