@@ -1729,7 +1729,9 @@ setInterval(() => {
 /* ═══════════════════════════════════════════════════════════════
    APP STATE & HELPERS
 ═══════════════════════════════════════════════════════════════ */
-const BASE = (window.location.port === '8000') ? window.location.origin : 'http://127.0.0.1:8000';
+const BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? (window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000')
+  : window.location.origin;
 const STUDENT_ID='user_001';
 let quizType='adaptive',questions=[],answers={},currentQ=0,radarChart=null;
 let adaptiveSessionId=null,adaptiveCurrentQuestion=null,adaptiveQuestionNum=1,adaptiveTotalQuestions=30,adaptiveSelectedAnswer=null;
