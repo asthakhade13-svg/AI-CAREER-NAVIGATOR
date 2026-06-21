@@ -1125,6 +1125,22 @@ nav{
 .result-footer{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 
 /* ═══════════════════════════════════════════════════════
+   ANSWER REVIEW CARDS
+═══════════════════════════════════════════════════════ */
+.review-card{
+  background:rgba(255,255,255,0.45);
+  border:1px solid rgba(200,200,220,0.35);
+  border-radius:16px;
+  padding:18px 20px;
+  margin-bottom:14px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 4px 18px rgba(100,120,200,0.05);
+  transition:box-shadow .2s;
+}
+.review-card:hover{box-shadow:0 8px 28px rgba(100,120,200,0.10)}
+
+
+/* ═══════════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════════ */
 @media(max-width:640px){
@@ -2184,8 +2200,10 @@ document.addEventListener('keydown',e=>{
 function renderAdaptiveResults(data){
   showScreen('screen-result-cs');
   const total=data.total_questions||30,correct=data.total_correct||0,acc=data.accuracy_pct||0;
+  const wrong=data.total_wrong||(total-correct);
   const bracket=data.bracket||'beginner',lp=data.learning_path||{},recs=data.career_recommendations||[];
   const breakdown=data.domain_breakdown||[],featureScores=data.feature_scores||{};
+  const history=data.answers_history||[];
   const bMap={
     beginner:{icon:'🌱',color:'#10b981',label:'Beginner',desc:'Computer Basics + Digital Literacy'},
     foundation:{icon:'🔧',color:'#f59e0b',label:'Foundation',desc:'Basic Programming + Office Tools'},
@@ -2206,6 +2224,57 @@ function renderAdaptiveResults(data){
   }).join('');
   const resources=(lp.resources||[]).map(r=>`<div class="resource-item"><a href="${r.url}" target="_blank" rel="noopener">${r.title}</a><span class="resource-type">${r.type}</span></div>`).join('');
   const radarMap=[{key:'programming_score',label:'Programming'},{key:'logical_score',label:'Logic'},{key:'networking_score',label:'Networking'},{key:'ai_score',label:'AI/ML'},{key:'cyber_score',label:'Cybersecurity'},{key:'communication_score',label:'Communication'}];
+
+  /* ── Answer Review Cards ── */
+  const optionLabels={'A':'A','B':'B','C':'C','D':'D'};
+  const reviewCards=history.map((h,idx)=>{
+    const opts=h.options||{};
+    const optRows=['A','B','C','D'].map(k=>{
+      if(opts[k]===undefined)return'';
+      const isCorrect=k===h.correct_answer;
+      const isChosen=k===h.given_answer;
+      let bg='rgba(255,255,255,0.18)';let border='rgba(200,200,220,0.25)';let badge='';
+      if(isCorrect){bg='rgba(5,150,105,0.12)';border='rgba(5,150,105,0.45)';badge='<span style="margin-left:6px;font-size:.6rem;padding:2px 7px;border-radius:10px;background:rgba(5,150,105,0.18);color:#059669;font-weight:700">✓ Correct</span>';}
+      if(isChosen&&!isCorrect){bg='rgba(220,38,38,0.10)';border='rgba(220,38,38,0.40)';badge='<span style="margin-left:6px;font-size:.6rem;padding:2px 7px;border-radius:10px;background:rgba(220,38,38,0.15);color:#dc2626;font-weight:700">✗ Your Answer</span>';}
+      if(isChosen&&isCorrect){badge='<span style="margin-left:6px;font-size:.6rem;padding:2px 7px;border-radius:10px;background:rgba(5,150,105,0.18);color:#059669;font-weight:700">✓ Your Answer</span>';}
+      return `<div style="padding:8px 12px;border-radius:8px;border:1px solid ${border};background:${bg};display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <span style="font-family:var(--mono);font-weight:700;font-size:.8rem;min-width:18px;color:var(--text)">${k}</span>
+        <span style="font-size:.82rem;color:var(--text);flex:1">${opts[k]}</span>
+        ${badge}
+      </div>`;
+    }).join('');
+    const cardBorder=h.is_correct?'rgba(5,150,105,0.35)':'rgba(220,38,38,0.35)';
+    const statusIcon=h.is_correct?'✅':'❌';
+    const diffColor={'Easy':'#10b981','Medium':'#f59e0b','Hard':'#f43f5e'}[h.difficulty]||'#8896b8';
+    return `<div class="review-card" style="border-color:${cardBorder}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <span style="font-family:var(--mono);font-size:.65rem;color:var(--text-dim);letter-spacing:.08em">Q${idx+1} · ${h.field||''}</span>
+        <div style="display:flex;gap:6px">
+          <span style="font-size:.65rem;padding:2px 8px;border-radius:10px;background:${diffColor}18;color:${diffColor};border:1px solid ${diffColor}40;font-weight:700">${h.difficulty||''}</span>
+          <span style="font-size:.75rem">${statusIcon}</span>
+        </div>
+      </div>
+      <p style="font-family:'Outfit',sans-serif;font-weight:600;font-size:.9rem;color:var(--text);margin-bottom:12px;line-height:1.5">${h.question}</p>
+      ${optRows}
+    </div>`;
+  }).join('');
+
+  /* ── Score Summary Bar ── */
+  const summaryBar=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:26px">
+    <div style="text-align:center;padding:16px 10px;background:rgba(5,150,105,0.10);border:1px solid rgba(5,150,105,0.35);border-radius:14px">
+      <div style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#059669">${correct}</div>
+      <div style="font-size:.72rem;color:#059669;font-weight:600;margin-top:2px">✓ CORRECT</div>
+    </div>
+    <div style="text-align:center;padding:16px 10px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.30);border-radius:14px">
+      <div style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#dc2626">${wrong}</div>
+      <div style="font-size:.72rem;color:#dc2626;font-weight:600;margin-top:2px">✗ WRONG</div>
+    </div>
+    <div style="text-align:center;padding:16px 10px;background:rgba(192,190,254,0.12);border:1px solid rgba(192,190,254,0.40);border-radius:14px">
+      <div style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#4338ca">${acc}%</div>
+      <div style="font-size:.72rem;color:#4338ca;font-weight:600;margin-top:2px">ACCURACY</div>
+    </div>
+  </div>`;
+
   document.getElementById('cs-result-content').innerHTML=`
     <div class="score-hero">
       <div class="score-orb">
@@ -2219,6 +2288,8 @@ function renderAdaptiveResults(data){
       <div class="bracket-badge" style="background:${bl.color}18;border:1px solid ${bl.color}40;color:${bl.color}">${bl.icon}&nbsp;${bl.label} Level&nbsp;·&nbsp;${acc}% Accuracy</div>
       <p style="color:var(--text-muted);margin-top:10px;font-size:.86rem;font-family:var(--mono)">${bl.desc}</p>
     </div>
+    <div class="section-title"><span class="dot"></span>Score Summary<span class="label-tag">OVERVIEW</span></div>
+    ${summaryBar}
     <div class="section-title"><span class="dot"></span>Learning Path<span class="label-tag">RECOMMENDED</span></div>
     <div class="learning-path-card"><h3>📡 ${lp.label||'Your Path'} — ${lp.description||''}</h3><div style="margin-top:4px">${resources||'<p style="color:var(--text-muted)">Resources loading…</p>'}</div></div>
     <div class="section-title"><span class="dot"></span>Top Career Orbits<span class="label-tag">ML MODEL</span></div>
@@ -2227,6 +2298,8 @@ function renderAdaptiveResults(data){
     <div class="radar-wrap"><canvas id="radarChart" height="300"></canvas></div>
     <div class="section-title"><span class="dot"></span>Topic Breakdown<span class="label-tag">ANALYSIS</span></div>
     <div class="domain-grid">${domainMinis}</div>
+    <div class="section-title"><span class="dot"></span>Answer Review<span class="label-tag">DETAILED</span></div>
+    <div style="margin-bottom:30px">${reviewCards||'<p style="color:var(--text-muted)">No answer history available.</p>'}</div>
     <div class="result-footer">
       <button class="btn btn-outline" onclick="proceedToQuiz()">↺ Retake Quiz</button>
       <button class="btn btn-outline" onclick="goHome()">⌂ Back to Home</button>

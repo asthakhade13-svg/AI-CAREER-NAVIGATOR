@@ -643,6 +643,7 @@ def submit_adaptive_answer(
     session["answers_history"].append({
         "question_id": question_id,
         "question": current_q["question"],
+        "options": current_q.get("options", {}),
         "given_answer": given_answer.upper(),
         "correct_answer": current_q["correct_answer"],
         "is_correct": is_correct,
@@ -748,18 +749,22 @@ def _compile_results(session: Dict[str, Any]) -> Dict[str, Any]:
         for field, total in sorted(session["domain_total"].items(), key=lambda x: -x[1])
     ]
 
+    total_wrong = total_answered - total_correct
+
     return {
         "completed": True,
         "session_id": session["session_id"],
         "student_id": session["student_id"],
         "total_questions": total_answered,
         "total_correct": total_correct,
+        "total_wrong": total_wrong,
         "accuracy_pct": round((total_correct / total_answered) * 100, 1) if total_answered > 0 else 0,
         "bracket": bracket,
         "learning_path": learning_path,
         "domain_breakdown": domain_breakdown,
         "feature_scores": feature_scores,
         "career_recommendations": career_recommendations,
+        "answers_history": session["answers_history"],
     }
 
 
