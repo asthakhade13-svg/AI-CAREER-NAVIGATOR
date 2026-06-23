@@ -54,10 +54,14 @@ def health_check():
 @app.get("/")
 def serve_frontend():
     if os.path.exists(INDEX_FILE):
-        # no-cache so browser always gets latest index.html on restart
+        # Strict no-cache so browser and CDN always fetch the latest HTML
         return FileResponse(
             INDEX_FILE,
-            headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
         )
     return JSONResponse({"message": "Welcome to First-Generation Career Navigator AI Backend"})
 
