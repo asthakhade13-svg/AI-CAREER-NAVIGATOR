@@ -106,10 +106,7 @@ h1,h2,h3,h4,h5{font-family:var(--font-heading)}
 /* ═══════════════════════════════════════════════════════
    SPARKLE CANVAS
 ═══════════════════════════════════════════════════════ */
-#sparkle-canvas{
-  position:fixed;inset:0;
-  z-index:-1;pointer-events:none;
-}
+
 
 /* ═══════════════════════════════════════════════════════
    SCREEN SYSTEM
@@ -1179,8 +1176,7 @@ nav{
   <div class="blob blob-5"></div>
 </div>
 
-<!-- ── Sparkle particle canvas ── -->
-<canvas id="sparkle-canvas"></canvas>
+
 
 <!-- ── Loading overlay ── -->
 <div class="loading-overlay" id="loading-overlay">
@@ -1378,134 +1374,7 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
 })();
 
-/* ═══════════════════════════════════════════════════════════════
-   SPARKLE CANVAS — GSAP Particle System
-═══════════════════════════════════════════════════════════════ */
-(function initSparkles(){
-  const canvas = document.getElementById('sparkle-canvas');
-  const ctx = canvas.getContext('2d');
-  const COLORS = ['rgba(12,107,133,0.35)','rgba(109,40,217,0.25)','rgba(5,150,105,0.22)','rgba(180,83,9,0.20)'];
-  let W, H, particles = [], mouseX = 0, mouseY = 0;
 
-  function resize(){
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // Build particles
-  const COUNT = Math.min(240, Math.floor(window.innerWidth / 6.5));
-  for(let i = 0; i < COUNT; i++){
-    particles.push({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      size: 1 + Math.random() * 4,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      alpha: 0,
-      layer: Math.floor(Math.random() * 3) // 0=bg,1=mid,2=fg
-    });
-  }
-
-  if(!REDUCED){
-    // Float, twinkle, scale for each particle
-    particles.forEach((p, i) => {
-      const dur = 12 + Math.random() * 16;
-      const delay = Math.random() * 8;
-
-      // Float upward (loop via modifiers)
-      gsap.to(p, {
-        y: p.y - (30 + Math.random() * 80),
-        x: p.x + gsap.utils.random(-22, 22),
-        duration: dur, repeat: -1, yoyo: false, ease: 'none', delay,
-        modifiers: {
-          y: y => {
-            const v = parseFloat(y);
-            return (v < -10 ? window.innerHeight + 10 : v) + 'px';
-          }
-        }
-      });
-
-      // Opacity twinkle
-      gsap.to(p, {
-        alpha: 0.08 + Math.random() * 0.62,
-        duration: 4 + Math.random() * 6,
-        repeat: -1, yoyo: true, ease: 'sine.inOut', delay
-      });
-
-      // Size pulse
-      gsap.to(p, {
-        size: p.size * (0.5 + Math.random()),
-        duration: 3 + Math.random() * 5,
-        repeat: -1, yoyo: true, ease: 'sine.inOut', delay
-      });
-    });
-
-    // Mouse parallax
-    window.addEventListener('mousemove', e => {
-      mouseX = (e.clientX / window.innerWidth - 0.5);
-      mouseY = (e.clientY / window.innerHeight - 0.5);
-    });
-
-    // Click burst
-    window.addEventListener('click', e => {
-      for(let i = 0; i < 9; i++){
-        const el = document.createElement('div');
-        el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:5px;height:5px;border-radius:50%;background:${COLORS[Math.floor(Math.random()*COLORS.length)]};left:${e.clientX}px;top:${e.clientY}px;box-shadow:0 0 10px currentColor`;
-        document.body.appendChild(el);
-        gsap.to(el, {
-          x: gsap.utils.random(-70, 70),
-          y: gsap.utils.random(-90, 20),
-          opacity: 0, scale: 0, duration: 1.0, ease: 'power2.out',
-          onComplete: () => el.remove()
-        });
-      }
-    });
-
-    // Periodic random burst every 3–5 s
-    function randomBurst(){
-      const bx = Math.random() * window.innerWidth;
-      const by = Math.random() * window.innerHeight;
-      for(let i = 0; i < 8; i++){
-        const el = document.createElement('div');
-        el.style.cssText = `position:fixed;pointer-events:none;z-index:9998;width:${2+Math.random()*4}px;height:${2+Math.random()*4}px;border-radius:50%;background:${COLORS[Math.floor(Math.random()*COLORS.length)]};left:${bx}px;top:${by}px;box-shadow:0 0 12px currentColor`;
-        document.body.appendChild(el);
-        gsap.to(el, {
-          x: gsap.utils.random(-55, 55), y: gsap.utils.random(-65, 10),
-          opacity: 0, scale: 0, duration: 1.5, ease: 'power2.out',
-          onComplete: () => el.remove()
-        });
-      }
-      setTimeout(randomBurst, 3000 + Math.random() * 4000);
-    }
-    setTimeout(randomBurst, 2200);
-  } else {
-    // Static alpha for reduced-motion
-    particles.forEach(p => { p.alpha = 0.08 + Math.random() * 0.15; });
-  }
-
-  // Draw loop
-  function draw(){
-    ctx.clearRect(0, 0, W, H);
-    const layerOffsets = [0.008, 0.016, 0.028];
-    particles.forEach(p => {
-      if(p.alpha <= 0) return;
-      const ox = mouseX * layerOffsets[p.layer] * W;
-      const oy = mouseY * layerOffsets[p.layer] * H;
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.shadowBlur = p.size * 4;
-      ctx.shadowColor = p.color;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x + ox, p.y + oy, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
 
 /* ═══════════════════════════════════════════════════════════════
    GSAP LANDING ANIMATIONS
@@ -1555,26 +1424,7 @@ function animateHeroText(){
   gsap.from('#journey-btn-wrap', { opacity: 0, y: 20, scale: 0.92, duration: 0.75, ease: 'back.out(1.6)', delay: 2.0 });
   gsap.from('.journey-hint', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.4 });
 
-  // ── Title sparkle burst on reveal ──
-  setTimeout(() => {
-    const titleEl = document.querySelector('.intro-title');
-    if(!titleEl) return;
-    const rect = titleEl.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const colors = ['rgba(12,107,133,.8)','rgba(109,40,217,.7)','rgba(5,150,105,.65)'];
-    for(let i = 0; i < 14; i++){
-      const el = document.createElement('div');
-      el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${3+Math.random()*6}px;height:${3+Math.random()*6}px;border-radius:50%;background:${colors[Math.floor(Math.random()*3)]};left:${cx}px;top:${cy}px;box-shadow:0 0 12px currentColor`;
-      document.body.appendChild(el);
-      gsap.to(el, {
-        x: gsap.utils.random(-110, 110),
-        y: gsap.utils.random(-90, 35),
-        opacity: 0, scale: 0, duration: 1.3, ease: 'power2.out',
-        onComplete: () => el.remove()
-      });
-    }
-  }, 1200);
+
 }
 
 function startIdleFloat(){
@@ -1662,30 +1512,7 @@ function startIdleFloat(){
   floatMainCard();
 }
 
-// ── Button hover sparkle trail (with event delegation for basic info & quiz elements) ──
-function initButtonSparkles(){
-  if(REDUCED) return;
-  const colors = ['rgba(12,107,133,.8)','rgba(109,40,217,.7)','rgba(5,150,105,.65)','rgba(180,83,9,.6)'];
-  const selector = '#your-journey-btn, .btn, .opt-pill, .rating-btn, .check-pill, .career-pill, .option-btn, .q-close-btn, #quiz-back-btn, #questionnaire-back-btn, .q-input, .q-textarea, .career-picker-search, #q-group-35, #q-group-36';
-  
-  document.body.addEventListener('mousemove', e => {
-    const target = e.target.closest(selector);
-    if(!target) return;
-    
-    for (let i = 0; i < 3; i++) {
-      const el = document.createElement('div');
-      el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${3+Math.random()*5}px;height:${3+Math.random()*5}px;border-radius:50%;background:${colors[Math.floor(Math.random()*colors.length)]};left:${e.clientX}px;top:${e.clientY}px;box-shadow:0 0 8px currentColor;opacity:0.95`;
-      document.body.appendChild(el);
-      gsap.to(el, {
-        x: gsap.utils.random(-28, 28),
-        y: gsap.utils.random(-40, -10),
-        opacity: 0, scale: 0.1, duration: 0.9 + Math.random() * 0.4,
-        ease: 'power2.out',
-        onComplete: () => el.remove()
-      });
-    }
-  });
-}
+
 
 // ── Backend Health Ping ──
 function setBackendStatus(online){
@@ -1730,7 +1557,7 @@ async function pingBackend(){
 window.addEventListener('load', () => {
   animateHeroText();
   setTimeout(startIdleFloat, 1800);
-  initButtonSparkles();
+
   setTimeout(pingBackend, 800);
 });
 
@@ -1764,72 +1591,15 @@ function showScreen(id){
 }
 
 /* Modal helpers — questionnaire is a separate overlay, not a .screen */
-let questionnaireSparkleInterval = null;
-
-function startQuestionnaireSparkles() {
-  if (REDUCED) return;
-  const modal = document.getElementById('screen-questionnaire');
-  if (!modal) return;
-
-  if (questionnaireSparkleInterval) clearInterval(questionnaireSparkleInterval);
-
-  const spawnSparkle = () => {
-    if (!modal.classList.contains('modal-open')) return;
-
-    const sparkle = document.createElement('div');
-    sparkle.className = 'q-sparkle';
-    const size = gsap.utils.random(4, 9);
-    const colors = ['#FFCD7F', '#C5FF7F', 'rgba(12,107,133,0.6)', 'rgba(109,40,217,0.5)', 'rgba(5,150,105,0.5)'];
-
-    sparkle.style.cssText = `
-      position: absolute;
-      bottom: -15px;
-      left: ${gsap.utils.random(0, 100)}%;
-      width: ${size}px;
-      height: ${size}px;
-      background: ${colors[Math.floor(Math.random() * colors.length)]};
-      border-radius: 50%;
-      pointer-events: none;
-      opacity: 0.85;
-      z-index: 1;
-      filter: blur(0.5px) drop-shadow(0 0 6px currentColor);
-    `;
-    modal.appendChild(sparkle);
-
-    gsap.to(sparkle, {
-      y: -window.innerHeight - 30,
-      x: gsap.utils.random(-80, 80),
-      scale: 0.2,
-      opacity: 0,
-      duration: gsap.utils.random(6, 12),
-      ease: 'sine.out',
-      onComplete: () => sparkle.remove()
-    });
-  };
-
-  // Pre-populate a few sparkles so the background doesn't start empty
-  for (let i = 0; i < 15; i++) {
-    setTimeout(spawnSparkle, i * 120);
-  }
-
-  questionnaireSparkleInterval = setInterval(spawnSparkle, 260);
-}
-
 function openQuestionnaireModal(){
   const m = document.getElementById('screen-questionnaire');
   m.classList.add('modal-open');
   document.body.style.overflow = 'hidden';
-  startQuestionnaireSparkles();
 }
 function closeQuestionnaireModal(){
   const m = document.getElementById('screen-questionnaire');
   m.classList.remove('modal-open');
   document.body.style.overflow = '';
-  if (questionnaireSparkleInterval) {
-    clearInterval(questionnaireSparkleInterval);
-    questionnaireSparkleInterval = null;
-  }
-  document.querySelectorAll('.q-sparkle').forEach(el => el.remove());
 }
 
 function goHome(){
