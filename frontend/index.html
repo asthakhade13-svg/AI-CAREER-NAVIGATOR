@@ -675,6 +675,7 @@ nav{
     inset 0 1px 0 rgba(255, 255, 255, 0.85);
   max-height: 90vh;
   overflow-y: auto;
+  scroll-behavior: smooth;
   position: relative;
   z-index: 5;
   backdrop-filter: blur(45px); /* heavy glass blur */
@@ -1614,8 +1615,15 @@ function hideLoading(){document.getElementById('loading-overlay').classList.remo
 function transitionContent(containerId,renderFn){
   const el=document.getElementById(containerId);
   el.classList.add('fading');
-  setTimeout(()=>{el.classList.remove('fading');renderFn();el.classList.add('sliding-in');
-    setTimeout(()=>el.classList.remove('sliding-in'),350);},220);
+  setTimeout(()=>{
+    el.classList.remove('fading');
+    renderFn();
+    el.classList.add('sliding-in');
+    setTimeout(()=>el.classList.remove('sliding-in'),350);
+    /* Scroll the glass card back to the top so each section starts from the header */
+    const card=document.querySelector('.q-container');
+    if(card) card.scrollTo({top:0,behavior:'smooth'});
+  },220);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1762,7 +1770,18 @@ function markAnswered(div,val){
   div.classList.toggle('answered',ok);
 }
 
-function prevSection(){if(currentSectionIdx>0){currentSectionIdx--;renderQuestionnaireSection()}}
+function _scrollQContainerToTop(){
+  const card=document.querySelector('.q-container');
+  if(card) card.scrollTo({top:0,behavior:'smooth'});
+}
+
+function prevSection(){
+  if(currentSectionIdx>0){
+    currentSectionIdx--;
+    renderQuestionnaireSection();
+    _scrollQContainerToTop();
+  }
+}
 
 function validateSection(){
   const sd=questionnaireSections[currentSectionIdx];let valid=true,first=null;
@@ -1783,8 +1802,11 @@ function validateSection(){
 
 async function nextSection(){
   if(!validateSection())return;
-  if(currentSectionIdx<questionnaireSections.length-1){currentSectionIdx++;renderQuestionnaireSection()}
-  else await submitQuestionnaire();
+  if(currentSectionIdx<questionnaireSections.length-1){
+    currentSectionIdx++;
+    renderQuestionnaireSection();
+    _scrollQContainerToTop();
+  } else await submitQuestionnaire();
 }
 
 async function submitQuestionnaire(){
