@@ -588,7 +588,7 @@ def start_adaptive_session(
     # Only add to used_ids if from the bank (AI question has sentinel ID 99999)
     if not ai_generated:
         session["used_question_ids"].append(first_q["question_id"])
-    ACTIVE_SESSIONS[session_id] = session
+    _save_session(session)
 
     logger.info(f"Started adaptive session {session_id} | difficulty={starting_difficulty} | q1_source={'AI' if ai_generated else 'bank'}")
 
@@ -617,7 +617,7 @@ def submit_adaptive_answer(
 
     Returns either the next question payload or the final results if 30 Qs are done.
     """
-    session = ACTIVE_SESSIONS.get(session_id)
+    session = get_session(session_id)
     if not session:
         return {"error": "Session not found. Please start a new session."}
 
@@ -657,6 +657,7 @@ def submit_adaptive_answer(
     # Check if quiz is complete
     if session["questions_answered"] >= QUIZ_LENGTH:
         session["completed"] = True
+        _save_session(session)
         return _compile_results(session)
 
     # Get next question
@@ -664,10 +665,12 @@ def submit_adaptive_answer(
     if next_q is None:
         # Edge case: exhausted questions — just end early
         session["completed"] = True
+        _save_session(session)
         return _compile_results(session)
 
     session["current_question"] = next_q
     session["used_question_ids"].append(next_q["question_id"])
+    _save_session(session)
 
     return {
         "completed": False,
@@ -803,6 +806,63 @@ def _run_recommender(student_id: str, feature_scores: Dict[str, float]) -> List[
         return fallback
 
 
+def _save_session(session: Dict[str, Any]):
+    import json
+    import os
+    session_id = session["session_id"]
+    ACTIVE_SESSIONS[session_id] = session
+    
+    # 1. Try to save to MongoDB
+    try:
+        from database import db
+        col = db.get_collection("adaptive_sessions")
+        if col is not None:
+            col.update_one({"session_id": session_id}, {"$set": session}, upsert=True)
+            return
+    except Exception as e:
+        logger.warning(f"Failed to save session {session_id} to MongoDB: {e}")
+        
+    # 2. Fallback to file-based persistence
+    try:
+        os.makedirs("data/sessions", exist_ok=True)
+        filepath = os.path.join("data/sessions", f"{session_id}.json")
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(session, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to save session {session_id} to file: {e}")
+
+
 def get_session(session_id: str) -> Optional[Dict[str, Any]]:
-    """Retrieve an active session by ID."""
-    return ACTIVE_SESSIONS.get(session_id)
+    """Retrieve an active session by ID, loading from memory, DB, or file."""
+    # 1. Try in-memory first
+    if session_id in ACTIVE_SESSIONS:
+        return ACTIVE_SESSIONS[session_id]
+        
+    # 2. Try MongoDB
+    try:
+        from database import db
+        col = db.get_collection("adaptive_sessions")
+        if col is not None:
+            session = col.find_one({"session_id": session_id})
+            if session:
+                # Remove MongoDB _id field
+                session.pop("_id", None)
+                ACTIVE_SESSIONS[session_id] = session
+                return session
+    except Exception as e:
+        logger.warning(f"Failed to load session {session_id} from MongoDB: {e}")
+        
+    # 3. Try file-based
+    try:
+        import json
+        import os
+        filepath = os.path.join("data/sessions", f"{session_id}.json")
+        if os.path.exists(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                session = json.load(f)
+                ACTIVE_SESSIONS[session_id] = session
+                return session
+    except Exception as e:
+        logger.error(f"Failed to load session {session_id} from file: {e}")
+        
+    return None
