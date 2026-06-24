@@ -115,7 +115,6 @@ def _load_questions() -> pd.DataFrame:
     return _questions_df
 
 
-
 def _get_available_fields() -> List[str]:
     """Return list of unique career fields in the question bank."""
     df = _load_questions()
@@ -124,10 +123,42 @@ def _get_available_fields() -> List[str]:
     return df["career_field"].unique().tolist()
 
 
+def _shuffle_options(options: Dict[str, str], correct_answer: str) -> tuple:
+    """
+    Randomly shuffle the A/B/C/D options and remap correct_answer to its
+    new position.  This prevents the correct answer from always appearing
+    at position A (which is how the CSV question bank is structured).
+
+    Args:
+        options:        {"A": "...", "B": "...", "C": "...", "D": "..."}
+        correct_answer: current label of the correct option, e.g. "A"
+
+    Returns:
+        (shuffled_options, new_correct_answer_label)
+    """
+    labels = ["A", "B", "C", "D"]
+    values = [options[lbl] for lbl in labels]           # original order
+    correct_text = options.get(correct_answer, "")      # text of correct answer
+
+    random.shuffle(values)                              # shuffle in place
+
+    shuffled = {labels[i]: values[i] for i in range(4)}
+
+    # Find which label the correct text landed on
+    new_correct = correct_answer  # fallback (should never be needed)
+    for lbl, val in shuffled.items():
+        if val == correct_text:
+            new_correct = lbl
+            break
+
+    return shuffled, new_correct
+
+
 def _pick_question(session: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Pick the next question for the session.
     Rotates career fields every ~5 questions and avoids repeating questions.
+    Options are always shuffled so the correct answer position is random.
     """
     df = _load_questions()
     if df.empty:
@@ -204,6 +235,9 @@ def _pick_question(session: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                     logger.info(f"Dynamically generated options for question ID {row['question_id']}")
         except Exception as e:
             logger.error(f"Failed to dynamically generate options: {e}")
+
+    # Shuffle options so the correct answer is never predictably at position A
+    options, correct_answer = _shuffle_options(options, correct_answer)
 
     return {
         "question_id": int(row["question_id"]),
@@ -574,7 +608,10 @@ def start_adaptive_session(
         )
         if first_q:
             ai_generated = True
-            logger.info(f"AI-generated first question ready: {first_q['question'][:80]}...")
+            shuffled_opts, new_correct = _shuffle_options(first_q["options"], first_q["correct_answer"])
+            first_q["options"] = shuffled_opts
+            first_q["correct_answer"] = new_correct
+            logger.info(f"AI-generated first question ready and shuffled: {first_q['question'][:80]}...")
 
     # Fallback to question bank
     if first_q is None:
