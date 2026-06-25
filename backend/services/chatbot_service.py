@@ -1,7 +1,16 @@
-import google.generativeai as genai
+import warnings
 import requests
 from config import settings
 import logging
+
+# Suppress FutureWarning from deprecated google-generativeai package
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    try:
+        import google.generativeai as genai
+        _genai_available = True
+    except ImportError:
+        _genai_available = False
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +59,7 @@ def mentor_chat(student_id: str, message: str) -> str:
             logger.error(f"Error in external mentor chat: {e}")
 
     # 2. Fallback to Gemini
-    if settings.GEMINI_API_KEY:
+    if settings.GEMINI_API_KEY and _genai_available:
         try:
             genai.configure(api_key=settings.GEMINI_API_KEY)
             model = genai.GenerativeModel('gemini-1.5-flash')

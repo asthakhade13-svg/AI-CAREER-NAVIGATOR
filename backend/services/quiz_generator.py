@@ -1,4 +1,4 @@
-import google.generativeai as genai
+import warnings
 from config import settings
 import json
 import logging
@@ -8,11 +8,21 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini if available
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-elif not settings.GROK_API_KEY:
-    logger.warning("Neither GEMINI_API_KEY nor GROK_API_KEY is set. Quiz generator will not work.")
+# Suppress FutureWarning from deprecated google-generativeai package
+# (it still works; only the warning is silenced)
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    try:
+        import google.generativeai as genai
+        _genai_available = True
+        # Configure Gemini if available
+        if settings.GEMINI_API_KEY:
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+        elif not settings.GROK_API_KEY:
+            logger.warning("Neither GEMINI_API_KEY nor GROK_API_KEY is set. Quiz generator will not work.")
+    except ImportError:
+        _genai_available = False
+        logger.warning("google-generativeai package not installed. Gemini fallback unavailable.")
 
 
 def generate_quiz(topic: str, content: str) -> dict:
@@ -101,7 +111,7 @@ def generate_quiz(topic: str, content: str) -> dict:
             logger.error(f"Error generating quiz using external API: {e}")
 
     # 2. Fallback to Gemini
-    if not settings.GEMINI_API_KEY:
+    if not settings.GEMINI_API_KEY or not _genai_available:
         raise ValueError("Neither Grok nor Gemini API key is configured.")
 
     try:
@@ -192,7 +202,7 @@ Return the response ONLY as a JSON object matching this structure:
             logger.error(f"Error in dynamic option generation (Grok/Groq): {e}")
 
     # Fallback to Gemini
-    if settings.GEMINI_API_KEY:
+    if settings.GEMINI_API_KEY and _genai_available:
         try:
             model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt)

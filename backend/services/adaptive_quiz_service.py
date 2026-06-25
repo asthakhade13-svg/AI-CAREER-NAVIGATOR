@@ -494,7 +494,10 @@ Return ONLY valid JSON matching this structure exactly:
     # 2. Fallback to Gemini
     if result is None and settings.GEMINI_API_KEY:
         try:
-            import google.generativeai as genai
+            import warnings as _w
+            with _w.catch_warnings():
+                _w.filterwarnings("ignore", category=FutureWarning)
+                import google.generativeai as genai
             import json as _json
             genai.configure(api_key=settings.GEMINI_API_KEY)
             model_obj = genai.GenerativeModel("gemini-1.5-flash")
