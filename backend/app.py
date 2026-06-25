@@ -1,3 +1,4 @@
+# BUILD: 2026-06-25-v6 — option shuffle + top career paths + FutureWarning fix
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
