@@ -8,7 +8,7 @@ GET  /api/v1/quiz/adaptive/status  — Get session status (for reconnect)
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List, Dict
 import logging
 
 from services.adaptive_quiz_service import (
@@ -25,7 +25,9 @@ router = APIRouter()
 class StartSessionRequest(BaseModel):
     student_id: str = Field(..., description="Unique student identifier")
     technical_score: float = Field(0.0, description="Technical familiarity score from questionnaire")
-    interest_field: Optional[str] = Field(None, description="Primary interest/career field from questionnaire")
+    interest_field: Optional[str] = Field(None, description="Top recommended career domain from basic info")
+    recommended_careers: List[str] = Field(default_factory=list, description="Ordered list of recommended career domains from the 3-layer engine")
+    trait_scores: Optional[Dict[str, float]] = Field(None, description="Computed personality & goal trait scores (0-100) from the basic info assessment")
 
 
 class SubmitAnswerRequest(BaseModel):
@@ -47,6 +49,8 @@ async def api_start_adaptive_quiz(request: StartSessionRequest):
             student_id=request.student_id,
             technical_score=request.technical_score,
             interest_field=request.interest_field,
+            recommended_careers=request.recommended_careers,
+            trait_scores=request.trait_scores,
         )
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])

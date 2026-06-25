@@ -115,7 +115,6 @@ def _load_questions() -> pd.DataFrame:
     return _questions_df
 
 
-
 def _get_available_fields() -> List[str]:
     """Return list of unique career fields in the question bank."""
     df = _load_questions()
@@ -124,10 +123,42 @@ def _get_available_fields() -> List[str]:
     return df["career_field"].unique().tolist()
 
 
+def _shuffle_options(options: Dict[str, str], correct_answer: str) -> tuple:
+    """
+    Randomly shuffle the A/B/C/D options and remap correct_answer to its
+    new position.  This prevents the correct answer from always appearing
+    at position A (which is how the CSV question bank is structured).
+
+    Args:
+        options:        {"A": "...", "B": "...", "C": "...", "D": "..."}
+        correct_answer: current label of the correct option, e.g. "A"
+
+    Returns:
+        (shuffled_options, new_correct_answer_label)
+    """
+    labels = ["A", "B", "C", "D"]
+    values = [options[lbl] for lbl in labels]           # original order
+    correct_text = options.get(correct_answer, "")      # text of correct answer
+
+    random.shuffle(values)                              # shuffle in place
+
+    shuffled = {labels[i]: values[i] for i in range(4)}
+
+    # Find which label the correct text landed on
+    new_correct = correct_answer  # fallback (should never be needed)
+    for lbl, val in shuffled.items():
+        if val == correct_text:
+            new_correct = lbl
+            break
+
+    return shuffled, new_correct
+
+
 def _pick_question(session: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Pick the next question for the session.
     Rotates career fields every ~5 questions and avoids repeating questions.
+    Options are always shuffled so the correct answer position is random.
     """
     df = _load_questions()
     if df.empty:
@@ -163,18 +194,58 @@ def _pick_question(session: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return None
 
     row = candidates.sample(1).iloc[0]
+    question_text = str(row["question"])
+    career_field = str(row["career_field"])
+    difficulty = str(row["difficulty"])
+
+    # Detect if the options are generic placeholders
+    placeholders = {
+        "Learning core concepts and tools",
+        "Using structured development practices",
+        "Applying scalable and maintainable engineering practices",
+        "Learning core concepts and practical skills",
+        "Following structured engineering practices",
+        "Using scalable, secure, and maintainable approaches"
+    }
+    opt_a = str(row["option_a"]).strip()
+    is_placeholder = opt_a in placeholders or any(p in opt_a for p in ["Learning core", "Using structured", "Applying scalable", "Following structured"])
+
+    options = {
+        "A": str(row["option_a"]),
+        "B": str(row["option_b"]),
+        "C": str(row["option_c"]),
+        "D": str(row["option_d"]),
+    }
+    correct_answer = str(row["correct_answer"]).strip().upper()
+
+    if is_placeholder:
+        try:
+            from services.quiz_generator import generate_options_for_question
+            enhanced = generate_options_for_question(question_text, career_field, difficulty)
+            if enhanced and "options" in enhanced and "correct_answer" in enhanced:
+                opt_dict = enhanced["options"]
+                if all(k in opt_dict for k in ["A", "B", "C", "D"]):
+                    options = {
+                        "A": str(opt_dict["A"]),
+                        "B": str(opt_dict["B"]),
+                        "C": str(opt_dict["C"]),
+                        "D": str(opt_dict["D"])
+                    }
+                    correct_answer = str(enhanced["correct_answer"]).strip().upper()
+                    logger.info(f"Dynamically generated options for question ID {row['question_id']}")
+        except Exception as e:
+            logger.error(f"Failed to dynamically generate options: {e}")
+
+    # Shuffle options so the correct answer is never predictably at position A
+    options, correct_answer = _shuffle_options(options, correct_answer)
+
     return {
         "question_id": int(row["question_id"]),
-        "career_field": str(row["career_field"]),
-        "difficulty": str(row["difficulty"]),
-        "question": str(row["question"]),
-        "options": {
-            "A": str(row["option_a"]),
-            "B": str(row["option_b"]),
-            "C": str(row["option_c"]),
-            "D": str(row["option_d"]),
-        },
-        "correct_answer": str(row["correct_answer"]),
+        "career_field": career_field,
+        "difficulty": difficulty,
+        "question": question_text,
+        "options": options,
+        "correct_answer": correct_answer,
     }
 
 
@@ -191,6 +262,50 @@ def _adjust_difficulty(current: str, is_correct: bool) -> str:
 
 # ─── Interest → Career Field Mapping ─────────────────────────────────────────
 # Maps Q36 questionnaire answer options to canonical career_field values in the CSV.
+# Maps the 10 career domains returned by classify_student_profile → question bank career_field values
+DOMAIN_TO_FIELD: Dict[str, List[str]] = {
+    "AI/ML":               ["Machine Learning", "AI Development", "Data Science", "Artificial Intelligence"],
+    "Data Science":        ["Data Science", "Data Analytics", "Machine Learning", "Business Intelligence"],
+    "Cyber Security":      ["Cybersecurity", "Network Security", "Ethical Hacking", "Penetration Testing"],
+    "Web Development":     ["Web Development", "Full Stack Development", "Frontend Development", "Backend Development"],
+    "App Development":     ["Mobile App Development", "Android Development", "iOS Development", "Cross-Platform Development"],
+    "UI/UX Design":        ["UI Design", "UX Design", "UI/UX Design", "Motion UI Development"],
+    "Cloud Computing":     ["Cloud Computing", "Cloud Architecture", "DevOps Engineering", "Site Reliability Engineering"],
+    "DevOps":              ["DevOps Engineering", "DevOps", "Cloud Computing", "Site Reliability Engineering"],
+    "Game Development":    ["Game Development", "Game Design", "AR/VR Development", "Interactive Media"],
+    "Software Engineering":["Software Engineering", "Full Stack Development", "Backend Development", "Systems Programming"],
+}
+
+
+def _map_domain_to_field(domain: str, all_fields: List[str]) -> str:
+    """
+    Maps a classify_student_profile domain name to the best matching career_field
+    that actually exists in the adaptive questions CSV.
+    """
+    if not domain:
+        return random.choice(all_fields)
+
+    # Try DOMAIN_TO_FIELD first
+    candidates = DOMAIN_TO_FIELD.get(domain, [])
+    for c in candidates:
+        if c in all_fields:
+            return c
+
+    # Fall back to partial/keyword match
+    lower = domain.lower()
+    for field in all_fields:
+        if lower in field.lower() or field.lower() in lower:
+            return field
+    for keyword in lower.split():
+        if len(keyword) >= 3:
+            for field in all_fields:
+                if keyword in field.lower():
+                    return field
+
+    logger.warning(f"Could not map domain '{domain}' to any question bank field; picking random.")
+    return random.choice(all_fields)
+
+
 INTEREST_TO_FIELD: Dict[str, List[str]] = {
     # Q36 choices (exact strings the frontend sends)
     "Software Development":   ["Full Stack Development", "Backend Development", "Frontend Development", "Web Development"],
@@ -251,37 +366,221 @@ def _map_interest_to_field(interest_field: Optional[str], all_fields: List[str])
     return random.choice(all_fields)
 
 
+# ─── Profile-Seeded First Question Generator ─────────────────────────────────
+def _build_trait_narrative(trait_scores: Dict[str, float]) -> str:
+    """
+    Convert raw trait scores into a human-readable profile narrative
+    for the LLM prompt.
+    """
+    # Sort traits by score descending
+    traits_layer1 = [
+        ("Analytical Thinking", trait_scores.get("analytical_thinking", 50)),
+        ("Creativity",          trait_scores.get("creativity", 50)),
+        ("Curiosity",           trait_scores.get("curiosity", 50)),
+        ("Attention to Detail", trait_scores.get("attention_to_detail", 50)),
+        ("Communication",       trait_scores.get("communication", 50)),
+        ("Leadership",          trait_scores.get("leadership", 50)),
+        ("Building Mindset",    trait_scores.get("building_mindset", 50)),
+        ("Research Mindset",    trait_scores.get("research_mindset", 50)),
+        ("User Empathy",        trait_scores.get("user_empathy", 50)),
+    ]
+    goals_layer2 = [
+        ("Placement Focus",       trait_scores.get("placement_focus", 50)),
+        ("Technical Expertise",   trait_scores.get("technical_expertise", 50)),
+        ("Research Orientation",  trait_scores.get("research_orientation", 50)),
+        ("Entrepreneurship",      trait_scores.get("entrepreneurship", 50)),
+        ("Leadership & Management", trait_scores.get("leadership_management", 50)),
+    ]
+
+    top3_traits = sorted(traits_layer1, key=lambda x: x[1], reverse=True)[:3]
+    top2_goals  = sorted(goals_layer2,  key=lambda x: x[1], reverse=True)[:2]
+
+    trait_text = ", ".join([f"{n} ({v:.0f}%)" for n, v in top3_traits])
+    goal_text  = ", ".join([f"{n} ({v:.0f}%)" for n, v in top2_goals])
+    tech_score = trait_scores.get("existing_skills", 0)
+    tech_level = "Advanced" if tech_score >= 70 else ("Intermediate" if tech_score >= 35 else "Beginner")
+
+    return (
+        f"Top personality traits: {trait_text}. "
+        f"Top career goals: {goal_text}. "
+        f"Technical exposure level: {tech_level} ({tech_score:.0f}% score)."
+    )
+
+
+def generate_profile_seeded_first_question(
+    trait_scores: Dict[str, float],
+    top_domain: str,
+    starting_difficulty: str,
+) -> Optional[Dict[str, Any]]:
+    """
+    Calls Groq (or Gemini fallback) to generate a fully personalised first
+    adaptive test question derived directly from the student's trait analysis.
+
+    The prompt tells the LLM:
+      - The student's dominant personality traits (from Layer 1)
+      - The student's top career goals (from Layer 2)
+      - The recommended career domain (from the recommendation engine)
+      - The target difficulty level
+
+    Returns a question dict compatible with the session format, or None on failure.
+    """
+    from config import settings
+    import requests as _req
+
+    narrative = _build_trait_narrative(trait_scores)
+    tech_level = "Beginner" if trait_scores.get("existing_skills", 0) < 35 else \
+                 ("Intermediate" if trait_scores.get("existing_skills", 0) < 70 else "Advanced")
+
+    prompt = f"""You are an expert Computer Science career assessment engine.
+
+A B.Tech CSE student has just completed a 3-layer personality and career assessment.
+Here is their profile:
+- {narrative}
+- Recommended career domain: {top_domain}
+- Technical background: {tech_level}
+
+Based on this profile, generate the FIRST question of their personalised adaptive technical test.
+The question must:
+1. Be directly relevant to the domain: "{top_domain}"
+2. Match difficulty: {starting_difficulty}
+3. Test a real technical concept or foundational idea in {top_domain}
+4. Be a 4-option MCQ with exactly one correct answer
+5. Feel natural as an opening question for someone with the traits described above
+
+Return ONLY valid JSON matching this structure exactly:
+{{
+  "question": "<the full question text>",
+  "options": {{
+    "A": "<option A>",
+    "B": "<option B>",
+    "C": "<option C>",
+    "D": "<option D>"
+  }},
+  "correct_answer": "<A|B|C|D>",
+  "career_field": "{top_domain}",
+  "difficulty": "{starting_difficulty}",
+  "rationale": "<one sentence why this question fits this student's profile>"
+}}"""
+
+    def _call_llm(api_url: str, model: str, key: str) -> Optional[Dict[str, Any]]:
+        try:
+            res = _req.post(
+                api_url,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                json={"model": model, "messages": [{"role": "user", "content": prompt}],
+                      "response_format": {"type": "json_object"}},
+                timeout=12,
+            )
+            if res.ok:
+                import json as _json
+                raw = res.json()["choices"][0]["message"]["content"].strip()
+                raw = raw.lstrip("```json").lstrip("```").rstrip("```").strip()
+                return _json.loads(raw)
+        except Exception as e:
+            logger.error(f"LLM call failed ({model}): {e}")
+        return None
+
+    result = None
+
+    # 1. Try Groq (gsk_...) or Grok
+    if settings.GROK_API_KEY:
+        if settings.GROK_API_KEY.startswith("gsk_"):
+            result = _call_llm("https://api.groq.com/openai/v1/chat/completions",
+                               "llama-3.3-70b-versatile", settings.GROK_API_KEY)
+        else:
+            result = _call_llm("https://api.x.ai/v1/chat/completions",
+                               "grok-2-1212", settings.GROK_API_KEY)
+
+    # 2. Fallback to Gemini
+    if result is None and settings.GEMINI_API_KEY:
+        try:
+            import warnings as _w
+            with _w.catch_warnings():
+                _w.filterwarnings("ignore", category=FutureWarning)
+                import google.generativeai as genai
+            import json as _json
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            model_obj = genai.GenerativeModel("gemini-1.5-flash")
+            resp = model_obj.generate_content(prompt)
+            raw = resp.text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+            result = _json.loads(raw)
+        except Exception as e:
+            logger.error(f"Gemini first-question generation failed: {e}")
+
+    if result is None:
+        logger.warning("LLM unavailable for first question generation; will use question bank fallback.")
+        return None
+
+    # Validate minimal structure
+    if not all(k in result for k in ["question", "options", "correct_answer"]):
+        logger.error(f"LLM returned incomplete question structure: {result}")
+        return None
+
+    # Assign a synthetic question_id outside the bank's range
+    return {
+        "question_id": 99999,   # sentinel: marks AI-generated question
+        "career_field": result.get("career_field", top_domain),
+        "difficulty": result.get("difficulty", starting_difficulty),
+        "question": result["question"],
+        "options": result["options"],
+        "correct_answer": str(result["correct_answer"]).strip().upper(),
+        "ai_generated": True,
+        "rationale": result.get("rationale", ""),
+    }
+
+
 # ─── Session Management ───────────────────────────────────────────────────────
 def start_adaptive_session(
     student_id: str,
     technical_score: float,
-    interest_field: Optional[str] = None
+    interest_field: Optional[str] = None,
+    recommended_careers: Optional[List[str]] = None,
+    trait_scores: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    Initialise a new adaptive quiz session.
+    Initialise a new adaptive quiz session seeded from the 3-layer profile.
 
     Args:
-        student_id: The student's identifier.
-        technical_score: Score from the Basic Info Questionnaire (determines start difficulty).
-        interest_field: The student's primary interest from questionnaire (determines first field).
+        student_id          : The student's identifier.
+        technical_score     : Existing-skills score from Layer 3 (determines start difficulty).
+        interest_field      : Top recommended career domain (from classify_student_profile).
+        recommended_careers : Full ordered list of recommended domains (Top 3).
+        trait_scores        : All computed personality + goal scores from the basic info assessment.
 
-    Returns:
-        A dict with session_id and the first question.
+    First Question Strategy:
+      - If LLM is available: generate a bespoke question from the student's trait profile
+      - Otherwise: pick from the question bank matching the top recommended domain
+
+    Field rotation strategy (questions 2-30):
+      - Q2–Q5   → top recommended domain
+      - Q6–Q10  → 2nd recommended domain (if present)
+      - Q11–Q15 → 3rd recommended domain (if present)
+      - Q16–Q30 → shuffle of other available fields
     """
     session_id = str(uuid.uuid4())
 
-    # Determine starting difficulty
-    starting_difficulty = "Medium" if technical_score >= 15 else "Easy"
+    # ── Determine starting difficulty ──────────────────────────────────────────
+    # Layer 3 score: 0-100.  ≥35 = experienced → Medium; else → Easy
+    starting_difficulty = "Medium" if technical_score >= 35 else "Easy"
 
-    # Build a rotation of career fields — start with student's interest, then rotate others
     all_fields = _get_available_fields()
-    primary_field = _map_interest_to_field(interest_field, all_fields)
-    logger.info(f"Interest '{interest_field}' → mapped to field '{primary_field}'")
-    primary = [primary_field]
 
-    other_fields = [f for f in all_fields if f not in primary]
+    # ── Build profile-aligned field rotation ──────────────────────────────────
+    if recommended_careers and len(recommended_careers) > 0:
+        ordered_pref = []
+        for domain in recommended_careers:
+            field = _map_domain_to_field(domain, all_fields)
+            if field not in ordered_pref:
+                ordered_pref.append(field)
+        logger.info(f"Recommended domains {recommended_careers} → fields {ordered_pref}")
+    else:
+        primary = _map_interest_to_field(interest_field, all_fields)
+        ordered_pref = [primary]
+        logger.info(f"Interest '{interest_field}' → mapped to field '{primary}'")
+
+    other_fields = [f for f in all_fields if f not in ordered_pref]
     random.shuffle(other_fields)
-    field_rotation = (primary + other_fields)[:6]  # cover up to 6 fields in 30 Qs
+    field_rotation = (ordered_pref + other_fields)[:6]
 
     session: Dict[str, Any] = {
         "session_id": session_id,
@@ -292,29 +591,53 @@ def start_adaptive_session(
         "questions_answered": 0,
         "correct_answers": 0,
         "used_question_ids": [],
-        "answers_history": [],  # list of {question_id, given_answer, correct_answer, is_correct, field, difficulty}
-        "domain_correct": {},   # {field: correct_count}
-        "domain_total": {},     # {field: total_count}
+        "answers_history": [],
+        "domain_correct": {},
+        "domain_total": {},
         "completed": False,
     }
 
-    # Get first question
-    first_q = _pick_question(session)
+    # ── Get first question — AI-generated if trait_scores available ────────────
+    top_domain = interest_field or (recommended_careers[0] if recommended_careers else None)
+    first_q = None
+    ai_generated = False
+
+    if trait_scores and top_domain:
+        logger.info(f"Attempting AI-generated first question for domain='{top_domain}' difficulty={starting_difficulty}")
+        first_q = generate_profile_seeded_first_question(
+            trait_scores=trait_scores,
+            top_domain=top_domain,
+            starting_difficulty=starting_difficulty,
+        )
+        if first_q:
+            ai_generated = True
+            shuffled_opts, new_correct = _shuffle_options(first_q["options"], first_q["correct_answer"])
+            first_q["options"] = shuffled_opts
+            first_q["correct_answer"] = new_correct
+            logger.info(f"AI-generated first question ready and shuffled: {first_q['question'][:80]}...")
+
+    # Fallback to question bank
+    if first_q is None:
+        first_q = _pick_question(session)
+
     if first_q is None:
         logger.error("No questions available to start session!")
         return {"error": "No questions available."}
 
     session["current_question"] = first_q
-    session["used_question_ids"].append(first_q["question_id"])
-    ACTIVE_SESSIONS[session_id] = session
+    # Only add to used_ids if from the bank (AI question has sentinel ID 99999)
+    if not ai_generated:
+        session["used_question_ids"].append(first_q["question_id"])
+    _save_session(session)
 
-    logger.info(f"Started adaptive session {session_id} for student {student_id} | difficulty={starting_difficulty}")
+    logger.info(f"Started adaptive session {session_id} | difficulty={starting_difficulty} | q1_source={'AI' if ai_generated else 'bank'}")
 
     return {
         "session_id": session_id,
         "question_number": 1,
         "total_questions": QUIZ_LENGTH,
         "current_difficulty": starting_difficulty,
+        "ai_seeded": ai_generated,
         "question": {
             "question_id": first_q["question_id"],
             "career_field": first_q["career_field"],
@@ -334,7 +657,7 @@ def submit_adaptive_answer(
 
     Returns either the next question payload or the final results if 30 Qs are done.
     """
-    session = ACTIVE_SESSIONS.get(session_id)
+    session = get_session(session_id)
     if not session:
         return {"error": "Session not found. Please start a new session."}
 
@@ -360,6 +683,7 @@ def submit_adaptive_answer(
     session["answers_history"].append({
         "question_id": question_id,
         "question": current_q["question"],
+        "options": current_q.get("options", {}),
         "given_answer": given_answer.upper(),
         "correct_answer": current_q["correct_answer"],
         "is_correct": is_correct,
@@ -373,6 +697,7 @@ def submit_adaptive_answer(
     # Check if quiz is complete
     if session["questions_answered"] >= QUIZ_LENGTH:
         session["completed"] = True
+        _save_session(session)
         return _compile_results(session)
 
     # Get next question
@@ -380,10 +705,12 @@ def submit_adaptive_answer(
     if next_q is None:
         # Edge case: exhausted questions — just end early
         session["completed"] = True
+        _save_session(session)
         return _compile_results(session)
 
     session["current_question"] = next_q
     session["used_question_ids"].append(next_q["question_id"])
+    _save_session(session)
 
     return {
         "completed": False,
@@ -465,18 +792,22 @@ def _compile_results(session: Dict[str, Any]) -> Dict[str, Any]:
         for field, total in sorted(session["domain_total"].items(), key=lambda x: -x[1])
     ]
 
+    total_wrong = total_answered - total_correct
+
     return {
         "completed": True,
         "session_id": session["session_id"],
         "student_id": session["student_id"],
         "total_questions": total_answered,
         "total_correct": total_correct,
+        "total_wrong": total_wrong,
         "accuracy_pct": round((total_correct / total_answered) * 100, 1) if total_answered > 0 else 0,
         "bracket": bracket,
         "learning_path": learning_path,
         "domain_breakdown": domain_breakdown,
         "feature_scores": feature_scores,
         "career_recommendations": career_recommendations,
+        "answers_history": session["answers_history"],
     }
 
 
@@ -515,6 +846,63 @@ def _run_recommender(student_id: str, feature_scores: Dict[str, float]) -> List[
         return fallback
 
 
+def _save_session(session: Dict[str, Any]):
+    import json
+    import os
+    session_id = session["session_id"]
+    ACTIVE_SESSIONS[session_id] = session
+    
+    # 1. Try to save to MongoDB
+    try:
+        from database import db
+        col = db.get_collection("adaptive_sessions")
+        if col is not None:
+            col.update_one({"session_id": session_id}, {"$set": session}, upsert=True)
+            return
+    except Exception as e:
+        logger.warning(f"Failed to save session {session_id} to MongoDB: {e}")
+        
+    # 2. Fallback to file-based persistence
+    try:
+        os.makedirs("data/sessions", exist_ok=True)
+        filepath = os.path.join("data/sessions", f"{session_id}.json")
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(session, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to save session {session_id} to file: {e}")
+
+
 def get_session(session_id: str) -> Optional[Dict[str, Any]]:
-    """Retrieve an active session by ID."""
-    return ACTIVE_SESSIONS.get(session_id)
+    """Retrieve an active session by ID, loading from memory, DB, or file."""
+    # 1. Try in-memory first
+    if session_id in ACTIVE_SESSIONS:
+        return ACTIVE_SESSIONS[session_id]
+        
+    # 2. Try MongoDB
+    try:
+        from database import db
+        col = db.get_collection("adaptive_sessions")
+        if col is not None:
+            session = col.find_one({"session_id": session_id})
+            if session:
+                # Remove MongoDB _id field
+                session.pop("_id", None)
+                ACTIVE_SESSIONS[session_id] = session
+                return session
+    except Exception as e:
+        logger.warning(f"Failed to load session {session_id} from MongoDB: {e}")
+        
+    # 3. Try file-based
+    try:
+        import json
+        import os
+        filepath = os.path.join("data/sessions", f"{session_id}.json")
+        if os.path.exists(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                session = json.load(f)
+                ACTIVE_SESSIONS[session_id] = session
+                return session
+    except Exception as e:
+        logger.error(f"Failed to load session {session_id} from file: {e}")
+        
+    return None
