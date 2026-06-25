@@ -2006,12 +2006,31 @@ function renderAdaptiveResults(data){
   };
   const bl=bMap[bracket]||bMap.beginner;
   const circ=2*Math.PI*64,offset=circ-(circ*(correct/total));
-  const recCards=recs.map((r,i)=>{
-    const pct=Math.min(Math.round(r.score),100),isBest=i===0;
+  const top3Paths = [...breakdown].sort((a, b) => {
+    if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+    if (b.correct !== a.correct) return b.correct - a.correct;
+    return b.total - a.total;
+  }).slice(0, 3);
+
+  const pathCards = top3Paths.map((p, i) => {
+    const pct = Math.min(Math.round(p.percentage), 100);
+    const isBest = i === 0;
     return `<div class="rec-card" style="${isBest?'border-color:rgba(245,158,11,.4);box-shadow:0 0 30px rgba(245,158,11,.07)':''}">
       ${isBest?'<span class="best-match-badge">Best Match</span>':''}
-      <div class="rec-card-top"><div style="display:flex;align-items:center"><span class="rec-rank">#${i+1}</span><span class="rec-domain">${r.domain}</span></div><span class="rec-pct" style="${isBest?'color:var(--gold)':''}">${pct}%</span></div>
-      <div class="rec-bar-track"><div class="rec-bar-fill ${isBest?'rec-bar-gold':'rec-bar-default'}" style="width:0%" data-width="${pct}"></div></div></div>`;
+      <div class="rec-card-top">
+        <div style="display:flex;align-items:center">
+          <span class="rec-rank">#${i+1}</span>
+          <span class="rec-domain">${p.field}</span>
+        </div>
+        <span class="rec-pct" style="${isBest?'color:var(--gold)':''}">${pct}% Accuracy</span>
+      </div>
+      <div class="rec-bar-track">
+        <div class="rec-bar-fill ${isBest?'rec-bar-gold':'rec-bar-default'}" style="width:0%" data-width="${pct}"></div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px">
+        Correct: <strong>${p.correct}</strong> / ${p.total} questions answered
+      </div>
+    </div>`;
   }).join('');
   const domainMinis=breakdown.slice(0,8).map(d=>{
     const c=2*Math.PI*30,off=c*(1-d.percentage/100);
@@ -2087,8 +2106,8 @@ function renderAdaptiveResults(data){
     ${summaryBar}
     <div class="section-title"><span class="dot"></span>Learning Path<span class="label-tag">RECOMMENDED</span></div>
     <div class="learning-path-card"><h3>📡 ${lp.label||'Your Path'} — ${lp.description||''}</h3><div style="margin-top:4px">${resources||'<p style="color:var(--text-muted)">Resources loading…</p>'}</div></div>
-    <div class="section-title"><span class="dot"></span>Top Career Orbits<span class="label-tag">ML MODEL</span></div>
-    <div class="rec-list">${recCards||'<p style="color:var(--text-muted)">No data.</p>'}</div>
+    <div class="section-title"><span class="dot"></span>Top Suggested Career Paths<span class="label-tag">BREAKDOWN ANALYSIS</span></div>
+    <div class="rec-list">${pathCards||'<p style="color:var(--text-muted)">No data.</p>'}</div>
     <div class="section-title"><span class="dot"></span>Domain Performance<span class="label-tag">RADAR</span></div>
     <div class="radar-wrap"><canvas id="radarChart" height="300"></canvas></div>
     <div class="section-title"><span class="dot"></span>Topic Breakdown<span class="label-tag">ANALYSIS</span></div>
