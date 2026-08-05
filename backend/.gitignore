@@ -6,3 +6,5 @@ scratch/
 .vscode/
 .idea/
 *.log
+data/raw_psychometrics/
+

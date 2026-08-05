@@ -243,15 +243,37 @@ def classify_student_profile(student_id: str, answers: Dict[str, Any]) -> Questi
         "Leadership": leadership_mgmt
     }
 
-    career_scores = []
-    for domain, weights in domain_configs.items():
-        t_score = sum(trait_scores_calculated[t] * w for t, w in weights["traits"].items())
-        g_score = sum(goal_scores_calculated[g] * w for g, w in weights["goals"].items())
-        final_score = 0.50 * t_score + 0.30 * g_score + 0.20 * existing_skills_score
-        career_scores.append((domain, final_score))
-
-    career_scores.sort(key=lambda x: x[1], reverse=True)
-    top_3 = career_scores[:3]
+    # ── Predict Top Career Paths using the Personality & Aptitude ML Model ──
+    try:
+        from models.recommendation_model import personality_recommender
+        feature_scores = {
+            "analytical_thinking": analytical_thinking,
+            "creativity": creativity,
+            "curiosity": curiosity,
+            "attention_to_detail": attention_to_detail,
+            "communication": communication,
+            "leadership": leadership,
+            "building_mindset": building_mindset,
+            "research_mindset": research_mindset,
+            "user_empathy": user_empathy,
+            "problem_solving": problem_solving,
+            "technical_depth": technical_depth
+        }
+        pred_res = personality_recommender.predict(feature_scores)
+        recs = pred_res.get("recommendations", [])
+        top_3 = [(r["domain"], r["score"]) for r in recs[:3]]
+        logger.info("Career recommendations generated successfully using the Personality ML Model.")
+    except Exception as e:
+        logger.error(f"Personality recommendation model prediction failed: {e}. Falling back to rule-based.")
+        # Rule-based fallback
+        career_scores = []
+        for domain, weights in domain_configs.items():
+            t_score = sum(trait_scores_calculated[t] * w for t, w in weights["traits"].items())
+            g_score = sum(goal_scores_calculated[g] * w for g, w in weights["goals"].items())
+            final_score = 0.50 * t_score + 0.30 * g_score + 0.20 * existing_skills_score
+            career_scores.append((domain, final_score))
+        career_scores.sort(key=lambda x: x[1], reverse=True)
+        top_3 = career_scores[:3]
 
     sorted_traits = sorted(trait_scores_calculated.items(), key=lambda x: x[1], reverse=True)
     dominant_traits = [t[0] for t in sorted_traits[:4]]
