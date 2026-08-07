@@ -1306,7 +1306,10 @@ nav{
     <div class="card card-gold" style="margin-bottom:22px;text-align:left">
       <h2 id="profile-result-title" style="margin-bottom:13px;font-size:1.7rem;color:var(--gold)">Profile Analyzed!</h2>
       <p id="profile-result-text" style="color:var(--text-muted);line-height:1.8;font-size:.92rem;margin-bottom:22px"></p>
-      <div style="text-align:center"><button class="btn btn-gold pulse" id="profile-result-btn" onclick="proceedToQuiz()">Launch Adaptive Quiz &nbsp;→</button></div>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-gold pulse" id="profile-result-btn" onclick="proceedToQuiz()">Launch Adaptive Quiz &nbsp;→</button>
+        <button class="btn btn-outline" id="profile-dashboard-btn" onclick="goHome()">Go to Dashboard</button>
+      </div>
     </div>
   </div>
 </div>
