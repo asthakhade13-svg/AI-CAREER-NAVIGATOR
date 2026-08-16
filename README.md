@@ -1,91 +1,59 @@
-# First-Generation Career Navigator AI Backend
+# AI Career Navigator
 
-An AI-powered career guidance platform backend for 1st Year B.Tech Computer Science students, especially first-generation learners.
+An AI-powered career guidance platform for computer science students, combining psychometric analysis, adaptive assessments, and machine learning to map personal traits to suitable career domains.
 
-## Features
-- Read learning materials from CSV files
-- Automatically generate quizzes using Gemini API
-- Evaluate student quiz responses
-- Analyze student skills and detect gaps
-- Recommend suitable Computer Science career paths using Scikit-Learn
-- Generate personalized learning roadmaps
-- Store and retrieve student progress (MongoDB)
-- Provide an AI mentor chatbot API
+## Key Features
+* **Psychometric Mapping (RIASEC & Big Five)**: Combines Holland Codes (RIASEC) and the Big Five Personality frameworks to analyze 11 cognitive/personality traits.
+* **Dual-Layer Assessment**: 
+  * *Diagnostic Stage*: Evaluates personality, goals, and technical exposure.
+  * *Adaptive Quiz*: Generates dynamic, multi-difficulty questions matching the student's CS or general readiness tier.
+* **Random Forest ML Predictor**: Trained on 19,000+ records from OpenPsychometrics to classify top career paths with 100% validation fit and robust centroid-based fallback.
+* **Skill Gap & Roadmap Generator**: Automated evaluation comparing current student knowledge against target domain demands, producing customized learning roadmaps.
+* **AI Mentor Chatbot**: Real-time LLM-driven mentoring interface to guide students on skill acquisition and learning resources.
+* **Modern Interface**: Glassmorphic, responsive UI with interactive timeline roadmap rendering and dynamic chat views.
 
-## Tech Stack
-- Python 3.11+
-- FastAPI
-- MongoDB
-- Pandas, NumPy, Scikit-Learn
-- Google Gemini API
+---
 
-## Project Structure
+## Technology Stack
+* **Backend**: FastAPI, Python, Uvicorn
+* **Machine Learning**: Scikit-Learn, Joblib, Pandas, NumPy
+* **Frontend**: HTML5, Vanilla JavaScript, CSS3
+* **AI/LLM**: Google Gemini API
+* **Database**: MongoDB
 
-```
-backend/
-├── data/
-│   ├── career_paths.json
-│   ├── industry_skills.json
-│   ├── learning_materials.csv
-│   └── sample_students.csv
-├── models/
-│   ├── progress_model.py
-│   ├── quiz_evaluation_model.py
-│   ├── recommendation_model.py
-│   └── skill_gap_model.py
-├── routes/
-│   ├── chatbot_routes.py
-│   ├── progress_routes.py
-│   ├── quiz_routes.py
-│   ├── recommendation_routes.py
-│   └── roadmap_routes.py
-├── services/
-│   ├── career_recommender.py
-│   ├── chatbot_service.py
-│   ├── quiz_evaluator.py
-│   ├── quiz_generator.py
-│   ├── roadmap_generator.py
-│   └── skill_gap_analyzer.py
-├── utils/
-│   ├── constants.py
-│   ├── csv_loader.py
-│   ├── helpers.py
-│   ├── text_preprocessing.py
-│   └── validators.py
-├── app.py
-├── config.py
-├── database.py
-├── train_model.py
-├── requirements.txt
-└── .env.example
+---
+
+## Getting Started
+
+### 1. Prerequisites & Environment Setup
+Create a virtual environment and install the required dependencies:
+```bash
+# Initialize and activate venv
+python -m venv venv
+venv/Scripts/activate  # On macOS/Linux: source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-## Setup
+Create a `.env` file in the root and configure the following variables:
+```env
+MONGODB_URI=your_mongodb_connection_string
+GEMINI_API_KEY=your_gemini_api_key
+```
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+### 2. Preprocess Data & Train ML Models
+To download the OpenPsychometrics datasets, preprocess the traits, and train the Random Forest Classifier:
+```bash
+python train_model.py
+```
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 3. Run the Server Locally
+```bash
+# Run FastAPI application
+python app.py
+```
+Access the application locally:
+* **Web App**: [http://localhost:8000/](http://localhost:8000/)
+* **Interactive API Documentation (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-3. Configure Environment Variables:
-   - Copy `.env.example` to `.env`
-   - Add your `MONGODB_URI` and `GEMINI_API_KEY`
-
-4. Train the ML Model (first time only):
-   ```bash
-   python train_model.py
-   ```
-
-5. Run the API:
-   ```bash
-   uvicorn app:app --reload
-   ```
-
-6. Access Swagger UI documentation:
-   http://localhost:8000/docs
