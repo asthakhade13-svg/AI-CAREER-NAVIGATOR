@@ -1214,7 +1214,7 @@ nav{
 
       <!-- Hero image/banner -->
       <div class="hero-img-container">
-        <img src="/static/hero-image.jpg" alt="Career Navigator sky path" class="hero-img">
+        <img src="hero-image.jpg" onerror="this.onerror=null; this.src='frontend/hero-image.jpg';" alt="Career Navigator sky path" class="hero-img">
       </div>
 
 
@@ -1579,9 +1579,15 @@ setInterval(() => {
 /* ═══════════════════════════════════════════════════════════════
    APP STATE & HELPERS
 ═══════════════════════════════════════════════════════════════ */
-const BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+// Deployed backend URL for GitHub Pages split deployment:
+const CLOUD_BACKEND_URL = 'https://ai-career-navigator.up.railway.app'; // Update this if your Railway/Render URL is different
+
+const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const isGhPages = window.location.hostname.endsWith('github.io');
+
+const BASE = isLocal
   ? (window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000')
-  : window.location.origin;
+  : (isGhPages ? CLOUD_BACKEND_URL : window.location.origin);
 const STUDENT_ID='user_001';
 let quizType='adaptive',questions=[],answers={},currentQ=0,radarChart=null;
 let adaptiveSessionId=null,adaptiveCurrentQuestion=null,adaptiveQuestionNum=1,adaptiveTotalQuestions=30,adaptiveSelectedAnswer=null;
