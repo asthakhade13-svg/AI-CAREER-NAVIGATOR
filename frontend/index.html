@@ -1245,12 +1245,23 @@ nav{
           <strong>Backend Unreachable</strong>
         </div>
         <p id="start-error-detail"></p>
-        <p class="error-hint">
-          Make sure you ran:
-          <code>python -m uvicorn app:app --host 127.0.0.1 --port 8000</code>
-          inside the <code>backend/</code> folder.
-        </p>
-        <button class="retry-btn" onclick="startQuestionnaire()">↺ Retry Connection</button>
+        <div id="error-hint-container">
+          <p class="error-hint" id="local-error-hint">
+            Make sure you ran:
+            <code>python -m uvicorn app:app --host 127.0.0.1 --port 8000</code>
+            inside the <code>backend/</code> folder.
+          </p>
+          <div id="gh-error-hint" style="display:none;margin-top:12px">
+            <p style="font-size:0.8rem;margin-bottom:6px;color:#991b1b">
+              Enter your live Cloud Backend URL (e.g., from Railway or Render):
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" id="backend-url-input" placeholder="https://your-project.up.railway.app" style="flex:1;min-width:210px;padding:8px 12px;border-radius:8px;border:1px solid rgba(220,38,38,0.35);font-size:0.82rem;background:#fff;color:#1e293b">
+              <button class="btn btn-lavender" style="padding:8px 14px;font-size:0.82rem" onclick="saveBackendUrlAndRetry()">Save &amp; Connect</button>
+            </div>
+          </div>
+        </div>
+        <button class="retry-btn" id="retry-conn-btn" onclick="startQuestionnaire()" style="margin-top:10px">↺ Retry Connection</button>
       </div>
 
     </div><!-- /.intro-menu-glass -->
@@ -1580,14 +1591,33 @@ setInterval(() => {
    APP STATE & HELPERS
 ═══════════════════════════════════════════════════════════════ */
 // Deployed backend URL for GitHub Pages split deployment:
-const CLOUD_BACKEND_URL = 'https://ai-career-navigator.up.railway.app'; // Update this if your Railway/Render URL is different
+const CLOUD_BACKEND_URL = 'https://ai-career-navigator.up.railway.app'; // Default fallback
 
-const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-const isGhPages = window.location.hostname.endsWith('github.io');
+function getBaseUrl(){
+  const custom = localStorage.getItem('CUSTOM_BACKEND_URL');
+  if(custom) return custom.replace(/\/+$/, '');
+  const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const isGhPages = window.location.hostname.endsWith('github.io');
+  if(isLocal){
+    return window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000';
+  }
+  return isGhPages ? CLOUD_BACKEND_URL : window.location.origin;
+}
 
-const BASE = isLocal
-  ? (window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000')
-  : (isGhPages ? CLOUD_BACKEND_URL : window.location.origin);
+let BASE = getBaseUrl();
+
+function saveBackendUrlAndRetry(){
+  const input = document.getElementById('backend-url-input');
+  if(input && input.value.trim()){
+    let val = input.value.trim();
+    if(!val.startsWith('http://') && !val.startsWith('https://')){
+      val = 'https://' + val;
+    }
+    localStorage.setItem('CUSTOM_BACKEND_URL', val);
+    BASE = getBaseUrl();
+    startQuestionnaire();
+  }
+}
 const STUDENT_ID='user_001';
 let quizType='adaptive',questions=[],answers={},currentQ=0,radarChart=null;
 let adaptiveSessionId=null,adaptiveCurrentQuestion=null,adaptiveQuestionNum=1,adaptiveTotalQuestions=30,adaptiveSelectedAnswer=null;
@@ -1664,6 +1694,19 @@ async function startQuestionnaire(){
     hideLoading();
     const banner=document.getElementById('start-error-banner');
     document.getElementById('start-error-detail').textContent=err.message;
+    if(window.location.hostname.endsWith('github.io') || window.location.protocol === 'https:'){
+      const localHint = document.getElementById('local-error-hint');
+      if(localHint) localHint.style.display='none';
+      const ghHint = document.getElementById('gh-error-hint');
+      if(ghHint) ghHint.style.display='block';
+      const input = document.getElementById('backend-url-input');
+      if(input && !input.value) input.value = localStorage.getItem('CUSTOM_BACKEND_URL') || CLOUD_BACKEND_URL;
+    } else {
+      const localHint = document.getElementById('local-error-hint');
+      if(localHint) localHint.style.display='block';
+      const ghHint = document.getElementById('gh-error-hint');
+      if(ghHint) ghHint.style.display='none';
+    }
     banner.style.display='block';
     banner.scrollIntoView({behavior:'smooth',block:'center'});
     setBackendStatus(false);
