@@ -1,38 +1,121 @@
-# AI Career Navigator
+# 🚀 AI Career Navigator
 
-An AI-powered career guidance platform for computer science students, combining psychometric analysis, adaptive assessments, and machine learning to map personal traits to suitable career domains.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109.2-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org)
+[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.4.0-F7931E?style=flat&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-LLM%20API-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![GitHub Pages](https://img.shields.io/badge/Frontend-GitHub%20Pages-222222?style=flat&logo=github&logoColor=white)](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
+[![Railway](https://img.shields.io/badge/Backend-Railway-0B0D0E?style=flat&logo=railway&logoColor=white)](https://railway.app/)
+
+An AI-powered career orientation and diagnostic assessment platform tailored for Computer Science students and first-generation learners. The platform fuses validated psychometric frameworks (**RIASEC Holland Codes** & **Big Five Personality Traits**) with **Machine Learning** and **Adaptive Testing** to recommend optimal career paths, detect skill gaps, and generate customized step-by-step learning roadmaps.
+
+---
 
 ## 🔗 Live Links
-* **Live Web Application (Frontend)**: [https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
-* **Backend API & Docs (Railway)**: [https://ai-career-navigator-production-b369.up.railway.app/docs](https://ai-career-navigator-production-b369.up.railway.app/docs)
 
-## Key Features
-* **Psychometric Mapping (RIASEC & Big Five)**: Combines Holland Codes (RIASEC) and the Big Five Personality frameworks to analyze 11 cognitive/personality traits.
-* **Dual-Layer Assessment**: 
-  * *Diagnostic Stage*: Evaluates personality, goals, and technical exposure.
-  * *Adaptive Quiz*: Generates dynamic, multi-difficulty questions matching the student's CS or general readiness tier.
-* **Random Forest ML Predictor**: Trained on 19,000+ records from OpenPsychometrics to classify top career paths with 100% validation fit and robust centroid-based fallback.
-* **Skill Gap & Roadmap Generator**: Automated evaluation comparing current student knowledge against target domain demands, producing customized learning roadmaps.
-* **AI Mentor Chatbot**: Real-time LLM-driven mentoring interface to guide students on skill acquisition and learning resources.
-* **Modern Interface**: Glassmorphic, responsive UI with interactive timeline roadmap rendering and dynamic chat views.
+* 🌐 **Live Web Application (Frontend)**: [https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
+* 📚 **Backend API & Swagger Documentation**: [https://ai-career-navigator-production-b369.up.railway.app/docs](https://ai-career-navigator-production-b369.up.railway.app/docs)
 
 ---
 
-## Technology Stack
-* **Backend**: FastAPI, Python, Uvicorn
-* **Machine Learning**: Scikit-Learn, Joblib, Pandas, NumPy
-* **Frontend**: HTML5, Vanilla JavaScript, CSS3
-* **AI/LLM**: Google Gemini API
-* **Database**: MongoDB
+## 🌟 Key Features
+
+### 1. 🧠 Scientific Psychometric Profiling
+* **Holland Codes (RIASEC) & Big Five Integration**: Evaluates **11 cognitive and personality traits** (*Analytical Thinking, Creativity, Curiosity, Attention to Detail, Communication, Leadership, Building Mindset, Research Mindset, User Empathy, Problem Solving, Technical Depth*).
+* **3-Layer Diagnostic Matrix**:
+  1. *Layer 1 (50%)*: Personality & Cognitive Aptitude traits.
+  2. *Layer 2 (30%)*: Career Goals (Placement, Technical Depth, Research, Entrepreneurship, Leadership).
+  3. *Layer 3 (20%)*: Baseline Technical Exposure (Programming rating, known languages, projects, Git/GitHub).
+
+### 2. 🤖 Machine Learning Recommendation Engine
+* **Trained Random Forest Classifier**: Trained on **19,718 clean student records** derived from OpenPsychometrics datasets to predict suitability across 10 core computer science domains.
+* **Fallback Similarity Engine**: Implements Cosine Similarity and Softmax probability distributions across profile centroids for zero-downtime offline execution.
+* **Target Career Domains**: *AI/ML, Data Science, Cyber Security, Web Development, App Development, UI/UX Design, Cloud Computing, DevOps, Game Development, Software Engineering*.
+
+### 3. 🎯 Dynamic Adaptive Quiz
+* **Intelligent Routing**: Automatically routes students to the *Foundation* or *CS Ready* track based on Layer 3 diagnostic scores.
+* **Dynamic Multi-Difficulty Questioning**: Adjusts difficulty (*Easy, Medium, Hard*) in real time based on user performance across 1,600+ questions spanning 100+ CS sub-topics.
+* **Automated Option Shuffling**: Implements randomized answer options to eliminate bias during assessments.
+
+### 4. 🗺️ Personalized Roadmap & Skill Gap Analyzer
+* **Skill Gap Identification**: Compares current student quiz competencies against industry requirements.
+* **Step-by-Step Learning Timeline**: Generates a milestone-based learning roadmap complete with recommended topics, projects, and certifications.
+* **AI Mentor Chatbot**: Real-time LLM-powered assistant (Gemini/Grok) to provide contextual career counseling, answers, and study strategies.
 
 ---
 
-## Getting Started
+## 🏗️ System Architecture
 
-### 1. Prerequisites & Environment Setup
-Create a virtual environment and install the required dependencies:
+```
+                                  ┌────────────────────────────────┐
+                                  │   Student Diagnostic Inputs    │
+                                  │ (Personality, Goals, Skills)   │
+                                  └───────────────┬────────────────┘
+                                                  │
+                                                  ▼
+                                  ┌────────────────────────────────┐
+                                  │   11-Trait Extraction Engine   │
+                                  │    (RIASEC + Big Five Map)     │
+                                  └───────────────┬────────────────┘
+                                                  │
+                         ┌────────────────────────┴────────────────────────┐
+                         ▼                                                 ▼
+        ┌────────────────────────────────┐                ┌────────────────────────────────┐
+        │   Random Forest ML Predictor   │                │   Adaptive Assessment Engine   │
+        │   (Domain Career Suitability)  │                │   (Multi-Difficulty Testing)   │
+        └────────────────┬───────────────┘                └────────────────┬───────────────┘
+                         │                                                 │
+                         └────────────────────────┬────────────────────────┘
+                                                  │
+                                                  ▼
+                                  ┌────────────────────────────────┐
+                                  │ Skill Gap & Roadmap Generator  │
+                                  │    + AI Mentor Chatbot (LLM)   │
+                                  └────────────────────────────────┘
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | HTML5, Modern CSS3 (Glassmorphism), Vanilla JavaScript, Chart.js |
+| **Backend API** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 |
+| **Machine Learning** | Scikit-Learn (Random Forest), Joblib, Pandas, NumPy |
+| **LLM & AI** | Google Gemini API (gemini-1.5-flash / gemini-pro), Grok API |
+| **Database** | MongoDB / MongoDB Atlas (pymongo) |
+| **Deployment** | GitHub Pages (Frontend) + Railway / Render (Cloud Backend) |
+
+---
+
+## 🔌 API Endpoints Reference
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/basic_info/questions` | Retrieves the 33-question diagnostic assessment questionnaire |
+| `GET` | `/api/v1/basic_info/career_fields` | Returns all available career specialization domains |
+| `POST`| `/api/v1/basic_info/evaluate` | Evaluates student profile & predicts top 3 matching career domains |
+| `POST`| `/api/v1/quiz/adaptive/start` | Initializes a dynamic adaptive quiz session |
+| `POST`| `/api/v1/quiz/adaptive/answer` | Submits an answer and returns the next calibrated question |
+| `POST`| `/api/v1/recommend/recommend` | Runs the Random Forest classifier on quiz feature vectors |
+| `POST`| `/api/v1/recommend/skill_gap` | Computes missing skills and technical readiness for a target domain |
+| `POST`| `/api/v1/roadmap/generate` | Generates a structured, milestone-based learning roadmap |
+| `POST`| `/api/v1/chatbot/chat` | AI Mentor conversation endpoint with student context |
+| `GET` | `/health` | Cloud health check endpoint |
+
+---
+
+## 💻 Local Development Setup
+
+### 1. Clone & Setup Environment
 ```bash
-# Initialize and activate venv
+# Clone the repository
+git clone https://github.com/asthakhade13-svg/AI-CAREER-NAVIGATOR.git
+cd AI-CAREER-NAVIGATOR
+
+# Create and activate virtual environment
 python -m venv venv
 venv/Scripts/activate  # On macOS/Linux: source venv/bin/activate
 
@@ -40,24 +123,28 @@ venv/Scripts/activate  # On macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file in the root and configure the following variables:
+### 2. Configure Environment Variables
+Create a `.env` file in the `backend/` directory (or root):
 ```env
-MONGODB_URI=your_mongodb_connection_string
-GEMINI_API_KEY=your_gemini_api_key
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB_NAME=career_navigator
+GEMINI_API_KEY=your_google_gemini_api_key
+PORT=8000
+DEBUG=True
 ```
 
-### 2. Preprocess Data & Train ML Models
-To download the OpenPsychometrics datasets, preprocess the traits, and train the Random Forest Classifier:
+### 3. Preprocess Datasets & Train Models
 ```bash
+# Download OpenPsychometrics data, map traits, and train Random Forest models
 python train_model.py
 ```
 
-### 3. Run the Server Locally
+### 4. Start the Application
 ```bash
-# Run FastAPI application
+# Start backend server with live reload
 python app.py
 ```
-Access the application locally:
-* **Web App**: [http://localhost:8000/](http://localhost:8000/)
-* **Interactive API Documentation (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+* Access the Web App: **[http://localhost:8000/](http://localhost:8000/)**
+* Interactive API Documentation (Swagger UI): **[http://localhost:8000/docs](http://localhost:8000/docs)**
+
 
