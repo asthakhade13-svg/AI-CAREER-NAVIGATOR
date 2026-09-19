@@ -3,8 +3,8 @@
 An AI-powered career guidance platform for computer science students, combining psychometric analysis, adaptive assessments, and machine learning to map personal traits to suitable career domains.
 
 ## 🔗 Live Links
-* **Live Web Application**: [https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
-* **Backend API Documentation**: [https://ai-career-navigator.up.railway.app/docs](https://ai-career-navigator.up.railway.app/docs)
+* **Live Web Application (Frontend)**: [https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
+* **Backend API & Docs (Railway)**: [https://ai-career-navigator-production-b369.up.railway.app/docs](https://ai-career-navigator-production-b369.up.railway.app/docs)
 
 ## Key Features
 * **Psychometric Mapping (RIASEC & Big Five)**: Combines Holland Codes (RIASEC) and the Big Five Personality frameworks to analyze 11 cognitive/personality traits.
