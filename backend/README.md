@@ -3,7 +3,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109.2-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.4.0-F7931E?style=flat&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-LLM%20API-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Grok API](https://img.shields.io/badge/Grok%20API-xAI%20LLM-000000?style=flat&logo=x&logoColor=white)](https://console.x.ai/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![GitHub Pages](https://img.shields.io/badge/Frontend-GitHub%20Pages-222222?style=flat&logo=github&logoColor=white)](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
 [![Railway](https://img.shields.io/badge/Backend-Railway-0B0D0E?style=flat&logo=railway&logoColor=white)](https://railway.app/)
@@ -41,7 +41,7 @@ An AI-powered career orientation and diagnostic assessment platform tailored for
 ### 4. 🗺️ Personalized Roadmap & Skill Gap Analyzer
 * **Skill Gap Identification**: Compares current student quiz competencies against industry requirements.
 * **Step-by-Step Learning Timeline**: Generates a milestone-based learning roadmap complete with recommended topics, projects, and certifications.
-* **AI Mentor Chatbot**: Real-time LLM-powered assistant (Gemini/Grok) to provide contextual career counseling, answers, and study strategies.
+* **AI Mentor Chatbot**: Real-time LLM-powered assistant (powered by **Grok API / Gemini**) to provide contextual career counseling, answers, and study strategies.
 
 ---
 
@@ -71,7 +71,7 @@ An AI-powered career orientation and diagnostic assessment platform tailored for
                                                   ▼
                                   ┌────────────────────────────────┐
                                   │ Skill Gap & Roadmap Generator  │
-                                  │    + AI Mentor Chatbot (LLM)   │
+                                  │   + AI Mentor Chatbot (Grok)   │
                                   └────────────────────────────────┘
 ```
 
@@ -84,7 +84,7 @@ An AI-powered career orientation and diagnostic assessment platform tailored for
 | **Frontend** | HTML5, Modern CSS3 (Glassmorphism), Vanilla JavaScript, Chart.js |
 | **Backend API** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 |
 | **Machine Learning** | Scikit-Learn (Random Forest), Joblib, Pandas, NumPy |
-| **LLM & AI** | Google Gemini API (gemini-1.5-flash / gemini-pro), Grok API |
+| **LLM & AI** | Grok API (xAI) / Google Gemini API |
 | **Database** | MongoDB / MongoDB Atlas (pymongo) |
 | **Deployment** | GitHub Pages (Frontend) + Railway / Render (Cloud Backend) |
 
@@ -128,7 +128,8 @@ Create a `.env` file in the `backend/` directory (or root):
 ```env
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_DB_NAME=career_navigator
-GEMINI_API_KEY=your_google_gemini_api_key
+GROK_API_KEY=your_grok_api_key
+GEMINI_API_KEY=your_optional_gemini_api_key
 PORT=8000
 DEBUG=True
 ```
