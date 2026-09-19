@@ -123,24 +123,7 @@ venv/Scripts/activate  # On macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the `backend/` directory (or root):
-```env
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=career_navigator
-GROK_API_KEY=your_grok_api_key
-GEMINI_API_KEY=your_optional_gemini_api_key
-PORT=8000
-DEBUG=True
-```
-
-### 3. Preprocess Datasets & Train Models
-```bash
-# Download OpenPsychometrics data, map traits, and train Random Forest models
-python train_model.py
-```
-
-### 4. Start the Application
+### 2. Start the Application
 ```bash
 # Start backend server with live reload
 python app.py
