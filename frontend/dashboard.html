@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+     <script src="api.js"></script>
+
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+
+    <!-- Nav Links -->
+    <nav class="sidebar-nav">
+
+      <p class="nav-label">Main Menu</p>
+
+      <a href="dashboard.html" class="nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="quiz.html" class="nav-item">
+        <i class="fas fa-brain"></i>
+        <span>Skill Assessment</span>
+      </a>
+
+      <a href="careers.html" class="nav-item">
+        <i class="fas fa-briefcase"></i>
+        <span>Career Paths</span>
+      </a>
+
+      <a href="roadmap.html" class="nav-item">
+        <i class="fas fa-map"></i>
+        <span>My Roadmap</span>
+      </a>
+
+      <a href="pages/internships.html" class="nav-item">
+        <i class="fas fa-building"></i>
+        <span>Internships</span>
+      </a>
+
+      <a href="pages/progress.html" class="nav-item">
+        <i class="fas fa-chart-line"></i>
+        <span>Progress</span>
+      </a>
+
+      <p class="nav-label">Support</p>
+
+      <a href="pages/chatbot.html" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>AI Mentor</span>
+      </a>
+
+      <a href="#" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+
+    </nav>
+
+    <!-- User Profile at bottom -->
+    <div class="sidebar-user">
+      <div class="user-avatar">R</div>
+      <div class="user-info">
+        <strong>Rahul Sharma</strong>
+        <p>1st Year · CSE</p>
+      </div>
+
+
+
+    <a href="#" title="Logout" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i>
+</a>
+
+
+    </div>
+
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <!-- Mobile menu toggle -->
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div>
+        <h2 class="topbar-title">Dashboard</h2>
+        <p class="topbar-sub">Welcome back, Rahul! 👋</p>
+      </div>
+
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="user-avatar sm">R</div>
+      </div>
+    </header>
+
+    <!-- ===== PAGE BODY ===== -->
+    <div class="page-body">
+
+      <!-- Alert Banner -->
+      <div class="alert-banner">
+        <i class="fas fa-star"></i>
+        <span>
+          You haven't taken the Skill Assessment yet!
+          <a href="pages/quiz.html">Take it now →</a>
+        </span>
+        <button onclick="this.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- ===== STAT CARDS ===== -->
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <i class="fas fa-fire"></i>
+          </div>
+          <div class="stat-info">
+            <p>Day Streak</p>
+            <h3>7 Days 🔥</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="stat-info">
+            <p>Tasks Done</p>
+            <h3>12 / 20</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <i class="fas fa-trophy"></i>
+          </div>
+          <div class="stat-info">
+            <p>Skills Learned</p>
+            <h3>5 Skills</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <p>Hours Learned</p>
+            <h3>34 Hours</h3>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== MAIN GRID (2 columns) ===== -->
+      <div class="dashboard-grid">
+
+        <!-- LEFT COLUMN -->
+        <div class="left-col">
+
+          <!-- Career Match Card -->
+          <div class="card">
+            <div class="card-header">
+              <h4>🎯 Your Top Career Matches</h4>
+              <a href="careers.html" class="see-all">See all</a>
+            </div>
+
+            <div class="career-list">
+
+              <div class="career-item">
+                <div class="career-icon" style="background:#EEF2FF">
+                  <i class="fas fa-code" style="color:#4F46E5"></i>
+                </div>
+                <div class="career-info">
+                  <strong>Web Development</strong>
+                  <p>Frontend & Backend</p>
+                </div>
+                <div class="career-match">
+                  <span>92%</span>
+                  <div class="match-bar">
+                    <div class="match-fill"
+                         style="width:92%;background:#4F46E5"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="career-item">
+                <div class="career-icon" style="background:#F0FDF4">
+                  <i class="fas fa-robot" style="color:#10B981"></i>
+                </div>
+                <div class="career-info">
+                  <strong>AI / Machine Learning</strong>
+                  <p>Data & Models</p>
+                </div>
+                <div class="career-match">
+                  <span>85%</span>
+                  <div class="match-bar">
+                    <div class="match-fill"
+                         style="width:85%;background:#10B981"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="career-item">
+                <div class="career-icon" style="background:#FFF7ED">
+                  <i class="fas fa-shield-alt" style="color:#F59E0B"></i>
+                </div>
+                <div class="career-info">
+                  <strong>Cybersecurity</strong>
+                  <p>Ethical Hacking</p>
+                </div>
+                <div class="career-match">
+                  <span>78%</span>
+                  <div class="match-bar">
+                    <div class="match-fill"
+                         style="width:78%;background:#F59E0B"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Roadmap Progress -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>🗺️ Roadmap Progress</h4>
+              <a href="roadmap.html" class="see-all">View full</a>
+            </div>
+
+            <div class="roadmap-steps">
+
+              <div class="road-step done">
+                <div class="step-dot">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="step-body">
+                  <strong>HTML & CSS Basics</strong>
+                  <p>Completed · Week 1</p>
+                </div>
+                <span class="badge badge-success">Done</span>
+              </div>
+
+              <div class="road-step active">
+                <div class="step-dot active">
+                  <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="step-body">
+                  <strong>JavaScript Fundamentals</strong>
+                  <p>In Progress · Week 2</p>
+                </div>
+                <span class="badge badge-warning">Active</span>
+              </div>
+
+              <div class="road-step">
+                <div class="step-dot locked">
+                  <i class="fas fa-lock"></i>
+                </div>
+                <div class="step-body">
+                  <strong>React.js Basics</strong>
+                  <p>Upcoming · Week 3</p>
+                </div>
+                <span class="badge badge-primary">Next</span>
+              </div>
+
+              <div class="road-step">
+                <div class="step-dot locked">
+                  <i class="fas fa-lock"></i>
+                </div>
+                <div class="step-body">
+                  <strong>Backend with Node.js</strong>
+                  <p>Upcoming · Week 5</p>
+                </div>
+                <span class="badge badge-primary">Next</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-col">
+
+          <!-- Quick Actions -->
+          <div class="card">
+            <h4 class="mb-2">⚡ Quick Actions</h4>
+            <div class="quick-actions">
+              <a href="quiz.html" class="quick-btn">
+                <i class="fas fa-brain"></i>
+                <span>Take Quiz</span>
+              </a>
+              <a href="roadmap.html" class="quick-btn">
+                <i class="fas fa-map"></i>
+                <span>My Roadmap</span>
+              </a>
+              <a href="pages/internships.html" class="quick-btn">
+                <i class="fas fa-building"></i>
+                <span>Internships</span>
+              </a>
+              <a href="pages/chatbot.html" class="quick-btn">
+                <i class="fas fa-robot"></i>
+                <span>AI Mentor</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Skill Gap Card -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>📊 Skill Levels</h4>
+            </div>
+            <div class="skill-bars">
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>HTML/CSS</span>
+                  <span>80%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       style="width:80%;background:var(--primary)"></div>
+                </div>
+              </div>
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>JavaScript</span>
+                  <span>45%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       style="width:45%;background:var(--secondary)"></div>
+                </div>
+              </div>
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>Python</span>
+                  <span>30%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       style="width:30%;background:var(--success)"></div>
+                </div>
+              </div>
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>DSA</span>
+                  <span>20%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       style="width:20%;background:var(--warning)"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Internship Card -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>💼 Latest Internships</h4>
+              <a href="pages/internships.html" class="see-all">See all</a>
+            </div>
+            <div class="internship-list">
+
+              <div class="intern-item">
+                <div class="intern-logo">G</div>
+                <div class="intern-info">
+                  <strong>Google STEP</strong>
+                  <p>Software Engineering · Remote</p>
+                </div>
+                <span class="badge badge-success">Open</span>
+              </div>
+
+              <div class="intern-item">
+                <div class="intern-logo"
+                     style="background:#E0F2FE;color:#0284C7">M</div>
+                <div class="intern-info">
+                  <strong>Microsoft Engage</strong>
+                  <p>Dev · Hybrid</p>
+                </div>
+                <span class="badge badge-success">Open</span>
+              </div>
+
+              <div class="intern-item">
+                <div class="intern-logo"
+                     style="background:#FEF3C7;color:#D97706">A</div>
+                <div class="intern-info">
+                  <strong>Amazon SDE Intern</strong>
+                  <p>Backend · Onsite</p>
+                </div>
+                <span class="badge badge-warning">Closing</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <!-- end right col -->
+
+      </div>
+      <!-- end dashboard-grid -->
+
+    </div>
+    <!-- end page-body -->
+
+  </main>
+
+ <!-- <script src="api.js"></script> -->
+ <script>
+// Protect page
+requireAuth();
+
+// ---- Update sidebar with logged in user ----
+function updateSidebarUser() {
+    const user = UserManager.get();
+    if (!user) return;
+
+    // Update ALL name elements
+    document.querySelectorAll('.user-info strong')
+        .forEach(el => {
+            el.textContent = user.fullName;
+        });
+
+    // Update ALL avatar circles
+    document.querySelectorAll('.user-avatar')
+        .forEach(el => {
+            if (el.textContent.trim().length <= 2) {
+                el.textContent =
+                    user.fullName.charAt(0).toUpperCase();
+            }
+        });
+
+    // Update welcome message
+    const subEl = document.querySelector('.topbar-sub');
+    if (subEl) {
+        subEl.textContent =
+            'Welcome back, ' +
+            user.fullName.split(' ')[0] + '! 👋';
+    }
+}
+
+// Call immediately
+updateSidebarUser();
+
+// ---- Load dashboard data ----
+async function loadDashboard() {
+    try {
+        const result = await ProgressAPI.getStats();
+        if (result.status === 200) {
+            updateStatCards(result.data);
+            loadCareerRecommendations();
+            loadRoadmap();
+        }
+    } catch (error) {
+        console.error('Dashboard error:', error);
+    }
+}
+
+function updateStatCards(stats) {
+    const taskEl = document.querySelector('.stat-info h3');
+    if (taskEl) {
+        taskEl.textContent =
+            stats.completedMilestones + '/' +
+            stats.totalMilestones;
+    }
+}
+
+async function loadCareerRecommendations() {
+    try {
+        const result = await CareerAPI.getRecommendations();
+        if (result.status === 200 && result.data.success) {
+            const recs = result.data.recommendations;
+            if (recs && recs.length > 0) {
+                updateCareerList(recs.slice(0, 3));
+            }
+        }
+    } catch (error) {
+        console.error('Career error:', error);
+    }
+}
+
+function updateCareerList(careers) {
+    const careerList = document.querySelector('.career-list');
+    if (!careerList) return;
+
+    const colors = [
+        { bg:'#EEF2FF', ic:'#4F46E5', icon:'fa-code' },
+        { bg:'#F0FDF4', ic:'#10B981', icon:'fa-robot' },
+        { bg:'#FFF7ED', ic:'#F59E0B', icon:'fa-shield-alt' }
+    ];
+
+    careerList.innerHTML = careers.map((c, i) => `
+        <div class="career-item">
+            <div class="career-icon"
+                 style="background:${colors[i].bg}">
+                <i class="fas ${colors[i].icon}"
+                   style="color:${colors[i].ic}"></i>
+            </div>
+            <div class="career-info">
+                <strong>${c.careerName}</strong>
+                <p>${c.difficultyLevel || 'Tech Career'}</p>
+            </div>
+            <div class="career-match">
+                <span>${c.matchPercentage}%</span>
+                <div class="match-bar">
+                    <div class="match-fill"
+                         style="width:${c.matchPercentage}%;
+                                background:${colors[i].ic}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadRoadmap() {
+    try {
+        const result = await RoadmapAPI.getMyRoadmap();
+        if (result.status === 200 && result.data.success) {
+            updateRoadmapSteps(result.data.milestones);
+        }
+    } catch (error) {
+        console.error('Roadmap error:', error);
+    }
+}
+
+function updateRoadmapSteps(milestones) {
+    const roadmapSteps =
+        document.querySelector('.roadmap-steps');
+    if (!roadmapSteps || !milestones) return;
+
+    roadmapSteps.innerHTML = milestones.slice(0, 4).map(m => {
+        const isDone   = m.isCompleted;
+        const isActive = m.status === 'ACTIVE';
+        return `
+        <div class="road-step ${isDone ? 'done' : isActive ? 'active' : ''}">
+            <div class="step-dot ${isActive ? 'active' : ''}">
+                <i class="fas ${
+                    isDone ? 'fa-check' :
+                    isActive ? 'fa-spinner fa-spin' :
+                    'fa-lock'
+                }"></i>
+            </div>
+            <div class="step-body">
+                <strong>${m.title}</strong>
+                <p>Month ${m.monthNumber}</p>
+            </div>
+            <span class="badge ${
+                isDone ? 'badge-success' :
+                isActive ? 'badge-warning' :
+                'badge-primary'
+            }">
+                ${isDone ? 'Done' : isActive ? 'Active' : 'Next'}
+            </span>
+        </div>`;
+    }).join('');
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar')
+        .classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+
+</body>
+</html>

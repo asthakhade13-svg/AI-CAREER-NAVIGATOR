@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Progress | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+   <script src="api.js"></script>
+
+  <link rel="stylesheet" href="progress.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-label">Main Menu</p>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a href="quiz.html" class="nav-item">
+        <i class="fas fa-brain"></i><span>Skill Assessment</span>
+      </a>
+      <a href="careers.html" class="nav-item">
+        <i class="fas fa-briefcase"></i><span>Career Paths</span>
+      </a>
+      <a href="roadmap.html" class="nav-item">
+        <i class="fas fa-map"></i><span>My Roadmap</span>
+      </a>
+      <a href="internships.html" class="nav-item">
+        <i class="fas fa-building"></i><span>Internships</span>
+      </a>
+      <a href="progress.html" class="nav-item active">
+        <i class="fas fa-chart-line"></i><span>Progress</span>
+      </a>
+      <p class="nav-label">Support</p>
+      <a href="chatbot.html" class="nav-item">
+        <i class="fas fa-robot"></i><span>AI Mentor</span>
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">R</div>
+      <div class="user-info">
+        <strong>Rahul Sharma</strong>
+        <p>1st Year · CSE</p>
+      </div>
+       <a href="#" title="Logout" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i>
+</a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div>
+        <h2 class="topbar-title">My Progress</h2>
+        <p class="topbar-sub">
+          Track your learning journey day by day
+        </p>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="user-avatar sm">R</div>
+      </div>
+    </header>
+
+    <div class="page-body">
+
+      <!-- ===== TOP STATS ===== -->
+      <div class="progress-stats">
+
+        <div class="prog-stat-card purple">
+          <div class="prog-stat-icon">
+            <i class="fas fa-fire"></i>
+          </div>
+          <div class="prog-stat-info">
+            <h3>7</h3>
+            <p>Day Streak 🔥</p>
+          </div>
+          <div class="prog-stat-chart">
+            <div class="mini-bar" style="height:40%"></div>
+            <div class="mini-bar" style="height:60%"></div>
+            <div class="mini-bar" style="height:50%"></div>
+            <div class="mini-bar" style="height:80%"></div>
+            <div class="mini-bar" style="height:70%"></div>
+            <div class="mini-bar" style="height:90%"></div>
+            <div class="mini-bar" style="height:100%"></div>
+          </div>
+        </div>
+
+        <div class="prog-stat-card green">
+          <div class="prog-stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="prog-stat-info">
+            <h3>34</h3>
+            <p>Hours Learned</p>
+          </div>
+          <div class="prog-stat-chart">
+            <div class="mini-bar" style="height:30%"></div>
+            <div class="mini-bar" style="height:55%"></div>
+            <div class="mini-bar" style="height:45%"></div>
+            <div class="mini-bar" style="height:70%"></div>
+            <div class="mini-bar" style="height:60%"></div>
+            <div class="mini-bar" style="height:85%"></div>
+            <div class="mini-bar" style="height:75%"></div>
+          </div>
+        </div>
+
+        <div class="prog-stat-card blue">
+          <div class="prog-stat-icon">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="prog-stat-info">
+            <h3>12/20</h3>
+            <p>Tasks Completed</p>
+          </div>
+          <div class="prog-stat-chart">
+            <div class="mini-bar" style="height:20%"></div>
+            <div class="mini-bar" style="height:40%"></div>
+            <div class="mini-bar" style="height:35%"></div>
+            <div class="mini-bar" style="height:60%"></div>
+            <div class="mini-bar" style="height:55%"></div>
+            <div class="mini-bar" style="height:75%"></div>
+            <div class="mini-bar" style="height:65%"></div>
+          </div>
+        </div>
+
+        <div class="prog-stat-card orange">
+          <div class="prog-stat-icon">
+            <i class="fas fa-trophy"></i>
+          </div>
+          <div class="prog-stat-info">
+            <h3>5</h3>
+            <p>Badges Earned</p>
+          </div>
+          <div class="prog-stat-chart">
+            <div class="mini-bar" style="height:50%"></div>
+            <div class="mini-bar" style="height:50%"></div>
+            <div class="mini-bar" style="height:75%"></div>
+            <div class="mini-bar" style="height:75%"></div>
+            <div class="mini-bar" style="height:75%"></div>
+            <div class="mini-bar" style="height:100%"></div>
+            <div class="mini-bar" style="height:100%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== MAIN GRID ===== -->
+      <div class="progress-main-grid">
+
+        <!-- LEFT COLUMN -->
+        <div class="prog-left">
+
+          <!-- Weekly Activity Chart -->
+          <div class="card">
+            <div class="card-header">
+              <h4>📅 Weekly Activity</h4>
+              <div class="chart-legend">
+                <span class="leg-dot purple"></span>
+                <span>Hours studied</span>
+              </div>
+            </div>
+
+            <div class="bar-chart">
+              <div class="bar-chart-bars">
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:40%">
+                    <span class="bar-tip">2h</span>
+                  </div>
+                  <span class="bar-label">Mon</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:60%">
+                    <span class="bar-tip">3h</span>
+                  </div>
+                  <span class="bar-label">Tue</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:30%">
+                    <span class="bar-tip">1.5h</span>
+                  </div>
+                  <span class="bar-label">Wed</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:80%">
+                    <span class="bar-tip">4h</span>
+                  </div>
+                  <span class="bar-label">Thu</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:50%">
+                    <span class="bar-tip">2.5h</span>
+                  </div>
+                  <span class="bar-label">Fri</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:100%">
+                    <span class="bar-tip">5h</span>
+                  </div>
+                  <span class="bar-label">Sat</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-fill purple"
+                       style="height:70%">
+                    <span class="bar-tip">3.5h</span>
+                  </div>
+                  <span class="bar-label">Sun</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-footer">
+              <div class="chart-foot-item">
+                <strong>21.5h</strong>
+                <span>This week</span>
+              </div>
+              <div class="chart-foot-item">
+                <strong>+4.5h</strong>
+                <span>vs last week</span>
+              </div>
+              <div class="chart-foot-item">
+                <strong>3h/day</strong>
+                <span>Daily average</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Skill Progress -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>🧠 Skill Progress</h4>
+              <span class="badge badge-primary">
+                Updated today
+              </span>
+            </div>
+
+            <div class="skill-progress-list">
+
+              <div class="skill-prog-item">
+                <div class="skill-prog-header">
+                  <div class="skill-prog-left">
+                    <div class="skill-icon purple">
+                      <i class="fas fa-code"></i>
+                    </div>
+                    <div>
+                      <strong>HTML & CSS</strong>
+                      <p>Web Fundamentals</p>
+                    </div>
+                  </div>
+                  <div class="skill-prog-right">
+                    <span class="skill-pct">80%</span>
+                    <span class="skill-change up">
+                      +5% ↑
+                    </span>
+                  </div>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill animated"
+                       style="width:80%;
+                              background:var(--primary)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-prog-item">
+                <div class="skill-prog-header">
+                  <div class="skill-prog-left">
+                    <div class="skill-icon yellow">
+                      <i class="fas fa-js"></i>
+                    </div>
+                    <div>
+                      <strong>JavaScript</strong>
+                      <p>Programming Language</p>
+                    </div>
+                  </div>
+                  <div class="skill-prog-right">
+                    <span class="skill-pct">45%</span>
+                    <span class="skill-change up">
+                      +12% ↑
+                    </span>
+                  </div>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill animated"
+                       style="width:45%;
+                              background:#F59E0B">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-prog-item">
+                <div class="skill-prog-header">
+                  <div class="skill-prog-left">
+                    <div class="skill-icon blue">
+                      <i class="fas fa-python"></i>
+                    </div>
+                    <div>
+                      <strong>Python</strong>
+                      <p>Programming Language</p>
+                    </div>
+                  </div>
+                  <div class="skill-prog-right">
+                    <span class="skill-pct">30%</span>
+                    <span class="skill-change up">
+                      +8% ↑
+                    </span>
+                  </div>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill animated"
+                       style="width:30%;
+                              background:var(--secondary)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-prog-item">
+                <div class="skill-prog-header">
+                  <div class="skill-prog-left">
+                    <div class="skill-icon green">
+                      <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                      <strong>DSA</strong>
+                      <p>Data Structures & Algorithms</p>
+                    </div>
+                  </div>
+                  <div class="skill-prog-right">
+                    <span class="skill-pct">20%</span>
+                    <span class="skill-change up">
+                      +3% ↑
+                    </span>
+                  </div>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill animated"
+                       style="width:20%;
+                              background:var(--success)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-prog-item">
+                <div class="skill-prog-header">
+                  <div class="skill-prog-left">
+                    <div class="skill-icon red">
+                      <i class="fas fa-git-alt"></i>
+                    </div>
+                    <div>
+                      <strong>Git & GitHub</strong>
+                      <p>Version Control</p>
+                    </div>
+                  </div>
+                  <div class="skill-prog-right">
+                    <span class="skill-pct">55%</span>
+                    <span class="skill-change up">
+                      +10% ↑
+                    </span>
+                  </div>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill animated"
+                       style="width:55%;
+                              background:#EF4444">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Activity Log -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>📋 Recent Activity</h4>
+              <span class="see-all">View all</span>
+            </div>
+            <div class="activity-log">
+
+              <div class="activity-item">
+                <div class="activity-icon green">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="activity-info">
+                  <strong>Completed: HTML & CSS Basics</strong>
+                  <p>Roadmap milestone completed</p>
+                </div>
+                <span class="activity-time">Today</span>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon purple">
+                  <i class="fas fa-brain"></i>
+                </div>
+                <div class="activity-info">
+                  <strong>Took Skill Assessment Quiz</strong>
+                  <p>Scored 70% — Web Dev recommended</p>
+                </div>
+                <span class="activity-time">Yesterday</span>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon blue">
+                  <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="activity-info">
+                  <strong>Saved: Google STEP Internship</strong>
+                  <p>Added to saved internships</p>
+                </div>
+                <span class="activity-time">2 days ago</span>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon orange">
+                  <i class="fas fa-trophy"></i>
+                </div>
+                <div class="activity-info">
+                  <strong>Badge Earned: Quick Learner 🏅</strong>
+                  <p>Completed 5 topics in one week</p>
+                </div>
+                <span class="activity-time">3 days ago</span>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon green">
+                  <i class="fas fa-map"></i>
+                </div>
+                <div class="activity-info">
+                  <strong>Started Web Dev Roadmap</strong>
+                  <p>Began your personalized learning path</p>
+                </div>
+                <span class="activity-time">1 week ago</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="prog-right">
+
+          <!-- Streak Calendar -->
+          <div class="card">
+            <div class="card-header">
+              <h4>🔥 Activity Calendar</h4>
+              <span class="badge badge-warning">
+                7 Day Streak
+              </span>
+            </div>
+            <div class="streak-calendar"
+                 id="streakCalendar">
+            </div>
+            <div class="streak-footer">
+              <div class="streak-foot-item">
+                <div class="streak-dot active"></div>
+                <span>Active day</span>
+              </div>
+              <div class="streak-foot-item">
+                <div class="streak-dot inactive"></div>
+                <span>Inactive day</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Goals -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>🎯 Weekly Goals</h4>
+              <span class="see-all"
+                    onclick="resetGoals()">
+                Reset
+              </span>
+            </div>
+
+            <div class="goals-list" id="goalsList">
+            </div>
+
+            <div class="goals-footer">
+              <div class="goals-progress-bar">
+                <div class="goals-fill"
+                     id="goalsFill"
+                     style="width:0%">
+                </div>
+              </div>
+              <p id="goalsText" class="goals-text">
+                0 of 5 goals completed this week
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Badges Section -->
+          <div class="card mt-3">
+            <div class="card-header">
+              <h4>🏆 Badges Earned</h4>
+              <span class="badge badge-success">5 / 12</span>
+            </div>
+
+            <div class="badges-grid">
+
+              <div class="badge-item earned"
+                   title="First Steps">
+                <div class="badge-icon">🚀</div>
+                <span>First Steps</span>
+              </div>
+
+              <div class="badge-item earned"
+                   title="Quiz Taker">
+                <div class="badge-icon">🧠</div>
+                <span>Quiz Taker</span>
+              </div>
+
+              <div class="badge-item earned"
+                   title="Quick Learner">
+                <div class="badge-icon">⚡</div>
+                <span>Quick Learner</span>
+              </div>
+
+              <div class="badge-item earned"
+                   title="Streak Master">
+                <div class="badge-icon">🔥</div>
+                <span>Streak Master</span>
+              </div>
+
+              <div class="badge-item earned"
+                   title="Job Hunter">
+                <div class="badge-icon">💼</div>
+                <span>Job Hunter</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="Complete 10 topics">
+                <div class="badge-icon">🔒</div>
+                <span>Topic Master</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="30 day streak">
+                <div class="badge-icon">🔒</div>
+                <span>30 Day Streak</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="Apply to 10 internships">
+                <div class="badge-icon">🔒</div>
+                <span>Go-Getter</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="Score 90%+ on quiz">
+                <div class="badge-icon">🔒</div>
+                <span>Quiz Master</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="Complete roadmap">
+                <div class="badge-icon">🔒</div>
+                <span>Road Warrior</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="100 hours learned">
+                <div class="badge-icon">🔒</div>
+                <span>Century Club</span>
+              </div>
+
+              <div class="badge-item locked"
+                   title="Get an internship offer">
+                <div class="badge-icon">🔒</div>
+                <span>Intern Ready</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Overall Progress -->
+          <div class="card mt-3">
+            <h4 class="mb-3">📊 Overall Progress</h4>
+            <div class="overall-ring-wrap">
+              <div class="overall-ring">
+                <div class="ring-inner">
+                  <strong>25%</strong>
+                  <span>Complete</span>
+                </div>
+              </div>
+              <div class="ring-stats">
+                <div class="ring-stat">
+                  <i class="fas fa-check-circle"
+                     style="color:var(--success)"></i>
+                  <div>
+                    <strong>2</strong>
+                    <p>Steps done</p>
+                  </div>
+                </div>
+                <div class="ring-stat">
+                  <i class="fas fa-spinner"
+                     style="color:var(--warning)"></i>
+                  <div>
+                    <strong>1</strong>
+                    <p>In progress</p>
+                  </div>
+                </div>
+                <div class="ring-stat">
+                  <i class="fas fa-lock"
+                     style="color:var(--gray-400)"></i>
+                  <div>
+                    <strong>5</strong>
+                    <p>Remaining</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+   <!-- <script src="api.js"></script> -->
+<script>
+// Protect page
+requireAuth();
+
+// Load progress data from API
+async function loadProgress() {
+    const result = await ProgressAPI.getDashboard();
+
+    if (result.status === 200 &&
+        result.data.success) {
+
+        const data = result.data;
+        updateProgressUI(data);
+    } else {
+        showError('Failed to load progress!');
+    }
+}
+
+function updateProgressUI(data) {
+    // Update stat cards
+    const stats = document.querySelectorAll(
+        '.prog-stat-info h3'
+    );
+
+    if (stats[0]) stats[0].textContent =
+        data.completedMilestones + ' Done';
+    if (stats[1]) stats[1].textContent =
+        Math.round(data.overallProgress) + '%';
+    if (stats[2]) stats[2].textContent =
+        data.totalQuizAttempts + ' Quizzes';
+    if (stats[3]) stats[3].textContent =
+        data.totalChatMessages + ' Chats';
+
+    // Update skill bars
+    updateSkillBar('HTML/CSS',
+        data.webDevScore || 0);
+    updateSkillBar('JavaScript',
+        Math.min(data.webDevScore * 0.6 || 0, 100));
+    updateSkillBar('Python',
+        data.aiMlScore || 0);
+    updateSkillBar('DSA',
+        data.dsaScore || 0);
+
+    // Update activity log
+    updateActivityLog(data.recentActivities || []);
+
+    // Update milestone progress
+    updateMilestones(data.milestoneProgress || []);
+}
+
+function updateSkillBar(name, value) {
+    const bars = document.querySelectorAll(
+        '.skill-prog-left strong'
+    );
+    bars.forEach((bar, i) => {
+        if (bar.textContent.includes(
+            name.split('/')[0])) {
+            const fill = bar.closest('.skill-prog-item')
+                .querySelector('.skill-fill');
+            const pct = bar.closest('.skill-prog-item')
+                .querySelector('.skill-pct');
+            if (fill) fill.style.width = value + '%';
+            if (pct)  pct.textContent = value + '%';
+        }
+    });
+}
+
+function updateActivityLog(activities) {
+    const log = document.querySelector('.activity-log');
+    if (!log || activities.length === 0) return;
+
+    log.innerHTML = activities.map(a => `
+        <div class="activity-item">
+            <div class="activity-icon ${
+                a.type === 'QUIZ'      ? 'purple' :
+                a.type === 'MILESTONE' ? 'green'  :
+                a.type === 'CAREER'    ? 'orange' :
+                'blue'
+            }">
+                <i class="fas ${
+                    a.type === 'QUIZ'      ? 'fa-brain' :
+                    a.type === 'MILESTONE' ? 'fa-check' :
+                    a.type === 'CAREER'    ? 'fa-briefcase':
+                    a.type === 'ROADMAP'   ? 'fa-map' :
+                    'fa-robot'
+                }"></i>
+            </div>
+            <div class="activity-info">
+                <strong>${a.description}</strong>
+                <p>${a.type}</p>
+            </div>
+            <span class="activity-time">
+                ${a.timeAgo}
+            </span>
+        </div>
+    `).join('');
+}
+
+function updateMilestones(milestones) {
+    const roadmapSteps =
+        document.querySelector('.roadmap-steps');
+    if (!roadmapSteps) return;
+
+    roadmapSteps.innerHTML = milestones.map(m => `
+        <div class="road-step ${
+            m.isCompleted ? 'done' : ''}">
+            <div class="step-dot ${
+                m.status === 'ACTIVE' ? 'active' : ''}">
+                <i class="fas ${
+                    m.isCompleted ? 'fa-check' :
+                    m.status === 'ACTIVE'
+                    ? 'fa-spinner fa-spin' :
+                    'fa-lock'
+                }"></i>
+            </div>
+            <div class="step-body">
+                <strong>${m.title}</strong>
+                <p>Month ${m.monthNumber}
+                   · ${m.estimatedHours}h</p>
+            </div>
+            <span class="badge ${
+                m.isCompleted ? 'badge-success' :
+                m.status === 'ACTIVE'
+                ? 'badge-warning' :
+                'badge-primary'
+            }">
+                ${m.isCompleted ? 'Done' :
+                  m.status === 'ACTIVE'
+                  ? 'Active' : 'Next'}
+            </span>
+        </div>
+    `).join('');
+}
+
+// Weekly goals
+const goals = [
+    { text: "Complete 1 roadmap milestone", done: false },
+    { text: "Study for 2+ hours",           done: false },
+    { text: "Ask AI mentor a question",      done: false },
+    { text: "Review your career roadmap",    done: false },
+    { text: "Update your GitHub profile",    done: false },
+];
+
+function renderGoals() {
+    const list = document.getElementById('goalsList');
+    if (!list) return;
+
+    list.innerHTML = '';
+    goals.forEach((goal, i) => {
+        const item = document.createElement('label');
+        item.className =
+            `goal-item ${goal.done ? 'done' : ''}`;
+        item.innerHTML = `
+            <input type="checkbox"
+                   ${goal.done ? 'checked' : ''}
+                   onchange="toggleGoal(${i}, this)" />
+            <span>${goal.text}</span>
+            ${goal.done ? '<i class="fas fa-check-circle goal-check"></i>' : ''}
+        `;
+        list.appendChild(item);
+    });
+    updateGoalsProgress();
+}
+
+function toggleGoal(idx, checkbox) {
+    goals[idx].done = checkbox.checked;
+    renderGoals();
+}
+
+function updateGoalsProgress() {
+    const done  = goals.filter(g => g.done).length;
+    const total = goals.length;
+    const pct   = Math.round((done / total) * 100);
+    const fill  =
+        document.getElementById('goalsFill');
+    const text  =
+        document.getElementById('goalsText');
+    if (fill) fill.style.width = pct + '%';
+    if (text) text.textContent =
+        `${done} of ${total} goals done this week`;
+}
+
+function resetGoals() {
+    goals.forEach(g => g.done = false);
+    renderGoals();
+}
+
+// Streak calendar
+function buildCalendar() {
+    const cal =
+        document.getElementById('streakCalendar');
+    if (!cal) return;
+
+    const days = ['S','M','T','W','T','F','S'];
+    const labelRow =
+        document.createElement('div');
+    labelRow.className = 'cal-labels';
+    days.forEach(d => {
+        const span = document.createElement('span');
+        span.textContent = d;
+        labelRow.appendChild(span);
+    });
+    cal.appendChild(labelRow);
+
+    const grid = document.createElement('div');
+    grid.className = 'cal-grid';
+    const totalDays = 49;
+
+    for (let i = 0; i < totalDays; i++) {
+        const dot = document.createElement('div');
+        const daysAgo = totalDays - 1 - i;
+        let active = false;
+
+        if (daysAgo < 7) {
+            active = true;
+        } else {
+            active = Math.random() > 0.55;
+        }
+
+        dot.className =
+            `cal-dot ${active ? 'active' : ''}`;
+
+        if (active) {
+            const intensity = Math.random();
+            if (intensity > 0.7)
+                dot.classList.add('high');
+            else if (intensity > 0.4)
+                dot.classList.add('medium');
+            else
+                dot.classList.add('low');
+        }
+        grid.appendChild(dot);
+    }
+    cal.appendChild(grid);
+}
+
+// Sidebar toggle
+function toggleSidebar() {
+    document.getElementById('sidebar')
+        .classList.toggle('open');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded',
+    async () => {
+        await loadProgress();
+        buildCalendar();
+        renderGoals();
+    }
+);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skill Assessment | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="quiz.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <script src="api.js"></script>
+
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-label">Main Menu</p>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a href="quiz.html" class="nav-item active">
+        <i class="fas fa-brain"></i><span>Skill Assessment</span>
+      </a>
+      <a href="careers.html" class="nav-item">
+        <i class="fas fa-briefcase"></i><span>Career Paths</span>
+      </a>
+      <a href="roadmap.html" class="nav-item">
+        <i class="fas fa-map"></i><span>My Roadmap</span>
+      </a>
+      <a href="internships.html" class="nav-item">
+        <i class="fas fa-building"></i><span>Internships</span>
+      </a>
+      <a href="progress.html" class="nav-item">
+        <i class="fas fa-chart-line"></i><span>Progress</span>
+      </a>
+      <p class="nav-label">Support</p>
+      <a href="chatbot.html" class="nav-item">
+        <i class="fas fa-robot"></i><span>AI Mentor</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">R</div>
+      <div class="user-info">
+        <strong>Rahul Sharma</strong>
+        <p>1st Year · CSE</p>
+      </div>
+  <a href="#" title="Logout" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i>
+</a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div>
+        <h2 class="topbar-title">Skill Assessment</h2>
+        <p class="topbar-sub">Find your strengths and skill gaps</p>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="user-avatar sm">R</div>
+      </div>
+    </header>
+
+    <!-- ===== PAGE BODY ===== -->
+    <div class="page-body">
+
+      <!-- ===== START SCREEN ===== -->
+      <div id="startScreen">
+
+        <div class="quiz-intro-card">
+
+          <div class="quiz-intro-icon">
+            <i class="fas fa-brain"></i>
+          </div>
+
+          <h2>Skill Assessment Quiz</h2>
+          <p class="quiz-intro-desc">
+            Answer 10 quick questions across different CS topics.
+            Our AI will analyze your answers and recommend the
+            best career path for you!
+          </p>
+
+          <!-- What to expect -->
+          <div class="expect-grid">
+            <div class="expect-item">
+              <i class="fas fa-clock"></i>
+              <strong>10 Minutes</strong>
+              <p>Estimated time</p>
+            </div>
+            <div class="expect-item">
+              <i class="fas fa-question-circle"></i>
+              <strong>10 Questions</strong>
+              <p>Multiple choice</p>
+            </div>
+            <div class="expect-item">
+              <i class="fas fa-layer-group"></i>
+              <strong>5 Topics</strong>
+              <p>CS fundamentals</p>
+            </div>
+            <div class="expect-item">
+              <i class="fas fa-robot"></i>
+              <strong>AI Result</strong>
+              <p>Instant analysis</p>
+            </div>
+          </div>
+
+          <!-- Topics covered -->
+          <div class="topics-covered">
+            <p class="topics-title">Topics Covered</p>
+            <div class="topic-tags">
+              <span class="badge badge-primary">Web Development</span>
+              <span class="badge badge-primary">AI / ML</span>
+              <span class="badge badge-primary">Data Structures</span>
+              <span class="badge badge-primary">Cybersecurity</span>
+              <span class="badge badge-primary">Cloud Computing</span>
+            </div>
+          </div>
+
+          <button
+            class="btn btn-primary"
+            style="padding: 14px 40px; font-size: 1rem;"
+            onclick="startQuiz()"
+          >
+            <i class="fas fa-play"></i>
+            Start Assessment
+          </button>
+
+        </div>
+      </div>
+
+      <!-- ===== QUIZ SCREEN ===== -->
+      <div id="quizScreen" style="display:none;">
+
+        <!-- Progress Bar -->
+        <div class="quiz-progress-wrap">
+          <div class="quiz-progress-info">
+            <span id="questionCount">Question 1 of 10</span>
+            <span id="timerDisplay">
+              <i class="fas fa-clock"></i> 10:00
+            </span>
+          </div>
+          <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill"
+                 id="progressFill"
+                 style="width: 10%">
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="question-card card">
+
+          <!-- Topic Badge -->
+          <div class="question-topic">
+            <span class="badge badge-primary"
+                  id="questionTopic">Web Development</span>
+          </div>
+
+          <!-- Question Text -->
+          <h3 class="question-text" id="questionText">
+            Loading question...
+          </h3>
+
+          <!-- Options -->
+          <div class="options-grid" id="optionsGrid">
+            <!-- Filled by JS -->
+          </div>
+
+          <!-- Navigation -->
+          <div class="quiz-nav">
+            <button
+              class="btn btn-outline"
+              onclick="prevQuestion()"
+              id="prevBtn"
+              disabled
+            >
+              <i class="fas fa-arrow-left"></i> Previous
+            </button>
+
+            <div class="question-dots" id="questionDots">
+              <!-- Dots filled by JS -->
+            </div>
+
+            <button
+              class="btn btn-primary"
+              onclick="nextQuestion()"
+              id="nextBtn"
+            >
+              Next <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== RESULT SCREEN ===== -->
+      <div id="resultScreen" style="display:none;">
+
+        <div class="result-card">
+
+          <!-- Score Circle -->
+          <div class="score-circle-wrap">
+            <div class="score-circle">
+              <span class="score-number" id="scoreNumber">0%</span>
+              <span class="score-label">Your Score</span>
+            </div>
+          </div>
+
+          <h2 id="resultTitle">Great Job! 🎉</h2>
+          <p id="resultDesc" class="result-desc">
+            Based on your answers, here are your recommended paths
+          </p>
+
+          <!-- Skill breakdown -->
+          <div class="result-breakdown">
+            <h4>📊 Skill Breakdown</h4>
+            <div class="breakdown-bars">
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>Web Development</span>
+                  <span id="webScore">0%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       id="webFill"
+                       style="background:var(--primary)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>AI / ML</span>
+                  <span id="aiScore">0%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       id="aiFill"
+                       style="background:var(--success)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>DSA</span>
+                  <span id="dsaScore">0%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       id="dsaFill"
+                       style="background:var(--secondary)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span>Cybersecurity</span>
+                  <span id="cyberScore">0%</span>
+                </div>
+                <div class="skill-track">
+                  <div class="skill-fill"
+                       id="cyberFill"
+                       style="background:var(--warning)">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Recommended careers -->
+          <div class="result-careers">
+            <h4>🎯 Recommended Career Paths</h4>
+            <div class="rec-career-grid" id="recCareers">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="result-actions">
+            <a href="roadmap.html"
+               class="btn btn-primary">
+              <i class="fas fa-map"></i>
+              View My Roadmap
+            </a>
+            <button
+              class="btn btn-outline"
+              onclick="retakeQuiz()">
+              <i class="fas fa-redo"></i>
+              Retake Quiz
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+ 
+
+<!-- At BOTTOM of body - only this script -->
+<script>
+// Protect page — redirect if not logged in
+requireAuth();
+
+// ========================================
+// QUIZ STATE
+// ========================================
+let current  = 0;
+let answers  = [];
+let questions = [];
+let timerInterval;
+let timeLeft = 600;
+
+// ========================================
+// LOAD QUESTIONS FROM BACKEND API
+// ========================================
+async function loadQuestions() {
+    try {
+        const result = await QuizAPI.getQuestions();
+
+        if (result.status === 200 &&
+            Array.isArray(result.data)) {
+            questions = result.data;
+            answers = new Array(questions.length)
+                .fill(null);
+            return true;
+        } else {
+            showError('Failed to load questions!');
+            return false;
+        }
+    } catch (error) {
+        showError(
+            'Backend connection failed! ' +
+            'Is Spring Boot running?'
+        );
+        return false;
+    }
+}
+
+// ========================================
+// START QUIZ
+// ========================================
+async function startQuiz() {
+    // Hide start screen
+    document.getElementById('startScreen')
+        .style.display = 'none';
+
+    // Show quiz screen
+    document.getElementById('quizScreen')
+        .style.display = 'block';
+
+    // Load questions from API
+    const loaded = await loadQuestions();
+
+    if (loaded && questions.length > 0) {
+        buildDots();
+        renderQuestion();
+        startTimer();
+    } else {
+        // Go back to start screen on error
+        document.getElementById('quizScreen')
+            .style.display = 'none';
+        document.getElementById('startScreen')
+            .style.display = 'block';
+    }
+}
+
+// ========================================
+// TIMER
+// ========================================
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        const m = Math.floor(timeLeft / 60)
+            .toString().padStart(2, '0');
+        const s = (timeLeft % 60)
+            .toString().padStart(2, '0');
+
+        const timerEl =
+            document.getElementById('timerDisplay');
+        if (timerEl) {
+            timerEl.innerHTML =
+                `<i class="fas fa-clock"></i> ${m}:${s}`;
+        }
+
+        if (timeLeft <= 60 && timerEl) {
+            timerEl.style.color = 'var(--danger)';
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            submitQuiz();
+        }
+    }, 1000);
+}
+
+// ========================================
+// RENDER QUESTION
+// ========================================
+function renderQuestion() {
+    if (!questions[current]) return;
+
+    const q = questions[current];
+
+    // Update question count
+    const countEl =
+        document.getElementById('questionCount');
+    if (countEl) {
+        countEl.textContent =
+            `Question ${current + 1} of ${questions.length}`;
+    }
+
+    // Update topic badge
+    const topicEl =
+        document.getElementById('questionTopic');
+    if (topicEl) {
+        topicEl.textContent =
+            q.topic.replace(/_/g, ' ');
+    }
+
+    // Update question text
+    const textEl =
+        document.getElementById('questionText');
+    if (textEl) {
+        textEl.textContent = q.questionText;
+    }
+
+    // Update progress bar
+    const progressEl =
+        document.getElementById('progressFill');
+    if (progressEl) {
+        progressEl.style.width =
+            `${((current + 1) / questions.length) * 100}%`;
+    }
+
+    // Build options
+    const grid =
+        document.getElementById('optionsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `
+            <span class="option-letter">
+                ${['A','B','C','D'][i]}
+            </span>
+            <span>${opt.optionText}</span>
+        `;
+
+        // Restore selected state
+        if (answers[current] &&
+            answers[current].selectedOptionId ===
+            opt.id) {
+            btn.classList.add('selected');
+        }
+
+        btn.onclick = () => selectOption(opt.id, i);
+        grid.appendChild(btn);
+    });
+
+    // Update nav buttons
+    const prevBtn =
+        document.getElementById('prevBtn');
+    if (prevBtn) {
+        prevBtn.disabled = current === 0;
+    }
+
+    const nextBtn =
+        document.getElementById('nextBtn');
+    if (nextBtn) {
+        nextBtn.innerHTML =
+            current === questions.length - 1
+            ? '<i class="fas fa-check"></i> Submit Quiz'
+            : 'Next <i class="fas fa-arrow-right"></i>';
+    }
+
+    updateDots();
+}
+
+// ========================================
+// SELECT OPTION
+// ========================================
+function selectOption(optionId, index) {
+    answers[current] = {
+        questionId: questions[current].id,
+        selectedOptionId: optionId
+    };
+
+    document.querySelectorAll('.option-btn')
+        .forEach((btn, i) => {
+            btn.classList.toggle('selected',
+                i === index);
+        });
+
+    updateDots();
+}
+
+// ========================================
+// NAVIGATION
+// ========================================
+function nextQuestion() {
+    if (current === questions.length - 1) {
+        clearInterval(timerInterval);
+        submitQuiz();
+        return;
+    }
+    current++;
+    renderQuestion();
+}
+
+function prevQuestion() {
+    if (current > 0) {
+        current--;
+        renderQuestion();
+    }
+}
+
+// ========================================
+// SUBMIT QUIZ TO BACKEND
+// ========================================
+async function submitQuiz() {
+    // Hide quiz screen
+    document.getElementById('quizScreen')
+        .style.display = 'none';
+
+    // Show result screen with loading
+    const resultScreen =
+        document.getElementById('resultScreen');
+    resultScreen.style.display = 'block';
+    resultScreen.innerHTML = `
+        <div style="text-align:center;padding:60px 20px">
+            <i class="fas fa-spinner fa-spin"
+               style="font-size:3rem;
+                      color:var(--primary)"></i>
+            <h3 style="margin-top:20px">
+                Analyzing your results... 🤖
+            </h3>
+            <p style="color:var(--gray-400)">
+                AI is processing your answers
+            </p>
+        </div>
+    `;
+
+    // Filter answered questions
+    const validAnswers = answers
+        .filter(a => a !== null);
+
+    if (validAnswers.length === 0) {
+        showError(
+            'Please answer at least one question!'
+        );
+        resultScreen.style.display = 'none';
+        document.getElementById('quizScreen')
+            .style.display = 'block';
+        return;
+    }
+
+    try {
+        // Submit to backend
+        const result = await QuizAPI.submitQuiz(
+            validAnswers
+        );
+
+        if (result.status === 200 &&
+            result.data.success) {
+
+            // Show results
+            showResults(result.data);
+
+            // Generate career recommendations
+            try {
+                await CareerAPI.generateRecommendations();
+            } catch (e) {
+                console.log(
+                    'Career generation error:', e
+                );
+            }
+
+        } else {
+            showError('Failed to submit quiz!');
+            resultScreen.style.display = 'none';
+            document.getElementById('quizScreen')
+                .style.display = 'block';
+        }
+
+    } catch (error) {
+        showError('Submission failed! Check backend.');
+        resultScreen.style.display = 'none';
+        document.getElementById('quizScreen')
+            .style.display = 'block';
+    }
+}
+
+// ========================================
+// SHOW RESULTS
+// ========================================
+function showResults(data) {
+    const resultScreen =
+        document.getElementById('resultScreen');
+
+    const scoreColor =
+        data.totalScore >= 70 ? 'var(--success)' :
+        data.totalScore >= 40 ? 'var(--warning)' :
+        'var(--danger)';
+
+    const title =
+        data.totalScore >= 80 ? 'Outstanding! 🏆' :
+        data.totalScore >= 60 ? 'Great Job! 🎉'   :
+        data.totalScore >= 40 ? 'Good Start! 👍'  :
+        'Keep Learning! 💪';
+
+    resultScreen.innerHTML = `
+        <div class="result-card">
+
+            <div class="score-circle-wrap">
+                <div class="score-circle"
+                     style="border-color:${scoreColor}">
+                    <span class="score-number">
+                        ${data.totalScore}%
+                    </span>
+                    <span class="score-label">
+                        Your Score
+                    </span>
+                </div>
+            </div>
+
+            <h2>${title}</h2>
+            <p class="result-desc">
+                ${data.correctAnswers} correct out of
+                ${data.totalQuestions} questions
+            </p>
+
+            <div class="result-breakdown">
+                <h4>📊 Skill Breakdown</h4>
+                <div class="breakdown-bars">
+                    ${makeBar('Web Dev',
+                        data.webDevScore,
+                        'var(--primary)')}
+                    ${makeBar('AI / ML',
+                        data.aiMlScore,
+                        'var(--success)')}
+                    ${makeBar('DSA',
+                        data.dsaScore,
+                        'var(--secondary)')}
+                    ${makeBar('Cybersecurity',
+                        data.cyberScore,
+                        'var(--warning)')}
+                    ${makeBar('Cloud',
+                        data.cloudScore,
+                        '#06B6D4')}
+                </div>
+            </div>
+
+            <div class="result-careers">
+                <h4>🎯 Top Career Match</h4>
+                <p style="font-size:1.1rem;
+                           font-weight:700;
+                           color:var(--primary)">
+                    ${data.topCareerMatch ||
+                      'Web Development'}
+                </p>
+            </div>
+
+            <div class="result-actions">
+                <a href="careers.html"
+                   class="btn btn-primary">
+                    <i class="fas fa-briefcase"></i>
+                    View Career Paths
+                </a>
+                <button class="btn btn-outline"
+                        onclick="retakeQuiz()">
+                    <i class="fas fa-redo"></i>
+                    Retake Quiz
+                </button>
+            </div>
+
+        </div>
+    `;
+}
+
+function makeBar(label, score, color) {
+    const val = score || 0;
+    return `
+        <div class="skill-row">
+            <div class="skill-label">
+                <span>${label}</span>
+                <span>${val}%</span>
+            </div>
+            <div class="skill-track">
+                <div class="skill-fill"
+                     style="width:${val}%;
+                            background:${color}">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ========================================
+// RETAKE QUIZ
+// ========================================
+function retakeQuiz() {
+    current   = 0;
+    answers   = [];
+    questions = [];
+    timeLeft  = 600;
+
+    const timerEl =
+        document.getElementById('timerDisplay');
+    if (timerEl) timerEl.style.color = '';
+
+    document.getElementById('resultScreen')
+        .style.display = 'none';
+    document.getElementById('startScreen')
+        .style.display = 'block';
+}
+
+// ========================================
+// QUESTION DOTS
+// ========================================
+function buildDots() {
+    const dotsWrap =
+        document.getElementById('questionDots');
+    if (!dotsWrap) return;
+
+    dotsWrap.innerHTML = '';
+    questions.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'q-dot';
+        dot.onclick = () => {
+            current = i;
+            renderQuestion();
+        };
+        dotsWrap.appendChild(dot);
+    });
+}
+
+function updateDots() {
+    document.querySelectorAll('.q-dot')
+        .forEach((dot, i) => {
+            dot.classList.remove('current', 'answered');
+            if (i === current)
+                dot.classList.add('current');
+            if (answers[i] !== null)
+                dot.classList.add('answered');
+        });
+}
+
+// ========================================
+// SIDEBAR
+// ========================================
+function toggleSidebar() {
+    document.getElementById('sidebar')
+        .classList.toggle('open');
+}
+</script>
+</body>
+</html>

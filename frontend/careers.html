@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Career Paths | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="careers.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <script src="api.js"></script>
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-label">Main Menu</p>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a href="quiz.html" class="nav-item">
+        <i class="fas fa-brain"></i><span>Skill Assessment</span>
+      </a>
+      <a href="careers.html" class="nav-item active">
+        <i class="fas fa-briefcase"></i><span>Career Paths</span>
+      </a>
+      <a href="roadmap.html" class="nav-item">
+        <i class="fas fa-map"></i><span>My Roadmap</span>
+      </a>
+      <a href="internships.html" class="nav-item">
+        <i class="fas fa-building"></i><span>Internships</span>
+      </a>
+      <a href="progress.html" class="nav-item">
+        <i class="fas fa-chart-line"></i><span>Progress</span>
+      </a>
+      <p class="nav-label">Support</p>
+      <a href="chatbot.html" class="nav-item">
+        <i class="fas fa-robot"></i><span>AI Mentor</span>
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">R</div>
+      <div class="user-info">
+        <strong>Rahul Sharma</strong>
+        <p>1st Year · CSE</p>
+      </div>
+       <a href="#" title="Logout" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i>
+</a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div>
+        <h2 class="topbar-title">Career Paths</h2>
+        <p class="topbar-sub">Explore all tech career options</p>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="user-avatar sm">R</div>
+      </div>
+    </header>
+
+    <div class="page-body">
+
+      <!-- ===== SEARCH & FILTER BAR ===== -->
+      <div class="filter-bar">
+
+        <!-- Search Box -->
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search career paths..."
+            oninput="filterCareers()"
+          />
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="filter-btns">
+          <button
+            class="filter-btn active"
+            onclick="setFilter('all', this)"
+          >
+            All
+          </button>
+          <button
+            class="filter-btn"
+            onclick="setFilter('high', this)"
+          >
+            💰 High Salary
+          </button>
+          <button
+            class="filter-btn"
+            onclick="setFilter('beginner', this)"
+          >
+            🌱 Beginner Friendly
+          </button>
+          <button
+            class="filter-btn"
+            onclick="setFilter('trending', this)"
+          >
+            🔥 Trending
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ===== YOUR MATCH BANNER ===== -->
+      <div class="match-banner">
+        <div class="match-banner-left">
+          <div class="match-banner-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div>
+            <strong>Your Top Match: Web Development</strong>
+            <p>Based on your skill assessment — 92% match</p>
+          </div>
+        </div>
+        <a href="roadmap.html" class="btn btn-primary">
+          <i class="fas fa-map"></i>
+          View Roadmap
+        </a>
+      </div>
+
+      <!-- ===== CAREER CARDS GRID ===== -->
+      <div class="careers-grid" id="careersGrid">
+
+        <!-- Card 1: Web Development -->
+        <div class="career-card" data-tag="beginner trending">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#4F46E5,#7C3AED)">
+            <i class="fas fa-code"></i>
+            <span class="match-pill">92% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>Web Development</h3>
+              <span class="badge badge-success">Trending</span>
+            </div>
+            <p class="career-card-desc">
+              Build websites and web apps using HTML, CSS,
+              JavaScript, React and more.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹6L – ₹25L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>6–12 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Beginner</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>HTML</span>
+              <span>CSS</span>
+              <span>JavaScript</span>
+              <span>React</span>
+              <span>Node.js</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1"
+                onclick="openModal('webdev')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: AI / ML -->
+        <div class="career-card" data-tag="high trending">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#10B981,#059669)">
+            <i class="fas fa-robot"></i>
+            <span class="match-pill">85% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>AI / Machine Learning</h3>
+              <span class="badge badge-warning">Hot 🔥</span>
+            </div>
+            <p class="career-card-desc">
+              Build intelligent systems, train ML models,
+              and work with data to solve real problems.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹8L – ₹40L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>12–18 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Intermediate</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>Python</span>
+              <span>NumPy</span>
+              <span>Scikit-learn</span>
+              <span>TensorFlow</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:var(--success)"
+                onclick="openModal('aiml')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Cybersecurity -->
+        <div class="career-card" data-tag="high trending">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#F59E0B,#D97706)">
+            <i class="fas fa-shield-alt"></i>
+            <span class="match-pill">78% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>Cybersecurity</h3>
+              <span class="badge badge-warning">High Demand</span>
+            </div>
+            <p class="career-card-desc">
+              Protect systems and networks from attacks.
+              Ethical hacking, penetration testing & more.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹7L – ₹30L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>8–12 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Intermediate</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>Linux</span>
+              <span>Networking</span>
+              <span>Python</span>
+              <span>Kali Linux</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:var(--warning)"
+                onclick="openModal('cyber')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Data Science -->
+        <div class="career-card" data-tag="high trending">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#3B82F6,#1D4ED8)">
+            <i class="fas fa-chart-bar"></i>
+            <span class="match-pill">74% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>Data Science</h3>
+              <span class="badge badge-primary">Popular</span>
+            </div>
+            <p class="career-card-desc">
+              Analyze large datasets, find patterns,
+              and help companies make data-driven decisions.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹7L – ₹35L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>10–14 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Intermediate</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>Python</span>
+              <span>Pandas</span>
+              <span>SQL</span>
+              <span>Tableau</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:#3B82F6"
+                onclick="openModal('data')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Cloud Computing -->
+        <div class="career-card" data-tag="high">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#06B6D4,#0891B2)">
+            <i class="fas fa-cloud"></i>
+            <span class="match-pill">70% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>Cloud Computing</h3>
+              <span class="badge badge-primary">Growing</span>
+            </div>
+            <p class="career-card-desc">
+              Deploy and manage applications on AWS,
+              Azure, and GCP. DevOps and cloud architecture.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹8L – ₹35L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>8–12 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Intermediate</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>AWS</span>
+              <span>Docker</span>
+              <span>Linux</span>
+              <span>Kubernetes</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:#06B6D4"
+                onclick="openModal('cloud')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: DevOps -->
+        <div class="career-card" data-tag="high">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#8B5CF6,#6D28D9)">
+            <i class="fas fa-cogs"></i>
+            <span class="match-pill">65% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>DevOps</h3>
+              <span class="badge badge-primary">In Demand</span>
+            </div>
+            <p class="career-card-desc">
+              Bridge development and operations.
+              Automate pipelines, CI/CD, monitoring & deployment.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹8L – ₹32L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>10–14 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Advanced</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>Linux</span>
+              <span>Docker</span>
+              <span>Jenkins</span>
+              <span>Git</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:#8B5CF6"
+                onclick="openModal('devops')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 7: UI/UX Design -->
+        <div class="career-card" data-tag="beginner">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#EC4899,#BE185D)">
+            <i class="fas fa-paint-brush"></i>
+            <span class="match-pill">60% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>UI/UX Design</h3>
+              <span class="badge badge-success">Creative</span>
+            </div>
+            <p class="career-card-desc">
+              Design beautiful user interfaces and
+              seamless user experiences for apps and websites.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹5L – ₹22L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>4–8 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Beginner</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>Figma</span>
+              <span>Adobe XD</span>
+              <span>Prototyping</span>
+              <span>CSS</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:#EC4899"
+                onclick="openModal('uiux')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 8: Blockchain -->
+        <div class="career-card" data-tag="high trending">
+          <div class="career-card-header"
+               style="background: linear-gradient(135deg,#F97316,#EA580C)">
+            <i class="fas fa-link"></i>
+            <span class="match-pill">55% Match</span>
+          </div>
+          <div class="career-card-body">
+            <div class="career-card-title">
+              <h3>Blockchain</h3>
+              <span class="badge badge-warning">Emerging</span>
+            </div>
+            <p class="career-card-desc">
+              Build decentralized apps, smart contracts
+              and work with Web3 technologies.
+            </p>
+            <div class="career-meta">
+              <div class="meta-item">
+                <i class="fas fa-rupee-sign"></i>
+                <span>₹10L – ₹45L/yr</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>12–18 months</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-signal"></i>
+                <span>Advanced</span>
+              </div>
+            </div>
+            <div class="skill-tags">
+              <span>Solidity</span>
+              <span>Web3.js</span>
+              <span>Ethereum</span>
+              <span>JavaScript</span>
+            </div>
+            <div class="career-card-footer">
+              <button
+                class="btn btn-primary"
+                style="flex:1;background:#F97316"
+                onclick="openModal('blockchain')"
+              >
+                Explore Path
+              </button>
+              <button class="btn-save" title="Save">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- end careers grid -->
+
+      <!-- No results message -->
+      <div class="no-results" id="noResults" style="display:none;">
+        <i class="fas fa-search"></i>
+        <h3>No careers found</h3>
+        <p>Try a different search term or filter</p>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===== CAREER DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="modalOverlay"
+       onclick="closeModal()">
+  </div>
+
+  <div class="career-modal" id="careerModal">
+
+    <button class="modal-close" onclick="closeModal()">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div id="modalContent">
+      <!-- Filled by JS -->
+    </div>
+
+  </div>
+
+  <script>
+    requireAuth();
+updateSidebarUser();
+  // ========================================
+  // CAREER DATA FOR MODALS
+  // ========================================
+  const careerData = {
+    webdev: {
+      title: "Web Development",
+      icon:  "fa-code",
+      color: "#4F46E5",
+      salary: "₹6L – ₹25L/yr",
+      time:   "6–12 months",
+      level:  "Beginner Friendly",
+      desc: "Web development is one of the most in-demand skills today. You will learn to build complete websites and web applications from scratch using modern tools and frameworks.",
+      roles: [
+        "Frontend Developer",
+        "Backend Developer",
+        "Full Stack Developer",
+        "React Developer"
+      ],
+      steps: [
+        "Learn HTML & CSS basics",
+        "Master JavaScript fundamentals",
+        "Learn React.js for frontend",
+        "Learn Node.js for backend",
+        "Build 3 portfolio projects",
+        "Apply for internships"
+      ],
+      resources: [
+        { name:"freeCodeCamp",  url:"https://freecodecamp.org",  icon:"fa-laptop-code" },
+        { name:"The Odin Project", url:"https://theodinproject.com", icon:"fa-book" },
+        { name:"MDN Web Docs",  url:"https://developer.mozilla.org", icon:"fa-globe" }
+      ]
+    },
+    aiml: {
+      title: "AI / Machine Learning",
+      icon:  "fa-robot",
+      color: "#10B981",
+      salary: "₹8L – ₹40L/yr",
+      time:   "12–18 months",
+      level:  "Intermediate",
+      desc: "Artificial Intelligence and Machine Learning is the fastest growing field in tech. Build intelligent systems that can learn, predict, and make decisions automatically.",
+      roles: [
+        "ML Engineer",
+        "Data Scientist",
+        "AI Researcher",
+        "NLP Engineer"
+      ],
+      steps: [
+        "Learn Python programming",
+        "Study statistics & math basics",
+        "Learn NumPy, Pandas",
+        "Study ML algorithms",
+        "Practice on Kaggle",
+        "Build ML projects"
+      ],
+      resources: [
+        { name:"Kaggle",          url:"https://kaggle.com",         icon:"fa-database" },
+        { name:"fast.ai",         url:"https://fast.ai",            icon:"fa-brain" },
+        { name:"Google ML Crash", url:"https://developers.google.com/machine-learning", icon:"fa-google" }
+      ]
+    },
+    cyber: {
+      title: "Cybersecurity",
+      icon:  "fa-shield-alt",
+      color: "#F59E0B",
+      salary: "₹7L – ₹30L/yr",
+      time:   "8–12 months",
+      level:  "Intermediate",
+      desc: "Cybersecurity professionals protect organizations from hackers and cyber threats. Ethical hacking, penetration testing, and security analysis are core skills.",
+      roles: [
+        "Security Analyst",
+        "Ethical Hacker",
+        "Penetration Tester",
+        "SOC Analyst"
+      ],
+      steps: [
+        "Learn networking basics",
+        "Study Linux OS deeply",
+        "Learn Python for scripting",
+        "Study ethical hacking",
+        "Practice on TryHackMe",
+        "Get CEH or CompTIA Sec+"
+      ],
+      resources: [
+        { name:"TryHackMe",   url:"https://tryhackme.com",  icon:"fa-flag" },
+        { name:"HackTheBox",  url:"https://hackthebox.com", icon:"fa-box" },
+        { name:"Cybrary",     url:"https://cybrary.it",     icon:"fa-shield-alt" }
+      ]
+    },
+    data: {
+      title: "Data Science",
+      icon:  "fa-chart-bar",
+      color: "#3B82F6",
+      salary: "₹7L – ₹35L/yr",
+      time:   "10–14 months",
+      level:  "Intermediate",
+      desc: "Data Scientists collect, analyze, and interpret large datasets to help organizations make better decisions. Combines statistics, programming, and domain knowledge.",
+      roles: [
+        "Data Analyst",
+        "Data Scientist",
+        "Business Analyst",
+        "BI Developer"
+      ],
+      steps: [
+        "Learn Python & SQL basics",
+        "Study statistics & probability",
+        "Learn Pandas & Matplotlib",
+        "Learn data visualization",
+        "Work on real datasets",
+        "Build a data portfolio"
+      ],
+      resources: [
+        { name:"Kaggle",        url:"https://kaggle.com",     icon:"fa-database" },
+        { name:"DataCamp",      url:"https://datacamp.com",   icon:"fa-chart-bar" },
+        { name:"Towards Data Science", url:"https://towardsdatascience.com", icon:"fa-book" }
+      ]
+    },
+    cloud: {
+      title: "Cloud Computing",
+      icon:  "fa-cloud",
+      color: "#06B6D4",
+      salary: "₹8L – ₹35L/yr",
+      time:   "8–12 months",
+      level:  "Intermediate",
+      desc: "Cloud engineers build and manage infrastructure on platforms like AWS, Azure and GCP. High demand across all industries as companies migrate to the cloud.",
+      roles: [
+        "Cloud Engineer",
+        "DevOps Engineer",
+        "Solutions Architect",
+        "SRE Engineer"
+      ],
+      steps: [
+        "Learn Linux basics",
+        "Study networking concepts",
+        "Get AWS Cloud Practitioner",
+        "Learn Docker & Kubernetes",
+        "Study Terraform & CI/CD",
+        "Get AWS Solutions Architect"
+      ],
+      resources: [
+        { name:"AWS Free Tier",     url:"https://aws.amazon.com/free", icon:"fa-aws" },
+        { name:"A Cloud Guru",      url:"https://acloudguru.com",      icon:"fa-cloud" },
+        { name:"KodeKloud",         url:"https://kodekloud.com",        icon:"fa-server" }
+      ]
+    },
+    devops: {
+      title: "DevOps",
+      icon:  "fa-cogs",
+      color: "#8B5CF6",
+      salary: "₹8L – ₹32L/yr",
+      time:   "10–14 months",
+      level:  "Advanced",
+      desc: "DevOps bridges the gap between development and operations teams. You automate software delivery pipelines, monitor systems, and ensure reliability at scale.",
+      roles: [
+        "DevOps Engineer",
+        "Platform Engineer",
+        "Release Manager",
+        "Cloud DevOps"
+      ],
+      steps: [
+        "Master Linux & shell scripting",
+        "Learn Git & version control",
+        "Study Docker containers",
+        "Learn CI/CD with Jenkins",
+        "Study Kubernetes",
+        "Learn monitoring tools"
+      ],
+      resources: [
+        { name:"KodeKloud",   url:"https://kodekloud.com",  icon:"fa-server" },
+        { name:"TechWorld Nana", url:"https://youtube.com", icon:"fa-youtube" },
+        { name:"DevOps Roadmap", url:"https://roadmap.sh/devops", icon:"fa-map" }
+      ]
+    },
+    uiux: {
+      title: "UI/UX Design",
+      icon:  "fa-paint-brush",
+      color: "#EC4899",
+      salary: "₹5L – ₹22L/yr",
+      time:   "4–8 months",
+      level:  "Beginner Friendly",
+      desc: "UI/UX designers create beautiful and user-friendly digital products. You will learn design thinking, prototyping, and how to make products that users love.",
+      roles: [
+        "UI Designer",
+        "UX Designer",
+        "Product Designer",
+        "Interaction Designer"
+      ],
+      steps: [
+        "Learn design principles",
+        "Master Figma tool",
+        "Study user research methods",
+        "Create wireframes & prototypes",
+        "Build a design portfolio",
+        "Work on real client projects"
+      ],
+      resources: [
+        { name:"Figma",         url:"https://figma.com",        icon:"fa-figma" },
+        { name:"UX Collective",  url:"https://uxdesign.cc",      icon:"fa-pen-nib" },
+        { name:"Google UX Design", url:"https://grow.google/certificates/ux-design", icon:"fa-google" }
+      ]
+    },
+    blockchain: {
+      title: "Blockchain",
+      icon:  "fa-link",
+      color: "#F97316",
+      salary: "₹10L – ₹45L/yr",
+      time:   "12–18 months",
+      level:  "Advanced",
+      desc: "Blockchain developers build decentralized applications and smart contracts. One of the highest-paying niches in tech with growing demand in Web3 and DeFi.",
+      roles: [
+        "Blockchain Developer",
+        "Smart Contract Engineer",
+        "Web3 Developer",
+        "DApp Developer"
+      ],
+      steps: [
+        "Learn JavaScript deeply",
+        "Understand blockchain basics",
+        "Learn Solidity language",
+        "Study Ethereum & smart contracts",
+        "Build DApps with Web3.js",
+        "Deploy on testnets"
+      ],
+      resources: [
+        { name:"CryptoZombies",   url:"https://cryptozombies.io",    icon:"fa-gamepad" },
+        { name:"Ethereum Docs",   url:"https://ethereum.org/developers", icon:"fa-link" },
+        { name:"Buildspace",      url:"https://buildspace.so",       icon:"fa-hammer" }
+      ]
+    }
+  };
+
+  // ========================================
+  // OPEN MODAL
+  // ========================================
+  function openModal(key) {
+    const d = careerData[key];
+    if (!d) return;
+
+    document.getElementById('modalContent').innerHTML = `
+      <div class="modal-header"
+           style="background:linear-gradient(135deg,${d.color},${d.color}99)">
+        <div class="modal-header-icon">
+          <i class="fas ${d.icon}"></i>
+        </div>
+        <div>
+          <h2>${d.title}</h2>
+          <div class="modal-meta-row">
+            <span><i class="fas fa-rupee-sign"></i> ${d.salary}</span>
+            <span><i class="fas fa-clock"></i> ${d.time}</span>
+            <span><i class="fas fa-signal"></i> ${d.level}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <p class="modal-desc">${d.desc}</p>
+
+        <div class="modal-sections">
+
+          <div class="modal-section">
+            <h4>💼 Job Roles</h4>
+            <div class="role-tags">
+              ${d.roles.map(r =>
+                `<span class="role-tag">${r}</span>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4>🗺️ Learning Steps</h4>
+            <div class="modal-steps">
+              ${d.steps.map((s, i) => `
+                <div class="modal-step">
+                  <div class="modal-step-num">${i+1}</div>
+                  <span>${s}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4>📚 Free Resources</h4>
+            <div class="resource-list">
+              ${d.resources.map(r => `
+                <a href="${r.url}"
+                   target="_blank"
+                   class="resource-item">
+                  <i class="fas ${r.icon}"></i>
+                  <span>${r.name}</span>
+                  <i class="fas fa-external-link-alt"
+                     style="margin-left:auto;
+                            font-size:0.75rem;
+                            color:var(--gray-400)">
+                  </i>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-actions">
+          <a href="roadmap.html"
+             class="btn btn-primary"
+             style="flex:1">
+            <i class="fas fa-map"></i>
+            Start This Path
+          </a>
+          <button
+            class="btn btn-outline"
+            onclick="closeModal()">
+            Close
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.getElementById('careerModal')
+            .classList.add('open');
+    document.getElementById('modalOverlay')
+            .classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // ========================================
+  // CLOSE MODAL
+  // ========================================
+  function closeModal() {
+    document.getElementById('careerModal')
+            .classList.remove('open');
+    document.getElementById('modalOverlay')
+            .classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ========================================
+  // SEARCH
+  // ========================================
+  function filterCareers() {
+    const query = document.getElementById('searchInput')
+                          .value.toLowerCase();
+    const cards = document.querySelectorAll('.career-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const text = card.innerText.toLowerCase();
+      const show = text.includes(query);
+      card.style.display = show ? 'flex' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('noResults').style.display =
+      visible === 0 ? 'block' : 'none';
+  }
+
+  // ========================================
+  // FILTER BUTTONS
+  // ========================================
+  let activeFilter = 'all';
+
+  function setFilter(tag, btn) {
+    activeFilter = tag;
+
+    document.querySelectorAll('.filter-btn')
+            .forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const cards = document.querySelectorAll('.career-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const tags = card.dataset.tag || '';
+      const show = tag === 'all' || tags.includes(tag);
+      card.style.display = show ? 'flex' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('noResults').style.display =
+      visible === 0 ? 'block' : 'none';
+  }
+
+  // Save button toggle
+  document.querySelectorAll('.btn-save').forEach(btn => {
+    btn.addEventListener('click', function() {
+      this.classList.toggle('saved');
+      const icon = this.querySelector('i');
+      if (this.classList.contains('saved')) {
+        icon.style.color = 'var(--primary)';
+      } else {
+        icon.style.color = '';
+      }
+    });
+  });
+
+  // Sidebar toggle
+  function toggleSidebar() {
+    document.getElementById('sidebar')
+            .classList.toggle('open');
+  }
+  </script>
+
+</body>
+</html>

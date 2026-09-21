@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Roadmap | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="roadmap.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <script src="api.js"></script>
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-label">Main Menu</p>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a href="quiz.html" class="nav-item">
+        <i class="fas fa-brain"></i><span>Skill Assessment</span>
+      </a>
+      <a href="careers.html" class="nav-item">
+        <i class="fas fa-briefcase"></i><span>Career Paths</span>
+      </a>
+      <a href="roadmap.html" class="nav-item active">
+        <i class="fas fa-map"></i><span>My Roadmap</span>
+      </a>
+      <a href="internships.html" class="nav-item">
+        <i class="fas fa-building"></i><span>Internships</span>
+      </a>
+      <a href="progress.html" class="nav-item">
+        <i class="fas fa-chart-line"></i><span>Progress</span>
+      </a>
+      <p class="nav-label">Support</p>
+      <a href="chatbot.html" class="nav-item">
+        <i class="fas fa-robot"></i><span>AI Mentor</span>
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">R</div>
+      <div class="user-info">
+        <strong>Rahul Sharma</strong>
+        <p>1st Year · CSE</p>
+      </div>
+      <a href="#" title="Logout" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i>
+</a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div>
+        <h2 class="topbar-title">My Roadmap</h2>
+        <p class="topbar-sub">Your personalized AI-generated learning path</p>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="user-avatar sm">R</div>
+      </div>
+    </header>
+
+    <div class="page-body">
+
+      <!-- ===== TOP SECTION ===== -->
+      <div class="roadmap-top">
+
+        <!-- Career Path Selector -->
+        <div class="path-selector card">
+          <h4 class="mb-2">🎯 Your Career Path</h4>
+
+          <div class="path-options">
+            <button
+              class="path-btn active"
+              onclick="switchPath('webdev', this)"
+            >
+              <i class="fas fa-code"></i>
+              <span>Web Dev</span>
+            </button>
+            <button
+              class="path-btn"
+              onclick="switchPath('aiml', this)"
+            >
+              <i class="fas fa-robot"></i>
+              <span>AI / ML</span>
+            </button>
+            <button
+              class="path-btn"
+              onclick="switchPath('cyber', this)"
+            >
+              <i class="fas fa-shield-alt"></i>
+              <span>Cybersecurity</span>
+            </button>
+            <button
+              class="path-btn"
+              onclick="switchPath('data', this)"
+            >
+              <i class="fas fa-chart-bar"></i>
+              <span>Data Science</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="roadmap-stats">
+
+          <div class="rm-stat-card">
+            <div class="rm-stat-icon purple">
+              <i class="fas fa-tasks"></i>
+            </div>
+            <div>
+              <h4 id="totalSteps">8 Steps</h4>
+              <p>Total Milestones</p>
+            </div>
+          </div>
+
+          <div class="rm-stat-card">
+            <div class="rm-stat-icon green">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+              <h4 id="doneSteps">2 Done</h4>
+              <p>Completed</p>
+            </div>
+          </div>
+
+          <div class="rm-stat-card">
+            <div class="rm-stat-icon blue">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div>
+              <h4 id="timeLeft">4 Months</h4>
+              <p>Est. Time Left</p>
+            </div>
+          </div>
+
+          <div class="rm-stat-card">
+            <div class="rm-stat-icon orange">
+              <i class="fas fa-fire"></i>
+            </div>
+            <div>
+              <h4>25%</h4>
+              <p>Completed</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Overall Progress Bar -->
+      <div class="card overall-progress">
+        <div class="op-header">
+          <div>
+            <h4 id="pathTitle">
+              🗺️ Web Development Roadmap
+            </h4>
+            <p id="pathDesc">
+              Full Stack Web Developer path — beginner to job-ready
+            </p>
+          </div>
+          <span class="badge badge-success"
+                id="progressBadge">
+            25% Complete
+          </span>
+        </div>
+        <div class="op-bar">
+          <div class="op-fill" id="opFill"
+               style="width: 25%">
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MAIN GRID ===== -->
+      <div class="roadmap-main-grid">
+
+        <!-- LEFT: Timeline -->
+        <div class="timeline-col">
+
+          <div class="timeline-header">
+            <h4>📍 Learning Milestones</h4>
+            <div class="legend">
+              <span class="leg-item done">
+                <i class="fas fa-circle"></i> Done
+              </span>
+              <span class="leg-item active">
+                <i class="fas fa-circle"></i> Active
+              </span>
+              <span class="leg-item locked">
+                <i class="fas fa-circle"></i> Upcoming
+              </span>
+            </div>
+          </div>
+
+          <!-- Timeline Items filled by JS -->
+          <div class="timeline" id="timeline">
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Active Step Detail + Resources -->
+        <div class="detail-col">
+
+          <!-- Active Step Card -->
+          <div class="card active-step-card" id="activeStepCard">
+            <div class="active-step-header">
+              <div class="active-step-icon" id="activeIcon">
+                <i class="fas fa-spinner fa-spin"></i>
+              </div>
+              <div>
+                <span class="badge badge-warning mb-1">
+                  Currently Learning
+                </span>
+                <h3 id="activeTitle">
+                  JavaScript Fundamentals
+                </h3>
+                <p id="activeWeek">Week 3 – 4</p>
+              </div>
+            </div>
+
+            <p id="activeDesc" class="active-desc">
+              Master the core concepts of JavaScript including
+              variables, functions, DOM manipulation and ES6+
+              features.
+            </p>
+
+            <!-- Topics list -->
+            <div class="topics-list" id="topicsList">
+            </div>
+
+            <!-- Resources -->
+            <div class="step-resources">
+              <h5>📚 Free Resources</h5>
+              <div id="stepResources">
+              </div>
+            </div>
+
+            <!-- Mark complete button -->
+            <button
+              class="btn btn-primary btn-full mt-3"
+              onclick="markComplete()"
+              id="markBtn"
+            >
+              <i class="fas fa-check"></i>
+              Mark as Complete
+            </button>
+
+          </div>
+
+          <!-- AI Tip Card -->
+          <div class="card ai-tip-card mt-3">
+            <div class="ai-tip-header">
+              <div class="ai-tip-icon">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div>
+                <strong>AI Mentor Tip</strong>
+                <p>Personalized for you</p>
+              </div>
+            </div>
+            <p class="ai-tip-text" id="aiTip">
+              "Focus on building small projects while learning
+              JavaScript. Try building a to-do list app after
+              learning arrays and functions — it will solidify
+              your understanding!"
+            </p>
+            <button
+              class="btn btn-outline mt-2"
+              style="width:100%; font-size:0.85rem"
+              onclick="newTip()"
+            >
+              <i class="fas fa-sync"></i>
+              Get New Tip
+            </button>
+          </div>
+
+          <!-- Weekly Schedule -->
+          <div class="card mt-3">
+            <h4 class="mb-2">📅 This Week's Plan</h4>
+            <div class="weekly-plan" id="weeklyPlan">
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // ADD at very top of script
+requireAuth();
+    
+  // ========================================
+  // ROADMAP DATA
+  // ========================================
+  const roadmaps = {
+
+    webdev: {
+      title:    "Web Development Roadmap",
+      desc:     "Full Stack Web Developer path — beginner to job-ready",
+      duration: "6 Months",
+      steps: [
+        {
+          title:  "HTML & CSS Basics",
+          week:   "Week 1 – 2",
+          status: "done",
+          icon:   "fa-html5",
+          desc:   "Learn the building blocks of every website. Structure with HTML and style with CSS.",
+          topics: [
+            "HTML tags & structure",
+            "CSS selectors & properties",
+            "Flexbox & Grid layout",
+            "Responsive design basics"
+          ],
+          resources: [
+            { name:"freeCodeCamp HTML", url:"https://freecodecamp.org" },
+            { name:"CSS Tricks",        url:"https://css-tricks.com"  }
+          ],
+          tip: "Build a simple personal portfolio page using only HTML and CSS — it's the perfect first project!"
+        },
+        {
+          title:  "JavaScript Fundamentals",
+          week:   "Week 3 – 4",
+          status: "active",
+          icon:   "fa-js",
+          desc:   "Master core JavaScript concepts including variables, functions, DOM manipulation and ES6+ features.",
+          topics: [
+            "Variables & data types",
+            "Functions & scope",
+            "DOM manipulation",
+            "ES6+ features (arrow functions, etc.)",
+            "Fetch API & JSON"
+          ],
+          resources: [
+            { name:"JavaScript.info",    url:"https://javascript.info"  },
+            { name:"Eloquent JavaScript", url:"https://eloquentjavascript.net" }
+          ],
+          tip: "Focus on building small projects while learning JavaScript. Try building a to-do list app after learning arrays and functions!"
+        },
+        {
+          title:  "React.js Basics",
+          week:   "Week 5 – 6",
+          status: "locked",
+          icon:   "fa-react",
+          desc:   "Learn the most popular frontend framework. Build dynamic, component-based user interfaces.",
+          topics: [
+            "Components & props",
+            "State & hooks",
+            "useEffect & lifecycle",
+            "React Router",
+            "Building a full app"
+          ],
+          resources: [
+            { name:"React Official Docs", url:"https://react.dev" },
+            { name:"Scrimba React",       url:"https://scrimba.com" }
+          ],
+          tip: "Once you know React, your value as a developer triples. Practice by rebuilding your portfolio in React!"
+        },
+        {
+          title:  "Node.js & Express",
+          week:   "Week 7 – 8",
+          status: "locked",
+          icon:   "fa-node-js",
+          desc:   "Build backend APIs and server-side applications using Node.js and Express framework.",
+          topics: [
+            "Node.js fundamentals",
+            "Express routing",
+            "REST API design",
+            "Middleware & auth",
+            "Connecting to database"
+          ],
+          resources: [
+            { name:"Node.js Docs",     url:"https://nodejs.org/docs" },
+            { name:"The Odin Project", url:"https://theodinproject.com" }
+          ],
+          tip: "Build a CRUD REST API for a simple project like a blog or todo app — this will get you interview-ready!"
+        },
+        {
+          title:  "Database — SQL & MongoDB",
+          week:   "Week 9 – 10",
+          status: "locked",
+          icon:   "fa-database",
+          desc:   "Learn how to store and retrieve data using relational SQL databases and NoSQL MongoDB.",
+          topics: [
+            "SQL basics & joins",
+            "MySQL setup",
+            "MongoDB & Mongoose",
+            "CRUD operations",
+            "Database design"
+          ],
+          resources: [
+            { name:"SQLZoo",          url:"https://sqlzoo.net"       },
+            { name:"MongoDB University", url:"https://university.mongodb.com" }
+          ],
+          tip: "SQL is used in almost every company. Even if you focus on MongoDB, always know basic SQL queries!"
+        },
+        {
+          title:  "Git & GitHub",
+          week:   "Week 11",
+          status: "locked",
+          icon:   "fa-git-alt",
+          desc:   "Learn version control with Git and collaborate on projects using GitHub. Essential for every developer.",
+          topics: [
+            "Git init, add, commit",
+            "Branching & merging",
+            "Pull requests",
+            "GitHub profile setup",
+            "Open source contribution"
+          ],
+          resources: [
+            { name:"GitHub Docs",   url:"https://docs.github.com"  },
+            { name:"Learn Git Branching", url:"https://learngitbranching.js.org" }
+          ],
+          tip: "Start committing your code to GitHub from Day 1. Recruiters look at your GitHub profile!"
+        },
+        {
+          title:  "Build 3 Portfolio Projects",
+          week:   "Week 12 – 14",
+          status: "locked",
+          icon:   "fa-folder-open",
+          desc:   "Apply everything you have learned by building 3 real-world projects for your portfolio.",
+          topics: [
+            "Personal portfolio website",
+            "Full stack web app",
+            "API integration project",
+            "Deploy on Netlify/Vercel",
+            "Write clean README files"
+          ],
+          resources: [
+            { name:"Netlify Deploy",  url:"https://netlify.com"  },
+            { name:"Vercel Deploy",   url:"https://vercel.com"   }
+          ],
+          tip: "Quality over quantity. 3 strong projects beat 10 half-finished ones. Focus on clean code and good UI!"
+        },
+        {
+          title:  "Apply for Internships",
+          week:   "Week 15 – 16",
+          status: "locked",
+          icon:   "fa-briefcase",
+          desc:   "Polish your resume, LinkedIn profile and start applying to web development internships.",
+          topics: [
+            "Resume writing for developers",
+            "LinkedIn profile optimization",
+            "Apply on Internshala & LinkedIn",
+            "Interview preparation",
+            "Behavioral interview prep"
+          ],
+          resources: [
+            { name:"Internshala",     url:"https://internshala.com" },
+            { name:"LinkedIn Jobs",   url:"https://linkedin.com/jobs" }
+          ],
+          tip: "Apply to at least 10–15 internships per week. Don't wait until you feel 100% ready — apply now!"
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"JavaScript — Arrays & Objects",   done: true  },
+        { day:"Tuesday",   task:"JavaScript — Functions & Scope",  done: true  },
+        { day:"Wednesday", task:"DOM Manipulation Practice",       done: false },
+        { day:"Thursday",  task:"Build a Calculator App",          done: false },
+        { day:"Friday",    task:"ES6 Features Study",              done: false },
+        { day:"Saturday",  task:"Mini Project + Review",           done: false },
+      ]
+    },
+
+    aiml: {
+      title:    "AI / ML Roadmap",
+      desc:     "Machine Learning Engineer path — beginner to ML practitioner",
+      duration: "12 Months",
+      steps: [
+        {
+          title:  "Python Programming",
+          week:   "Week 1 – 3",
+          status: "done",
+          icon:   "fa-python",
+          desc:   "Learn Python from scratch — the primary language of AI and ML.",
+          topics: ["Python syntax", "Functions & OOP", "File handling", "Libraries overview"],
+          resources: [
+            { name:"Python.org Docs", url:"https://python.org" },
+            { name:"Automate the Boring Stuff", url:"https://automatetheboringstuff.com" }
+          ],
+          tip: "Python is the gateway to AI. Master it well before moving to ML libraries!"
+        },
+        {
+          title:  "Mathematics for ML",
+          week:   "Week 4 – 6",
+          status: "active",
+          icon:   "fa-square-root-alt",
+          desc:   "Study the math fundamentals needed for understanding machine learning algorithms.",
+          topics: ["Linear algebra basics", "Statistics & probability", "Calculus intro", "Matrix operations"],
+          resources: [
+            { name:"Khan Academy Math",  url:"https://khanacademy.org" },
+            { name:"3Blue1Brown",        url:"https://youtube.com" }
+          ],
+          tip: "Don't get stuck in math theory. Learn enough to understand what ML algorithms do, then move forward!"
+        },
+        {
+          title:  "NumPy & Pandas",
+          week:   "Week 7 – 8",
+          status: "locked",
+          icon:   "fa-table",
+          desc:   "Master the core data manipulation libraries used in every ML project.",
+          topics: ["Arrays & matrices", "DataFrames", "Data cleaning", "Exploratory analysis"],
+          resources: [
+            { name:"Kaggle Learn",  url:"https://kaggle.com/learn" },
+            { name:"Pandas Docs",   url:"https://pandas.pydata.org" }
+          ],
+          tip: "Data cleaning takes 80% of an ML engineer's time. Pandas mastery is non-negotiable!"
+        },
+        {
+          title:  "ML Algorithms",
+          week:   "Week 9 – 12",
+          status: "locked",
+          icon:   "fa-brain",
+          desc:   "Learn core machine learning algorithms using Scikit-learn.",
+          topics: ["Linear regression", "Decision trees", "KNN & SVM", "Clustering", "Model evaluation"],
+          resources: [
+            { name:"Scikit-learn Docs", url:"https://scikit-learn.org" },
+            { name:"Google ML Crash",   url:"https://developers.google.com/machine-learning" }
+          ],
+          tip: "Implement each algorithm from scratch once, even if you will use libraries later. It builds real intuition!"
+        },
+        {
+          title:  "Deep Learning Basics",
+          week:   "Week 13 – 16",
+          status: "locked",
+          icon:   "fa-network-wired",
+          desc:   "Understand neural networks and deep learning using TensorFlow and Keras.",
+          topics: ["Neural networks", "Backpropagation", "CNNs", "RNNs basics", "Transfer learning"],
+          resources: [
+            { name:"fast.ai",        url:"https://fast.ai" },
+            { name:"TensorFlow Docs", url:"https://tensorflow.org" }
+          ],
+          tip: "fast.ai teaches deep learning top-down which is much better for beginners than bottom-up!"
+        },
+        {
+          title:  "Kaggle Competitions",
+          week:   "Week 17 – 20",
+          status: "locked",
+          icon:   "fa-trophy",
+          desc:   "Apply your skills on real datasets and competitions on Kaggle.",
+          topics: ["Kaggle notebooks", "Feature engineering", "Model tuning", "Competition workflow"],
+          resources: [
+            { name:"Kaggle",          url:"https://kaggle.com" },
+            { name:"Kaggle Learn",    url:"https://kaggle.com/learn" }
+          ],
+          tip: "Even finishing in the top 50% on your first Kaggle competition is impressive for beginners. Just participate!"
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"Statistics — Mean, Median, Mode",  done: true  },
+        { day:"Tuesday",   task:"Probability Basics",               done: true  },
+        { day:"Wednesday", task:"Linear Algebra — Vectors",         done: false },
+        { day:"Thursday",  task:"Matrix Multiplication Practice",   done: false },
+        { day:"Friday",    task:"Khan Academy Math Problems",       done: false },
+        { day:"Saturday",  task:"Week Review + Notes",              done: false },
+      ]
+    },
+
+    cyber: {
+      title:    "Cybersecurity Roadmap",
+      desc:     "Ethical Hacker & Security Analyst path",
+      duration: "8 Months",
+      steps: [
+        {
+          title:  "Networking Fundamentals",
+          week:   "Week 1 – 3",
+          status: "done",
+          icon:   "fa-network-wired",
+          desc:   "Understand how the internet and networks work — the foundation of cybersecurity.",
+          topics: ["OSI model", "TCP/IP protocols", "DNS & HTTP", "Firewalls & VPNs"],
+          resources: [
+            { name:"Professor Messer", url:"https://professormesser.com" },
+            { name:"CompTIA Net+",     url:"https://comptia.org" }
+          ],
+          tip: "Networking is the backbone of cybersecurity. You cannot protect what you don't understand!"
+        },
+        {
+          title:  "Linux Operating System",
+          week:   "Week 4 – 5",
+          status: "active",
+          icon:   "fa-linux",
+          desc:   "Master Linux command line — used in 90% of cybersecurity tools and servers.",
+          topics: ["Linux file system", "Shell commands", "User permissions", "Bash scripting basics"],
+          resources: [
+            { name:"OverTheWire Bandit", url:"https://overthewire.org" },
+            { name:"Linux Journey",      url:"https://linuxjourney.com" }
+          ],
+          tip: "OverTheWire Bandit is the best free way to learn Linux through hacking challenges. Start it today!"
+        },
+        {
+          title:  "Python for Security",
+          week:   "Week 6 – 7",
+          status: "locked",
+          icon:   "fa-python",
+          desc:   "Use Python to write security scripts, automate tasks and build simple tools.",
+          topics: ["Python basics", "Socket programming", "Writing scanners", "Automation scripts"],
+          resources: [
+            { name:"Black Hat Python (Book)", url:"https://nostarch.com" },
+            { name:"Python.org",              url:"https://python.org"   }
+          ],
+          tip: "Even basic Python scripting makes you 10x more powerful as a security professional!"
+        },
+        {
+          title:  "Ethical Hacking",
+          week:   "Week 8 – 11",
+          status: "locked",
+          icon:   "fa-user-secret",
+          desc:   "Learn penetration testing methodology and common attack techniques.",
+          topics: ["Reconnaissance", "Scanning & enumeration", "Exploitation basics", "Metasploit", "Web app attacks"],
+          resources: [
+            { name:"TryHackMe",   url:"https://tryhackme.com"  },
+            { name:"HackTheBox",  url:"https://hackthebox.com" }
+          ],
+          tip: "TryHackMe has guided rooms for beginners. Complete the 'Pre-Security' path first — it's free!"
+        },
+        {
+          title:  "Certifications",
+          week:   "Week 12 – 16",
+          status: "locked",
+          icon:   "fa-certificate",
+          desc:   "Prepare for industry certifications that employers look for.",
+          topics: ["CompTIA Security+", "CEH basics", "eJPT exam prep", "Practice tests", "Exam strategy"],
+          resources: [
+            { name:"CompTIA Sec+",    url:"https://comptia.org"      },
+            { name:"eLearnSecurity",  url:"https://elearnsecurity.com" }
+          ],
+          tip: "The eJPT (eLearnSecurity Junior Penetration Tester) is a great first paid cert — practical and affordable!"
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"Linux Commands Practice",         done: true  },
+        { day:"Tuesday",   task:"File Permissions & Users",        done: true  },
+        { day:"Wednesday", task:"Bash Scripting Basics",           done: false },
+        { day:"Thursday",  task:"OverTheWire Bandit Level 5-8",    done: false },
+        { day:"Friday",    task:"Networking Review",               done: false },
+        { day:"Saturday",  task:"TryHackMe — 1 Free Room",        done: false },
+      ]
+    },
+
+    data: {
+      title:    "Data Science Roadmap",
+      desc:     "Data Analyst to Data Scientist path",
+      duration: "10 Months",
+      steps: [
+        {
+          title:  "Python & SQL Basics",
+          week:   "Week 1 – 3",
+          status: "done",
+          icon:   "fa-python",
+          desc:   "Learn Python and SQL — the two most essential tools for any data professional.",
+          topics: ["Python syntax", "Pandas basics", "SQL SELECT queries", "Joins & aggregations"],
+          resources: [
+            { name:"Mode SQL Tutorial", url:"https://mode.com/sql-tutorial" },
+            { name:"Kaggle Python",     url:"https://kaggle.com/learn/python" }
+          ],
+          tip: "SQL is used in literally every data job. Master SELECT, JOIN, GROUP BY and you are ahead of most beginners!"
+        },
+        {
+          title:  "Data Analysis with Pandas",
+          week:   "Week 4 – 5",
+          status: "active",
+          icon:   "fa-table",
+          desc:   "Deep dive into Pandas for data manipulation, cleaning and exploratory analysis.",
+          topics: ["DataFrames", "Data cleaning", "GroupBy & pivot", "Merging data", "EDA workflow"],
+          resources: [
+            { name:"Pandas Docs",       url:"https://pandas.pydata.org" },
+            { name:"Kaggle Pandas",     url:"https://kaggle.com/learn/pandas" }
+          ],
+          tip: "Real-world data is always messy. Practice cleaning messy Kaggle datasets to build real skill!"
+        },
+        {
+          title:  "Data Visualization",
+          week:   "Week 6 – 7",
+          status: "locked",
+          icon:   "fa-chart-pie",
+          desc:   "Tell stories with data using Python charts and interactive dashboards.",
+          topics: ["Matplotlib basics", "Seaborn charts", "Plotly interactive", "Dashboard design", "Storytelling with data"],
+          resources: [
+            { name:"Seaborn Docs",     url:"https://seaborn.pydata.org" },
+            { name:"Storytelling with Data", url:"https://storytellingwithdata.com" }
+          ],
+          tip: "A chart that communicates clearly is worth more than 100 lines of analysis. Focus on clarity!"
+        },
+        {
+          title:  "Statistics & Probability",
+          week:   "Week 8 – 9",
+          status: "locked",
+          icon:   "fa-calculator",
+          desc:   "Build the statistical foundation needed for machine learning and data analysis.",
+          topics: ["Descriptive stats", "Probability distributions", "Hypothesis testing", "Correlation", "A/B testing"],
+          resources: [
+            { name:"StatQuest YouTube",  url:"https://youtube.com" },
+            { name:"Khan Academy Stats", url:"https://khanacademy.org" }
+          ],
+          tip: "StatQuest with Josh Starmer on YouTube is the absolute best free statistics resource. Watch it!"
+        },
+        {
+          title:  "Machine Learning Basics",
+          week:   "Week 10 – 14",
+          status: "locked",
+          icon:   "fa-brain",
+          desc:   "Apply ML algorithms to real datasets and learn model building workflow.",
+          topics: ["Scikit-learn", "Regression & classification", "Cross validation", "Feature engineering"],
+          resources: [
+            { name:"Scikit-learn Docs",  url:"https://scikit-learn.org" },
+            { name:"Kaggle ML Course",   url:"https://kaggle.com/learn" }
+          ],
+          tip: "Enter a Kaggle Titanic competition — it is the classic beginner ML challenge everyone does!"
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"Pandas — GroupBy Practice",       done: true  },
+        { day:"Tuesday",   task:"Data Cleaning on Kaggle Dataset", done: true  },
+        { day:"Wednesday", task:"Pivot Tables & Merge",            done: false },
+        { day:"Thursday",  task:"EDA on New Dataset",              done: false },
+        { day:"Friday",    task:"Matplotlib Charts Practice",      done: false },
+        { day:"Saturday",  task:"Mini Analysis Project",           done: false },
+      ]
+    }
+  };
+
+  // ========================================
+  // AI TIPS
+  // ========================================
+  const aiTips = [
+    "Focus on building small projects at every stage — theory alone won't get you hired!",
+    "Consistency beats intensity. 1 hour every day beats 7 hours on Sunday.",
+    "Join developer communities on Discord and Reddit — you will learn faster.",
+    "Document your learning journey on LinkedIn — recruiters will notice you!",
+    "Don't skip the basics. A strong foundation makes advanced topics 3x easier.",
+    "Build in public — share your projects on GitHub from day one!",
+    "Find a learning buddy. Teaching someone else cements your own knowledge.",
+    "Apply for internships before you feel ready — you never feel 100% ready!"
+  ];
+
+  // ========================================
+  // STATE
+  // ========================================
+  let currentPath    = 'webdev';
+  let currentTipIdx  = 0;
+
+  // ========================================
+  // RENDER ROADMAP
+  // ========================================
+  function renderRoadmap(pathKey) {
+    const path = roadmaps[pathKey];
+    if (!path) return;
+
+    // Update header
+    document.getElementById('pathTitle').textContent =
+      '🗺️ ' + path.title;
+    document.getElementById('pathDesc').textContent =
+      path.desc;
+    document.getElementById('timeLeft').textContent =
+      path.duration;
+
+    // Count done
+    const done  = path.steps.filter(s => s.status === 'done').length;
+    const total = path.steps.length;
+    const pct   = Math.round((done / total) * 100);
+
+    document.getElementById('totalSteps').textContent =
+      total + ' Steps';
+    document.getElementById('doneSteps').textContent =
+      done + ' Done';
+    document.getElementById('progressBadge').textContent =
+      pct + '% Complete';
+    document.getElementById('opFill').style.width =
+      pct + '%';
+
+    // Build timeline
+    const timeline = document.getElementById('timeline');
+    timeline.innerHTML = '';
+
+    path.steps.forEach((step, i) => {
+      const item = document.createElement('div');
+      item.className = `timeline-item ${step.status}`;
+      item.onclick   = () => showStepDetail(pathKey, i);
+
+      item.innerHTML = `
+        <div class="tl-dot">
+          <i class="fas ${
+            step.status === 'done'   ? 'fa-check'   :
+            step.status === 'active' ? 'fa-spinner fa-spin' :
+            'fa-lock'
+          }"></i>
+        </div>
+        <div class="tl-connector"></div>
+        <div class="tl-content ${step.status === 'active' ? 'is-active' : ''}">
+          <div class="tl-header">
+            <div class="tl-icon">
+              <i class="fab ${step.icon}
+                 ${step.icon.startsWith('fa-') && !step.icon.startsWith('fa-python') && !step.icon.startsWith('fa-js') && !step.icon.startsWith('fa-react') && !step.icon.startsWith('fa-node') && !step.icon.startsWith('fa-git') && !step.icon.startsWith('fa-linux')
+                   ? '' : ''}" >
+              </i>
+              <i class="fas ${step.icon}"></i>
+            </div>
+            <div class="tl-info">
+              <strong>${step.title}</strong>
+              <span>${step.week}</span>
+            </div>
+          </div>
+          ${step.status === 'active'
+            ? '<span class="tl-badge active-badge">In Progress</span>'
+            : step.status === 'done'
+            ? '<span class="tl-badge done-badge">Completed ✓</span>'
+            : '<span class="tl-badge locked-badge">Upcoming</span>'
+          }
+        </div>
+      `;
+
+      timeline.appendChild(item);
+    });
+
+    // Show active step detail
+    const activeIdx = path.steps.findIndex(
+      s => s.status === 'active'
+    );
+    showStepDetail(pathKey, activeIdx >= 0 ? activeIdx : 0);
+
+    // Weekly plan
+    renderWeekly(path.weekly);
+  }
+
+  // ========================================
+  // SHOW STEP DETAIL
+  // ========================================
+  function showStepDetail(pathKey, idx) {
+    const step = roadmaps[pathKey].steps[idx];
+    if (!step) return;
+
+    document.getElementById('activeIcon').innerHTML =
+      `<i class="fas ${step.icon}"></i>`;
+    document.getElementById('activeTitle').textContent =
+      step.title;
+    document.getElementById('activeWeek').textContent =
+      step.week;
+    document.getElementById('activeDesc').textContent =
+      step.desc;
+
+    // Topics
+    const topicsList =
+      document.getElementById('topicsList');
+    topicsList.innerHTML = step.topics.map(t => `
+      <div class="topic-item">
+        <i class="fas fa-check-circle"></i>
+        <span>${t}</span>
+      </div>
+    `).join('');
+
+    // Resources
+    const resDiv =
+      document.getElementById('stepResources');
+    resDiv.innerHTML = step.resources.map(r => `
+      <a href="${r.url}"
+         target="_blank"
+         class="step-resource-link">
+        <i class="fas fa-external-link-alt"></i>
+        ${r.name}
+      </a>
+    `).join('');
+
+    // AI tip
+    document.getElementById('aiTip').textContent =
+      `"${step.tip}"`;
+
+    // Mark button
+    const btn = document.getElementById('markBtn');
+    if (step.status === 'done') {
+      btn.innerHTML =
+        '<i class="fas fa-check-double"></i> Already Completed!';
+      btn.style.background = 'var(--success)';
+      btn.disabled = true;
+    } else if (step.status === 'locked') {
+      btn.innerHTML =
+        '<i class="fas fa-lock"></i> Complete Previous Steps First';
+      btn.style.background = 'var(--gray-400)';
+      btn.disabled = true;
+    } else {
+      btn.innerHTML =
+        '<i class="fas fa-check"></i> Mark as Complete';
+      btn.style.background = '';
+      btn.disabled = false;
+    }
+
+    // Highlight active timeline item
+    document.querySelectorAll('.tl-content')
+            .forEach((el, i) => {
+      el.classList.toggle('is-active', i === idx);
+    });
+  }
+
+  // ========================================
+  // RENDER WEEKLY PLAN
+  // ========================================
+  function renderWeekly(weekly) {
+    const plan =
+      document.getElementById('weeklyPlan');
+    plan.innerHTML = weekly.map(w => `
+      <div class="weekly-item ${w.done ? 'done' : ''}">
+        <div class="weekly-check">
+          <i class="fas ${
+            w.done ? 'fa-check-circle' : 'fa-circle'
+          }"></i>
+        </div>
+        <div class="weekly-info">
+          <strong>${w.day}</strong>
+          <span>${w.task}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ========================================
+  // SWITCH PATH
+  // ========================================
+  function switchPath(key, btn) {
+    currentPath = key;
+    document.querySelectorAll('.path-btn')
+            .forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderRoadmap(key);
+  }
+
+  // ========================================
+  // MARK COMPLETE
+  // ========================================
+  function markComplete() {
+    const steps = roadmaps[currentPath].steps;
+    const activeIdx = steps.findIndex(
+      s => s.status === 'active'
+    );
+    if (activeIdx === -1) return;
+
+    steps[activeIdx].status = 'done';
+    if (activeIdx + 1 < steps.length) {
+      steps[activeIdx + 1].status = 'active';
+    }
+
+    renderRoadmap(currentPath);
+  }
+
+  // ========================================
+  // NEW AI TIP
+  // ========================================
+  function newTip() {
+    currentTipIdx =
+      (currentTipIdx + 1) % aiTips.length;
+    document.getElementById('aiTip').textContent =
+      `"${aiTips[currentTipIdx]}"`;
+  }
+
+  // ========================================
+  // SIDEBAR TOGGLE
+  // ========================================
+  function toggleSidebar() {
+    document.getElementById('sidebar')
+            .classList.toggle('open');
+  }
+
+  // ========================================
+  // INIT
+  // ========================================
+  renderRoadmap('webdev');
+  </script>
+
+</body>
+</html>

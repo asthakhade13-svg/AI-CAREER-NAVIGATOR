@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Mentor | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="chatbot.css" />
+   <script src="api.js"></script>
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-label">Main Menu</p>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a href="quiz.html" class="nav-item">
+        <i class="fas fa-brain"></i><span>Skill Assessment</span>
+      </a>
+      <a href="careers.html" class="nav-item">
+        <i class="fas fa-briefcase"></i><span>Career Paths</span>
+      </a>
+      <a href="roadmap.html" class="nav-item">
+        <i class="fas fa-map"></i><span>My Roadmap</span>
+      </a>
+      <a href="internships.html" class="nav-item">
+        <i class="fas fa-building"></i><span>Internships</span>
+      </a>
+      <a href="progress.html" class="nav-item">
+        <i class="fas fa-chart-line"></i><span>Progress</span>
+      </a>
+      <p class="nav-label">Support</p>
+      <a href="chatbot.html" class="nav-item active">
+        <i class="fas fa-robot"></i><span>AI Mentor</span>
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">R</div>
+      <div class="user-info">
+        <strong>Rahul Sharma</strong>
+        <p>1st Year · CSE</p>
+      </div>
+       <a href="#" title="Logout" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i>
+</a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div>
+        <h2 class="topbar-title">AI Mentor</h2>
+        <p class="topbar-sub">
+          Your personal career guidance assistant
+        </p>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="user-avatar sm">R</div>
+      </div>
+    </header>
+
+    <div class="page-body chat-page-body">
+
+      <!-- ===== CHAT LAYOUT ===== -->
+      <div class="chat-layout">
+
+        <!-- LEFT: Chat Window -->
+        <div class="chat-col">
+
+          <!-- Chat Header -->
+          <div class="chat-header">
+            <div class="chat-bot-info">
+              <div class="bot-avatar">
+                <i class="fas fa-robot"></i>
+                <span class="bot-online"></span>
+              </div>
+              <div>
+                <strong>CareerBot</strong>
+                <p>AI Career Mentor · Always Online</p>
+              </div>
+            </div>
+            <button
+              class="clear-btn"
+              onclick="clearChat()"
+              title="Clear chat"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+
+          <!-- Messages Area -->
+          <div class="chat-messages" id="chatMessages">
+
+            <!-- Welcome message -->
+            <div class="msg bot-msg">
+              <div class="msg-avatar">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div class="msg-bubble">
+                 <p id="welcomeMsg">
+  👋 Hi there! I'm <strong>CareerBot</strong>,
+                  your AI career mentor.
+                </p>
+                <p class="mt-1">
+                  I can help you with:
+                </p>
+                <ul class="bot-list">
+                  <li>🎯 Choosing the right career path</li>
+                  <li>🗺️ Learning roadmap guidance</li>
+                  <li>💼 Internship application tips</li>
+                  <li>🧠 Skill building advice</li>
+                  <li>📝 Resume & interview help</li>
+                </ul>
+                <p class="mt-1">
+                  What would you like to know today?
+                </p>
+                <span class="msg-time">Just now</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Prompts -->
+          <div class="quick-prompts" id="quickPrompts">
+            <p class="prompts-label">Quick Questions:</p>
+            <div class="prompts-grid">
+              <button onclick="sendQuick(this)">
+                Which career path suits me?
+              </button>
+              <button onclick="sendQuick(this)">
+                How do I build my resume?
+              </button>
+              <button onclick="sendQuick(this)">
+                How to get my first internship?
+              </button>
+              <button onclick="sendQuick(this)">
+                What skills should I learn first?
+              </button>
+              <button onclick="sendQuick(this)">
+                How to prepare for interviews?
+              </button>
+              <button onclick="sendQuick(this)">
+                Best free resources to learn coding?
+              </button>
+            </div>
+          </div>
+
+          <!-- Input Area -->
+          <div class="chat-input-area">
+            <div class="chat-input-box">
+              <textarea
+                id="userInput"
+                placeholder="Ask your career question..."
+                rows="1"
+                onkeydown="handleKey(event)"
+                oninput="autoResize(this)"
+              ></textarea>
+              <button
+                class="send-btn"
+                onclick="sendMessage()"
+                id="sendBtn"
+              >
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+            <p class="input-hint">
+              Press <kbd>Enter</kbd> to send ·
+              <kbd>Shift+Enter</kbd> for new line
+            </p>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Info Panel -->
+        <div class="chat-right-panel">
+
+          <!-- Bot Info Card -->
+          <div class="card bot-info-card">
+            <div class="bot-card-header">
+              <div class="bot-card-avatar">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div>
+                <strong>CareerBot</strong>
+                <p>Powered by Claude AI</p>
+              </div>
+            </div>
+            <div class="bot-capabilities">
+              <div class="cap-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Career path guidance</span>
+              </div>
+              <div class="cap-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Roadmap recommendations</span>
+              </div>
+              <div class="cap-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Resume & LinkedIn tips</span>
+              </div>
+              <div class="cap-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Interview preparation</span>
+              </div>
+              <div class="cap-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Internship advice</span>
+              </div>
+              <div class="cap-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Skill building plans</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Suggested Topics -->
+          <div class="card mt-3">
+            <h4 class="mb-3">💡 Topic Ideas</h4>
+            <div class="topic-ideas">
+
+              <div class="topic-idea-item"
+                   onclick="fillPrompt(
+                     'I am a 1st year CSE student. Which tech skill should I learn first as a complete beginner?'
+                   )">
+                <div class="topic-icon purple">
+                  <i class="fas fa-code"></i>
+                </div>
+                <div>
+                  <strong>First skill to learn</strong>
+                  <p>As a 1st year student</p>
+                </div>
+              </div>
+
+              <div class="topic-idea-item"
+                   onclick="fillPrompt(
+                     'What is the difference between Web Development, AI/ML and Data Science? Which one should I choose?'
+                   )">
+                <div class="topic-icon green">
+                  <i class="fas fa-road"></i>
+                </div>
+                <div>
+                  <strong>Web Dev vs AI vs Data</strong>
+                  <p>Compare career paths</p>
+                </div>
+              </div>
+
+              <div class="topic-idea-item"
+                   onclick="fillPrompt(
+                     'I have no work experience. How do I write a good resume as a fresher CSE student?'
+                   )">
+                <div class="topic-icon blue">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <div>
+                  <strong>Fresher resume tips</strong>
+                  <p>No experience needed</p>
+                </div>
+              </div>
+
+              <div class="topic-idea-item"
+                   onclick="fillPrompt(
+                     'How do I crack a technical interview for a software engineering internship?'
+                   )">
+                <div class="topic-icon orange">
+                  <i class="fas fa-comments"></i>
+                </div>
+                <div>
+                  <strong>Crack tech interviews</strong>
+                  <p>SDE internship prep</p>
+                </div>
+              </div>
+
+              <div class="topic-idea-item"
+                   onclick="fillPrompt(
+                     'What are the best free websites and YouTube channels to learn programming for free?'
+                   )">
+                <div class="topic-icon red">
+                  <i class="fas fa-book"></i>
+                </div>
+                <div>
+                  <strong>Free learning resources</strong>
+                  <p>Best websites & channels</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Chat Stats -->
+          <div class="card mt-3">
+            <h4 class="mb-2">📊 Your Chat Stats</h4>
+            <div class="chat-stats">
+              <div class="chat-stat-item">
+                <strong id="msgCount">1</strong>
+                <p>Messages today</p>
+              </div>
+              <div class="chat-stat-item">
+                <strong>12</strong>
+                <p>Total sessions</p>
+              </div>
+              <div class="chat-stat-item">
+                <strong>3</strong>
+                <p>Topics covered</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+   <!-- <script src="api.js"></script> -->
+<script>
+// Protect page
+requireAuth();
+
+// Load user info
+ // Update welcome message with user name
+const user = UserManager.get();
+if (user) {
+    const welcomeEl =
+        document.getElementById('welcomeMsg');
+    if (welcomeEl) {
+        welcomeEl.innerHTML =
+            '👋 Hi <strong>' +
+            user.fullName.split(' ')[0] +
+            '</strong>! I\'m <strong>CareerBot</strong>,';
+    }
+}
+
+let messageCount = 0;
+let isTyping = false;
+
+// Send message
+async function sendMessage() {
+    const input =
+        document.getElementById('userInput');
+    const text = input.value.trim();
+
+    if (!text || isTyping) return;
+
+    // Hide quick prompts
+    const qp = document.getElementById('quickPrompts');
+    if (qp) qp.style.display = 'none';
+
+    addMessage(text, 'user');
+    input.value = '';
+    input.style.height = 'auto';
+    messageCount++;
+    document.getElementById('msgCount')
+        .textContent = messageCount;
+
+    showTyping();
+
+    try {
+        const result = await ChatAPI.sendMessage(
+            text,
+            'CAREER'
+        );
+
+        removeTyping();
+
+        if (result.status === 200 &&
+            result.data.success) {
+            addMessage(result.data.aiResponse, 'bot');
+        } else {
+            addMessage(
+                '⚠️ Sorry, I could not process that. ' +
+                'Please try again!',
+                'bot'
+            );
+        }
+
+    } catch (error) {
+        removeTyping();
+        addMessage(
+            '⚠️ Connection error. ' +
+            'Please check if backend is running!',
+            'bot'
+        );
+    }
+}
+
+
+
+
+
+// Add message to chat
+function addMessage(text, sender) {
+    const container =
+        document.getElementById('chatMessages');
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.className =
+        `msg ${sender === 'user'
+               ? 'user-msg' : 'bot-msg'}`;
+
+    const formatted = text
+        .replace(/\*\*(.*?)\*\*/g,
+            '<strong>$1</strong>')
+        .replace(/\n/g, '<br/>');
+
+    if (sender === 'user') {
+        wrapper.innerHTML = `
+            <div class="msg-bubble user-bubble">
+                <p>${formatted}</p>
+                <span class="msg-time">${time}</span>
+            </div>
+            <div class="msg-avatar user-av">
+                ${user ? user.fullName.charAt(0) : 'U'}
+            </div>
+        `;
+    } else {
+        wrapper.innerHTML = `
+            <div class="msg-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="msg-bubble">
+                <p>${formatted}</p>
+                <span class="msg-time">${time}</span>
+            </div>
+        `;
+    }
+
+    container.appendChild(wrapper);
+    scrollToBottom();
+}
+
+// Typing indicator
+function showTyping() {
+    isTyping = true;
+    document.getElementById('sendBtn')
+        .disabled = true;
+
+    const container =
+        document.getElementById('chatMessages');
+    const typing = document.createElement('div');
+    typing.className = 'msg bot-msg';
+    typing.id = 'typingIndicator';
+    typing.innerHTML = `
+        <div class="msg-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="msg-bubble typing-bubble">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    container.appendChild(typing);
+    scrollToBottom();
+}
+
+function removeTyping() {
+    isTyping = false;
+    document.getElementById('sendBtn')
+        .disabled = false;
+    const indicator =
+        document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+function scrollToBottom() {
+    const c = document.getElementById('chatMessages');
+    c.scrollTop = c.scrollHeight;
+}
+
+function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height =
+        Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function sendQuick(btn) {
+    document.getElementById('userInput').value =
+        btn.textContent.trim();
+    sendMessage();
+}
+
+function fillPrompt(text) {
+    const input =
+        document.getElementById('userInput');
+    input.value = text;
+    input.focus();
+    autoResize(input);
+}
+
+function clearChat() {
+    if (!confirm('Clear chat history?')) return;
+    const container =
+        document.getElementById('chatMessages');
+    container.innerHTML = '';
+    const qp =
+        document.getElementById('quickPrompts');
+    if (qp) qp.style.display = 'block';
+    addMessage(
+        'Chat cleared! 👋 How can I help you?',
+        'bot'
+    );
+    messageCount = 0;
+    document.getElementById('msgCount')
+        .textContent = '0';
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar')
+        .classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
