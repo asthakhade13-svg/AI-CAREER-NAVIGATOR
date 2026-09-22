@@ -6,8 +6,12 @@
 // Spring Boot backend URL (defaults to localhost:8080 or custom configured URL)
 const API_BASE_URL = localStorage.getItem('SPRING_API_BASE_URL') || 'http://localhost:8080/api/v1';
 
-// Python FastAPI ML backend URL (defaults to localhost:8000 or custom configured URL)
-const ML_API_BASE_URL = localStorage.getItem('ML_API_BASE_URL') || 'http://localhost:8000/api/v1';
+// Python FastAPI ML backend URL (defaults to Render on GitHub Pages / remote, localhost for local)
+const ML_API_BASE_URL = localStorage.getItem('ML_API_BASE_URL') || (
+    (typeof window !== 'undefined' && (window.location.hostname.endsWith('github.io') || window.location.protocol === 'https:'))
+        ? 'https://ai-career-navigator-vzcm.onrender.com/api/v1'
+        : 'http://localhost:8000/api/v1'
+);
 
 // ============================================
 // TOKEN MANAGEMENT

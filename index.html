@@ -1597,7 +1597,7 @@ setInterval(() => {
    APP STATE & HELPERS
 ═══════════════════════════════════════════════════════════════ */
 // Deployed backend URL for GitHub Pages split deployment:
-const CLOUD_BACKEND_URL = 'https://ai-career-navigator-production-b369.up.railway.app'; // Default fallback
+const CLOUD_BACKEND_URL = 'https://ai-career-navigator-vzcm.onrender.com'; // Deployed Render backend
 
 function getBaseUrl(){
   const custom = localStorage.getItem('CUSTOM_BACKEND_URL');
@@ -1607,7 +1607,7 @@ function getBaseUrl(){
   if(isLocal){
     return window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000';
   }
-  return isGhPages ? CLOUD_BACKEND_URL : window.location.origin;
+  return isGhPages ? CLOUD_BACKEND_URL : (window.location.protocol === 'https:' ? CLOUD_BACKEND_URL : window.location.origin);
 }
 
 let BASE = getBaseUrl();
