@@ -286,7 +286,7 @@ async function goToDashboard(e) {
     }
 
     // Show loading
-    const btn = e.target;
+    const btn = document.querySelector('button[type="submit"]') || e.target.closest('button') || e.target;
     const originalText = btn.innerHTML;
     btn.innerHTML =
         '<i class="fas fa-spinner fa-spin"></i> Creating account...';
