@@ -56,14 +56,14 @@
         <span>Internships</span>
       </a>
 
-      <a href="pages/progress.html" class="nav-item">
+      <a href="progress.html" class="nav-item">
         <i class="fas fa-chart-line"></i>
         <span>Progress</span>
       </a>
 
       <p class="nav-label">Support</p>
 
-      <a href="pages/chatbot.html" class="nav-item">
+      <a href="chatbot.html" class="nav-item">
         <i class="fas fa-robot"></i>
         <span>AI Mentor</span>
       </a>
@@ -121,16 +121,33 @@
     <!-- ===== PAGE BODY ===== -->
     <div class="page-body">
 
-      <!-- Alert Banner -->
-      <div class="alert-banner">
-        <i class="fas fa-star"></i>
-        <span>
-          You haven't taken the Skill Assessment yet!
-          <a href="pages/quiz.html">Take it now →</a>
-        </span>
-        <button onclick="this.parentElement.remove()">
-          <i class="fas fa-times"></i>
-        </button>
+      <!-- ===== 1. AI CAREER NAVIGATOR ML MODEL HERO CARD ===== -->
+      <div class="card mb-3" style="background:linear-gradient(135deg, rgba(238,242,255,0.85), rgba(240,253,244,0.85)); border:1px solid rgba(99,102,241,0.25); box-shadow:0 8px 24px rgba(99,102,241,0.08); padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div style="display:flex; align-items:center; gap:18px;">
+            <div style="width:54px; height:54px; border-radius:14px; background:linear-gradient(135deg, #4F46E5, #06B6D4); display:flex; align-items:center; justify-content:center; color:white; font-size:1.6rem; box-shadow:0 4px 14px rgba(79,70,229,0.35);">
+              <i class="fas fa-brain"></i>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge badge-primary" style="font-size:0.75rem; padding:3px 10px; text-transform:uppercase; letter-spacing:0.06em;">Step 1: AI Assessment</span>
+                <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">Random Forest ML Engine</span>
+              </div>
+              <h3 style="margin-top:4px; font-size:1.35rem; color:var(--dark); font-weight:800;">AI Career Navigator Assessment</h3>
+              <p style="color:var(--text-muted); font-size:0.88rem; margin-top:2px;">
+                Run our scientific 11-trait psychometric model (RIASEC + Big Five) to predict your ideal tech career.
+              </p>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="quiz.html" class="btn btn-primary" style="padding:12px 24px; font-size:0.95rem; font-weight:700; box-shadow:0 4px 14px rgba(79,70,229,0.3);">
+              <i class="fas fa-play-circle"></i> Start ML Assessment
+            </a>
+            <a href="index.html" class="btn btn-outline" style="padding:12px 18px; font-size:0.9rem; font-weight:600;">
+              <i class="fas fa-compass"></i> Full Diagnostic
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- ===== STAT CARDS ===== -->
@@ -517,31 +534,57 @@ function updateCareerList(careers) {
     const colors = [
         { bg:'#EEF2FF', ic:'#4F46E5', icon:'fa-code' },
         { bg:'#F0FDF4', ic:'#10B981', icon:'fa-robot' },
-        { bg:'#FFF7ED', ic:'#F59E0B', icon:'fa-shield-alt' }
+        { bg:'#FFF7ED', ic:'#F59E0B', icon:'fa-shield-alt' },
+        { bg:'#FDF4FF', ic:'#9333EA', icon:'fa-chart-bar' },
+        { bg:'#F0F9FF', ic:'#0284C7', icon:'fa-cloud' }
     ];
 
-    careerList.innerHTML = careers.map((c, i) => `
-        <div class="career-item">
+    careerList.innerHTML = careers.map((c, i) => {
+        const color = colors[i % colors.length];
+        return `
+        <div class="career-item" style="cursor:pointer; transition:all 0.2s;" onclick="selectCareerAndOpenRoadmap('${c.careerName}')" title="Click to choose this career and open learning roadmap">
             <div class="career-icon"
-                 style="background:${colors[i].bg}">
-                <i class="fas ${colors[i].icon}"
-                   style="color:${colors[i].ic}"></i>
+                 style="background:${color.bg}">
+                <i class="fas ${color.icon}"
+                   style="color:${color.ic}"></i>
             </div>
-            <div class="career-info">
+            <div class="career-info" style="flex:1;">
                 <strong>${c.careerName}</strong>
-                <p>${c.difficultyLevel || 'Tech Career'}</p>
+                <p>${c.difficultyLevel || 'AI Recommended Track'}</p>
             </div>
-            <div class="career-match">
-                <span>${c.matchPercentage}%</span>
+            <div class="career-match" style="margin-right:12px;">
+                <span>${c.matchPercentage}% Match</span>
                 <div class="match-bar">
                     <div class="match-fill"
                          style="width:${c.matchPercentage}%;
-                                background:${colors[i].ic}">
+                                background:${color.ic}">
                     </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+            <button class="btn btn-outline sm" style="padding:6px 14px; font-size:0.8rem; border-radius:18px;" onclick="event.stopPropagation(); selectCareerAndOpenRoadmap('${c.careerName}')">
+                Choose Path →
+            </button>
+        </div>`;
+    }).join('');
+}
+
+// Function to select career and open its personalized guideline & roadmap
+function selectCareerAndOpenRoadmap(careerName) {
+    let pathKey = 'webdev';
+    const lower = (careerName || '').toLowerCase();
+    if (lower.includes('ai') || lower.includes('machine') || lower.includes('model')) {
+        pathKey = 'aiml';
+    } else if (lower.includes('cyber') || lower.includes('security') || lower.includes('hack')) {
+        pathKey = 'cyber';
+    } else if (lower.includes('data') || lower.includes('analytics')) {
+        pathKey = 'data';
+    } else if (lower.includes('cloud') || lower.includes('aws') || lower.includes('devops')) {
+        pathKey = 'webdev';
+    }
+
+    localStorage.setItem('selected_career', pathKey);
+    localStorage.setItem('selected_career_name', careerName);
+    window.location.href = `roadmap.html?career=${pathKey}`;
 }
 
 async function loadRoadmap() {

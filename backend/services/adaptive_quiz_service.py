@@ -21,7 +21,8 @@ CSV_PATH = "data/adaptive_questions.csv"
 ACTIVE_SESSIONS: Dict[str, Dict[str, Any]] = {}
 
 # ─── Scoring bracket constants ───────────────────────────────────────────────
-QUIZ_LENGTH = 30
+QUIZ_LENGTH = 15
+
 
 LEARNING_PATHS = {
     "beginner": {
@@ -168,8 +169,8 @@ def _pick_question(session: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     used_ids = set(session["used_question_ids"])
     fields = session["field_rotation"]
 
-    # Rotate through fields every 5 questions
-    rotation_idx = session["questions_answered"] // 5
+    # Rotate through fields every 3 questions for a 15-question quiz
+    rotation_idx = session["questions_answered"] // 3
     rotation_idx = min(rotation_idx, len(fields) - 1)
     current_field = fields[rotation_idx]
 

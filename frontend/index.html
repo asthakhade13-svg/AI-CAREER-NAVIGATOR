@@ -1339,7 +1339,7 @@ nav{
           <span class="quiz-label" id="quiz-type-label">Adaptive Quiz</span>
           <span class="quiz-diff-badge diff-medium" id="quiz-diff-badge">Medium</span>
         </div>
-        <span class="quiz-counter" id="quiz-counter">Question 1 of 30</span>
+        <span class="quiz-counter" id="quiz-counter">Question 1 of 15</span>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
@@ -1941,7 +1941,7 @@ async function submitQuestionnaire(){
     html += `
       <p style="color:var(--text-muted);font-size:0.88rem;line-height:1.65;margin-bottom:18px">
         ${data.reason}<br/><br/>
-        Next, you will take a <strong style="color:#b45309">30-question Computer Adaptive Test</strong>. The questions will establish your competencies starting at a level aligned with your technical exposure.
+        Next, you will take a <strong style="color:#b45309">15-question Computer Adaptive Test</strong>. The questions will establish your competencies starting at a level aligned with your technical exposure.
       </p>
     `;
     
@@ -1971,7 +1971,7 @@ async function startAdaptiveQuiz(){
     const res=await fetch(`${BASE}/api/v1/quiz/adaptive/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(startPayload)});
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const data=await res.json();
-    adaptiveSessionId=data.session_id;adaptiveTotalQuestions=data.total_questions||30;
+    adaptiveSessionId=data.session_id;adaptiveTotalQuestions=data.total_questions||15;
     adaptiveCurrentQuestion=data.question;adaptiveQuestionNum=data.question_number||1;
     hideLoading();renderAdaptiveQuestion(data);
   }catch(err){hideLoading();showQuizError(err.message)}
@@ -2046,7 +2046,7 @@ document.addEventListener('keydown',e=>{
 ═══════════════════════════════════════════════════════════════ */
 function renderAdaptiveResults(data){
   showScreen('screen-result-cs');
-  const total=data.total_questions||30,correct=data.total_correct||0,acc=data.accuracy_pct||0;
+  const total=data.total_questions||15,correct=data.total_correct||0,acc=data.accuracy_pct||0;
   const wrong=data.total_wrong||(total-correct);
   const bracket=data.bracket||'beginner',lp=data.learning_path||{},recs=data.career_recommendations||[];
   const breakdown=data.domain_breakdown||[],featureScores=data.feature_scores||{};
@@ -2074,14 +2074,17 @@ function renderAdaptiveResults(data){
           <span class="rec-rank">#${i+1}</span>
           <span class="rec-domain">${p.field}</span>
         </div>
-        <span class="rec-pct" style="${isBest?'color:var(--gold)':''}">${pct}% Accuracy</span>
+        <span class="rec-pct" style="${isBest?'color:var(--gold)':''}">${pct}% Match</span>
       </div>
       <div class="rec-bar-track">
         <div class="rec-bar-fill ${isBest?'rec-bar-gold':'rec-bar-default'}" style="width:0%" data-width="${pct}"></div>
       </div>
-      <div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px">
-        Correct: <strong>${p.correct}</strong> / ${p.total} questions answered
+      <div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+        <span>Correct: <strong>${p.correct}</strong> / ${p.total} questions answered</span>
       </div>
+      <button class="btn btn-lavender" style="margin-top:10px;padding:8px 16px;font-size:0.80rem;width:100%;font-weight:600;" onclick="openCareerRoadmap('${p.field}')">
+        🗺️ Step 5: Open ${p.field} Roadmap &amp; Guidelines →
+      </button>
     </div>`;
   }).join('');
   const domainMinis=breakdown.slice(0,8).map(d=>{
@@ -2141,6 +2144,8 @@ function renderAdaptiveResults(data){
     </div>
   </div>`;
 
+  const topDomainName = top3Paths[0] ? top3Paths[0].field : 'Web Development';
+
   document.getElementById('cs-result-content').innerHTML=`
     <div class="score-hero">
       <div class="score-orb">
@@ -2153,28 +2158,66 @@ function renderAdaptiveResults(data){
       </div>
       <div class="bracket-badge" style="background:${bl.color}18;border:1px solid ${bl.color}40;color:${bl.color}">${bl.icon}&nbsp;${bl.label} Level&nbsp;·&nbsp;${acc}% Accuracy</div>
       <p style="color:var(--text-muted);margin-top:10px;font-size:.86rem;font-family:var(--mono)">${bl.desc}</p>
+      
+      <!-- Primary Step 5 Action Button -->
+      <div style="margin-top:16px;">
+        <button class="btn btn-lavender" style="font-weight:700;font-size:0.95rem;padding:12px 28px;box-shadow:0 6px 22px rgba(109,40,217,0.30);" onclick="openCareerRoadmap('${topDomainName}')">
+          🗺️ Step 5: Open Personalized Learning Roadmap (${topDomainName}) →
+        </button>
+      </div>
     </div>
+
     <div class="section-title"><span class="dot"></span>Score Summary<span class="label-tag">OVERVIEW</span></div>
     ${summaryBar}
-    <div class="section-title"><span class="dot"></span>Learning Path<span class="label-tag">RECOMMENDED</span></div>
-    <div class="learning-path-card"><h3>📡 ${lp.label||'Your Path'} — ${lp.description||''}</h3><div style="margin-top:4px">${resources||'<p style="color:var(--text-muted)">Resources loading…</p>'}</div></div>
-    <div class="section-title"><span class="dot"></span>Top Suggested Career Paths<span class="label-tag">BREAKDOWN ANALYSIS</span></div>
+
+    <div class="section-title"><span class="dot"></span>Top Suggested Career Paths<span class="label-tag">STEP 4: SELECTION</span></div>
     <div class="rec-list">${pathCards||'<p style="color:var(--text-muted)">No data.</p>'}</div>
+
+    <div class="section-title"><span class="dot"></span>Learning Path Guidelines<span class="label-tag">STEP 5: SYLLABUS</span></div>
+    <div class="learning-path-card">
+      <h3>📡 ${lp.label||'Your Path'} — ${lp.description||''}</h3>
+      <div style="margin-top:8px">${resources||'<p style="color:var(--text-muted)">Resources loading…</p>'}</div>
+      <div style="margin-top:16px;text-align:center;">
+        <button class="btn btn-lavender" style="padding:10px 22px;font-size:0.88rem;font-weight:700;" onclick="openCareerRoadmap('${topDomainName}')">
+          🚀 Open Full Milestone Roadmap &amp; AI Mentor →
+        </button>
+      </div>
+    </div>
+
     <div class="section-title"><span class="dot"></span>Domain Performance<span class="label-tag">RADAR</span></div>
     <div class="radar-wrap"><canvas id="radarChart" height="300"></canvas></div>
+
     <div class="section-title"><span class="dot"></span>Topic Breakdown<span class="label-tag">ANALYSIS</span></div>
     <div class="domain-grid">${domainMinis}</div>
+
     <div class="section-title"><span class="dot"></span>Answer Review<span class="label-tag">DETAILED</span></div>
     <div style="margin-bottom:30px">${reviewCards||'<p style="color:var(--text-muted)">No answer history available.</p>'}</div>
-    <div class="result-footer">
+
+    <div class="result-footer" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
+      <button class="btn btn-lavender" style="font-weight:700;padding:12px 24px;" onclick="openCareerRoadmap('${topDomainName}')">
+        🗺️ Step 5: Open Roadmap
+      </button>
       <button class="btn btn-outline" onclick="proceedToQuiz()">↺ Retake Quiz</button>
       <button class="btn btn-outline" onclick="goHome()">⌂ Back to Home</button>
     </div>`;
+
   animateCounter('cs-score-num',0,correct,1200);
   setTimeout(()=>{const arc=document.getElementById('scoreArc');if(arc)arc.style.strokeDashoffset=offset},100);
   setTimeout(()=>document.querySelectorAll('.rec-bar-fill').forEach(el=>el.style.width=(el.dataset.width||0)+'%'),200);
   setTimeout(()=>document.querySelectorAll('.ring-fill').forEach(el=>el.style.strokeDashoffset=el.dataset.offset),400);
   setTimeout(()=>buildRadarChart(featureScores,radarMap),150);
+}
+
+function openCareerRoadmap(fieldName) {
+  let key = 'webdev';
+  const lower = (fieldName || '').toLowerCase();
+  if (lower.includes('ai') || lower.includes('machine') || lower.includes('model')) key = 'aiml';
+  else if (lower.includes('cyber') || lower.includes('security') || lower.includes('network')) key = 'cyber';
+  else if (lower.includes('data') || lower.includes('analytics')) key = 'data';
+  else if (lower.includes('cloud') || lower.includes('devops')) key = 'webdev';
+  localStorage.setItem('selected_career', key);
+  localStorage.setItem('selected_career_name', fieldName);
+  window.location.href = `roadmap.html?career=${key}`;
 }
 
 function renderGeneralResults(data){renderAdaptiveResults(data)}

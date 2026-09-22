@@ -101,7 +101,7 @@ async def api_get_session_status(session_id: str):
         "student_id": session["student_id"],
         "questions_answered": session["questions_answered"],
         "correct_answers": session["correct_answers"],
-        "total_questions": 30,
+        "total_questions": 15,
         "completed": session["completed"],
         "current_difficulty": session.get("current_difficulty"),
     }

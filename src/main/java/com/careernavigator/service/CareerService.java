@@ -13,12 +13,16 @@ import org.springframework.transaction.annotation
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
+
 /**
  * CareerService
  * Smart career recommendation engine
  *
  * Analyzes quiz scores and matches
- * student strengths to career paths
+ * student strengths to career paths using FastAPI ML model
  */
 @Service
 @Slf4j
@@ -30,6 +34,10 @@ public class CareerService {
     private final QuizAttemptRepository
             quizAttemptRepository;
     private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${ml.backend.url:http://localhost:8000/api/v1}")
+    private String mlBackendUrl;
 
     // ==========================================
     // GENERATE RECOMMENDATIONS FROM LATEST QUIZ
@@ -72,9 +80,11 @@ public class CareerService {
         careerRecommendationRepository
                 .deleteByUserId(user.getId());
 
-        // Generate new recommendations
-        List<CareerRecommendationResponse.CareerDetail>
-                careers = buildCareerRecommendations(attempt);
+        // Generate new recommendations via ML Engine (with heuristic fallback)
+        List<CareerRecommendationResponse.CareerDetail> careers = fetchMlRecommendations(user, attempt);
+        if (careers == null || careers.isEmpty()) {
+            careers = buildCareerRecommendations(attempt);
+        }
 
         // Save to database
         saveRecommendations(user, attempt, careers);
@@ -198,8 +208,68 @@ public class CareerService {
     }
 
     // ==========================================
-    // BUILD CAREER RECOMMENDATIONS
-    // Smart matching algorithm
+    // FETCH RECOMMENDATIONS FROM FASTAPI ML BACKEND
+    // ==========================================
+    @SuppressWarnings("unchecked")
+    private List<CareerRecommendationResponse.CareerDetail> fetchMlRecommendations(User user, QuizAttempt attempt) {
+        try {
+            if (restTemplate == null || mlBackendUrl == null) {
+                return null;
+            }
+            String url = mlBackendUrl + "/recommendation/recommend";
+
+            Map<String, Object> quizResults = new HashMap<>();
+            quizResults.put("Web Development", attempt.getWebDevScore());
+            quizResults.put("AI / Machine Learning", attempt.getAiMlScore());
+            quizResults.put("DSA", attempt.getDsaScore());
+            quizResults.put("Cybersecurity", attempt.getCyberScore());
+            quizResults.put("Cloud Computing", attempt.getCloudScore());
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("student_id", user.getEmail());
+            requestBody.put("quiz_results", quizResults);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> body = response.getBody();
+                List<Map<String, Object>> recs = (List<Map<String, Object>>) body.get("recommendations");
+                if (recs != null && !recs.isEmpty()) {
+                    List<CareerRecommendationResponse.CareerDetail> careers = new ArrayList<>();
+                    int rank = 1;
+                    for (Map<String, Object> rec : recs) {
+                        String domain = String.valueOf(rec.get("domain"));
+                        double score = 75.0;
+                        if (rec.get("score") instanceof Number) {
+                            score = ((Number) rec.get("score")).doubleValue();
+                        }
+                        careers.add(CareerRecommendationResponse.CareerDetail.builder()
+                                .rank(rank++)
+                                .careerName(domain)
+                                .matchPercentage(Math.round(score * 10.0) / 10.0)
+                                .reason("Our AI Psychometric ML model recommends " + domain + " based on your verified performance and aptitude profile.")
+                                .requiredSkills("Core CS fundamentals, Domain Specialization, Project portfolio")
+                                .salaryRange("₹8L – ₹35L per year")
+                                .difficultyLevel("Intermediate")
+                                .timeToLearn("6–12 months")
+                                .emoji("🎯")
+                                .build());
+                    }
+                    log.info("Successfully fetched {} ML recommendations from FastAPI", careers.size());
+                    return careers;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("FastAPI ML service call failed or offline, falling back to local engine: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    // ==========================================
+    // BUILD CAREER RECOMMENDATIONS (Local Engine)
     // ==========================================
     private List<CareerRecommendationResponse.CareerDetail>
     buildCareerRecommendations(

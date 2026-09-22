@@ -983,7 +983,22 @@ requireAuth();
   // ========================================
   // INIT
   // ========================================
-  renderRoadmap('webdev');
+  const urlParams = new URLSearchParams(window.location.search);
+  const careerParam = urlParams.get('career') || localStorage.getItem('selected_career') || 'webdev';
+  const initialPath = roadmaps[careerParam] ? careerParam : 'webdev';
+  currentPath = initialPath;
+
+  // Highlight corresponding path selector button
+  document.querySelectorAll('.path-btn').forEach(b => {
+      const onclickAttr = b.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${initialPath}'`)) {
+          b.classList.add('active');
+      } else {
+          b.classList.remove('active');
+      }
+  });
+
+  renderRoadmap(initialPath);
   </script>
 
 </body>
