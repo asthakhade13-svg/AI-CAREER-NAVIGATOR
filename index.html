@@ -1323,9 +1323,9 @@ nav{
     <div class="card card-gold" style="margin-bottom:22px;text-align:left">
       <h2 id="profile-result-title" style="margin-bottom:13px;font-size:1.7rem;color:var(--gold)">Profile Analyzed!</h2>
       <p id="profile-result-text" style="color:var(--text-muted);line-height:1.8;font-size:.92rem;margin-bottom:22px"></p>
-      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px">
-        <button class="btn btn-gold pulse" id="profile-result-btn" onclick="proceedToQuiz()">Launch Adaptive Quiz &nbsp;→</button>
-        <button class="btn btn-outline" id="profile-dashboard-btn" onclick="goHome()">Go to Dashboard</button>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px">
+        <button class="btn btn-gold" id="profile-result-btn" onclick="proceedToQuiz()">🎯 Optional: Launch 15-Q Adaptive Test &nbsp;→</button>
+        <button class="btn btn-outline" id="profile-dashboard-btn" onclick="goHome()">⌂ Go to Dashboard</button>
       </div>
     </div>
   </div>
@@ -1907,9 +1907,9 @@ async function submitQuestionnaire(){
         const barColor = colors[idx] || '#C0BEFE';
         
         html += `
-          <div class="rec-career-card" style="padding:14px 18px;background:rgba(255,255,255,0.40);border:1px solid rgba(250, 152, 255, 0.4);border-radius:16px;box-shadow:0 4px 18px rgba(100,120,200,0.02)">
+          <div class="rec-career-card" style="padding:16px 18px;background:rgba(255,255,255,0.45);border:1px solid rgba(250, 152, 255, 0.45);border-radius:16px;box-shadow:0 4px 18px rgba(100,120,200,0.04);transition:transform .2s ease;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span style="font-family:var(--font-heading);font-weight:700;font-size:1rem;color:var(--text)">
+              <span style="font-family:var(--font-heading);font-weight:700;font-size:1.05rem;color:var(--text)">
                 ${idx + 1}. ${rc.domain}
               </span>
               <span style="font-family:var(--mono);font-weight:700;font-size:0.8rem;color:#312e81;background:rgba(192,190,254,0.22);padding:2px 8px;border-radius:20px;border:1px solid rgba(192,190,254,0.4)">
@@ -1921,9 +1921,13 @@ async function submitQuestionnaire(){
               <div class="rec-bar-fill" style="height:100%;width:${rc.score}%;background:${barColor};border-radius:10px;box-shadow:0 0 8px ${barColor}44"></div>
             </div>
             
-            <p style="font-size:0.78rem;color:var(--text-muted);line-height:1.45;margin:0">
+            <p style="font-size:0.80rem;color:var(--text-muted);line-height:1.45;margin:0 0 10px 0">
               <strong style="color:#4b4895">Dominant Alignment:</strong> ${rc.reason}
             </p>
+
+            <button class="btn btn-lavender" style="width:100%;padding:9px 16px;font-size:0.82rem;font-weight:700;cursor:pointer;" onclick="openCareerRoadmap('${rc.domain}')">
+              🗺️ Step 5: Choose ${rc.domain} &amp; Open Learning Roadmap →
+            </button>
           </div>
         `;
       });
@@ -1934,7 +1938,7 @@ async function submitQuestionnaire(){
     // Add dominant traits / interests
     const dominant = data.profile_summary.interests || [];
     html += `
-      <div style="margin-bottom:24px;padding:14px 18px;background:rgba(255,255,255,0.25);border:1px solid rgba(250, 152, 255, 0.3);border-radius:16px">
+      <div style="margin-bottom:20px;padding:14px 18px;background:rgba(255,255,255,0.25);border:1px solid rgba(250, 152, 255, 0.3);border-radius:16px">
         <h4 style="font-family:var(--font-heading);font-weight:700;font-size:0.88rem;margin-bottom:10px;color:var(--text)">
           🌌 Key Traits Identified
         </h4>
@@ -1945,10 +1949,14 @@ async function submitQuestionnaire(){
     `;
 
     html += `
-      <p style="color:var(--text-muted);font-size:0.88rem;line-height:1.65;margin-bottom:18px">
-        ${data.reason}<br/><br/>
-        Next, you will take a <strong style="color:#b45309">15-question Computer Adaptive Test</strong>. The questions will establish your competencies starting at a level aligned with your technical exposure.
-      </p>
+      <div style="margin-top:16px;padding:16px;background:rgba(255,255,255,0.35);border:1px dashed rgba(180,83,9,0.30);border-radius:14px">
+        <h4 style="font-size:0.88rem;color:var(--gold);margin-bottom:6px;font-family:var(--font-heading)">
+          🎯 Optional Precision Skill Calibration
+        </h4>
+        <p style="color:var(--text-muted);font-size:0.82rem;line-height:1.6;margin:0">
+          You can immediately click any suggested career above to access your learning roadmap and guidelines. Alternatively, if you want real-time dynamic IRT evaluation, you can take the optional <strong>15-question Computer Adaptive Test (CAT)</strong> below.
+        </p>
+      </div>
     `;
     
     document.getElementById('profile-result-text').innerHTML=html;

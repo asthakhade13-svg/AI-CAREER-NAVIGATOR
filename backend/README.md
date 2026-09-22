@@ -94,7 +94,7 @@ An AI-powered career orientation and diagnostic assessment platform tailored for
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/v1/basic_info/questions` | Retrieves the 33-question diagnostic assessment questionnaire |
+| `GET` | `/api/v1/basic_info/questions` | Retrieves the 19-question diagnostic assessment questionnaire |
 | `GET` | `/api/v1/basic_info/career_fields` | Returns all available career specialization domains |
 | `POST`| `/api/v1/basic_info/evaluate` | Evaluates student profile & predicts top 3 matching career domains |
 | `POST`| `/api/v1/quiz/adaptive/start` | Initializes a dynamic adaptive quiz session |

@@ -107,29 +107,60 @@ def classify_student_profile(student_id: str, answers: Dict[str, Any]) -> Questi
         return ((val - 1.0) / 4.0) * 100.0
 
     # ── Layer 1: Personality & Aptitude Traits (50% weight) ──
-    analytical_thinking = scale_1_5_to_100((to_val(1) + to_val(2)) / 2.0)
-    creativity          = scale_1_5_to_100((to_val(3) + to_val(4)) / 2.0)
-    curiosity           = scale_1_5_to_100((to_val(5) + to_val(6)) / 2.0)
-    attention_to_detail = scale_1_5_to_100((to_val(7) + to_val(8)) / 2.0)
-    communication       = scale_1_5_to_100((to_val(9) + to_val(10)) / 2.0)
-    leadership          = scale_1_5_to_100((to_val(11) + to_val(12)) / 2.0)
-    building_mindset    = scale_1_5_to_100((to_val(13) + to_val(14)) / 2.0)
-    research_mindset    = scale_1_5_to_100((to_val(15) + to_val(16)) / 2.0)
-    user_empathy        = scale_1_5_to_100((to_val(17) + to_val(18)) / 2.0)
+    # Check if answered under 19-question schema or legacy 33-question schema
+    is_legacy_schema = any(get_ans(i) is not None for i in range(20, 34))
 
-    # ── Layer 2: Career Goals & Preferences (30% weight) ──
-    placement_focus     = scale_1_5_to_100((to_val(19) + to_val(20)) / 2.0)
-    technical_expertise = scale_1_5_to_100((to_val(21) + to_val(22)) / 2.0)
-    research_orient     = scale_1_5_to_100((to_val(23) + to_val(24)) / 2.0)
-    entrepreneurship    = scale_1_5_to_100((to_val(25) + to_val(26)) / 2.0)
-    leadership_mgmt     = scale_1_5_to_100((to_val(27) + to_val(28)) / 2.0)
+    if is_legacy_schema:
+        analytical_thinking = scale_1_5_to_100((to_val(1) + to_val(2)) / 2.0)
+        creativity          = scale_1_5_to_100((to_val(3) + to_val(4)) / 2.0)
+        curiosity           = scale_1_5_to_100((to_val(5) + to_val(6)) / 2.0)
+        attention_to_detail = scale_1_5_to_100((to_val(7) + to_val(8)) / 2.0)
+        communication       = scale_1_5_to_100((to_val(9) + to_val(10)) / 2.0)
+        leadership          = scale_1_5_to_100((to_val(11) + to_val(12)) / 2.0)
+        building_mindset    = scale_1_5_to_100((to_val(13) + to_val(14)) / 2.0)
+        research_mindset    = scale_1_5_to_100((to_val(15) + to_val(16)) / 2.0)
+        user_empathy        = scale_1_5_to_100((to_val(17) + to_val(18)) / 2.0)
 
-    # ── Layer 3: Existing Skills (20% weight) ──
-    # Q29: Programming rating (1-5)
-    prog_rating = scale_1_5_to_100(to_val(29))
-    
-    # Q30: Languages list
-    lang_ans = get_ans(30)
+        # ── Layer 2: Career Goals & Preferences (30% weight) ──
+        placement_focus     = scale_1_5_to_100((to_val(19) + to_val(20)) / 2.0)
+        technical_expertise = scale_1_5_to_100((to_val(21) + to_val(22)) / 2.0)
+        research_orient     = scale_1_5_to_100((to_val(23) + to_val(24)) / 2.0)
+        entrepreneurship    = scale_1_5_to_100((to_val(25) + to_val(26)) / 2.0)
+        leadership_mgmt     = scale_1_5_to_100((to_val(27) + to_val(28)) / 2.0)
+
+        # ── Layer 3: Existing Skills (20% weight) ──
+        prog_rating         = scale_1_5_to_100(to_val(29))
+        lang_ans            = get_ans(30)
+        proj_built_raw      = get_ans(31, "")
+        proj_count_ans      = str(get_ans(32, "")).strip()
+        git_exp             = str(get_ans(33, "")).strip().lower()
+    else:
+        # Streamlined 19-question psychometric matrix architecture:
+        # Q1-Q9: 9 psychometric matrices (1 high-discriminant question per trait)
+        analytical_thinking = scale_1_5_to_100(to_val(1))
+        creativity          = scale_1_5_to_100(to_val(2))
+        curiosity           = scale_1_5_to_100(to_val(3))
+        attention_to_detail = scale_1_5_to_100(to_val(4))
+        communication       = scale_1_5_to_100(to_val(5))
+        leadership          = scale_1_5_to_100(to_val(6))
+        building_mindset    = scale_1_5_to_100(to_val(7))
+        research_mindset    = scale_1_5_to_100(to_val(8))
+        user_empathy        = scale_1_5_to_100(to_val(9))
+
+        # Q10-Q14: 5 career goals & preferences
+        placement_focus     = scale_1_5_to_100(to_val(10))
+        technical_expertise = scale_1_5_to_100(to_val(11))
+        research_orient     = scale_1_5_to_100(to_val(12))
+        entrepreneurship    = scale_1_5_to_100(to_val(13))
+        leadership_mgmt     = scale_1_5_to_100(to_val(14))
+
+        # Q15-Q19: Existing technical exposure
+        prog_rating         = scale_1_5_to_100(to_val(15))
+        lang_ans            = get_ans(16)
+        proj_built_raw      = get_ans(17, "")
+        proj_count_ans      = str(get_ans(18, "")).strip()
+        git_exp             = str(get_ans(19, "")).strip().lower()
+
     lang_count = 0
     if lang_ans:
         if isinstance(lang_ans, list):
@@ -138,12 +169,9 @@ def classify_student_profile(student_id: str, answers: Dict[str, Any]) -> Questi
             lang_count = len([l.strip() for l in lang_ans.split("|") if l.strip()])
     langs_score = min(lang_count / 3.0, 1.0) * 100.0 # 3+ languages gives 100%
 
-    # Q31: Projects Built (Yes/No)
-    proj_built = str(get_ans(31, "")).strip().lower()
+    proj_built = str(proj_built_raw).strip().lower()
     proj_built_score = 100.0 if "yes" in proj_built else 0.0
 
-    # Q32: Number of projects completed ("0"|"1-2"|"3-5"|"5+")
-    proj_count_ans = str(get_ans(32, "")).strip()
     if proj_count_ans == "0":
         proj_count_score = 0.0
     elif proj_count_ans == "1-2":
@@ -155,8 +183,6 @@ def classify_student_profile(student_id: str, answers: Dict[str, Any]) -> Questi
     else:
         proj_count_score = 0.0
 
-    # Q33: Git/GitHub experience
-    git_exp = str(get_ans(33, "")).strip().lower()
     if "never" in git_exp:
         git_score = 0.0
     elif "beginner" in git_exp:
