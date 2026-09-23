@@ -1323,9 +1323,9 @@ nav{
     <div class="card card-gold" style="margin-bottom:22px;text-align:left">
       <h2 id="profile-result-title" style="margin-bottom:13px;font-size:1.7rem;color:var(--gold)">Profile Analyzed!</h2>
       <p id="profile-result-text" style="color:var(--text-muted);line-height:1.8;font-size:.92rem;margin-bottom:22px"></p>
-      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px">
-        <button class="btn btn-gold" id="profile-result-btn" onclick="proceedToQuiz()">🎯 Optional: Launch 15-Q Adaptive Test &nbsp;→</button>
-        <button class="btn btn-outline" id="profile-dashboard-btn" onclick="window.location.href='dashboard.html'">📊 Go to Student Dashboard →</button>
+      <div style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:20px">
+        <button class="btn btn-lavender" id="profile-dashboard-btn" style="font-weight:700;padding:14px 28px;font-size:0.95rem;box-shadow:0 8px 25px rgba(109,40,217,0.25);" onclick="window.location.href='dashboard.html'">📊 Step 3: Go to Student Dashboard →</button>
+        <button class="btn btn-gold" id="profile-result-btn" style="font-weight:600;padding:14px 24px;font-size:0.92rem;" onclick="proceedToQuiz()">⚡ Launch Adaptive Test (Optional) →</button>
       </div>
     </div>
   </div>
@@ -1907,6 +1907,27 @@ async function submitQuestionnaire(){
     // Store full trait scores for AI-powered first question generation
     window._traitScores=data.trait_scores||null;
     window._studentName=data.profile_summary.full_name||'Student';
+
+    // Persist to localStorage for seamless handoff to Dashboard & Roadmap
+    try {
+      localStorage.setItem('assessment_completed', 'true');
+      if (data.recommended_careers && data.recommended_careers.length > 0) {
+        localStorage.setItem('career_recommendations', JSON.stringify(data.recommended_careers));
+        localStorage.setItem('top_recommended_careers', JSON.stringify(data.recommended_careers));
+        const topDomain = data.recommended_careers[0].domain;
+        let pathKey = 'webdev';
+        const lower = (topDomain || '').toLowerCase();
+        if (lower.includes('ai') || lower.includes('machine') || lower.includes('model')) pathKey = 'aiml';
+        else if (lower.includes('cyber') || lower.includes('security') || lower.includes('hack')) pathKey = 'cyber';
+        else if (lower.includes('data') || lower.includes('analytics')) pathKey = 'data';
+        else if (lower.includes('cloud') || lower.includes('devops')) pathKey = 'webdev';
+        localStorage.setItem('selected_career', pathKey);
+        localStorage.setItem('selected_career_name', topDomain);
+      }
+    } catch(e) {
+      console.warn('localStorage save warning:', e);
+    }
+
     document.getElementById('profile-result-emoji').textContent='🧠⚡';
     document.getElementById('profile-result-title').textContent='Assessment Analysis Complete!';
     

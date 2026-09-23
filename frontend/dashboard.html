@@ -494,12 +494,14 @@ updateSidebarUser();
 
 // ---- Load dashboard data ----
 async function loadDashboard() {
+    // Immediately load local or cached recommendations & roadmaps
+    loadCareerRecommendations();
+    loadRoadmap();
+
     try {
         const result = await ProgressAPI.getStats();
-        if (result.status === 200) {
+        if (result.status === 200 && result.data) {
             updateStatCards(result.data);
-            loadCareerRecommendations();
-            loadRoadmap();
         }
     } catch (error) {
         console.error('Dashboard error:', error);
@@ -508,24 +510,43 @@ async function loadDashboard() {
 
 function updateStatCards(stats) {
     const taskEl = document.querySelector('.stat-info h3');
-    if (taskEl) {
+    if (taskEl && stats) {
         taskEl.textContent =
-            stats.completedMilestones + '/' +
-            stats.totalMilestones;
+            (stats.completedMilestones || 0) + '/' +
+            (stats.totalMilestones || 6);
     }
 }
 
 async function loadCareerRecommendations() {
+    // 1. First populate from localStorage (from AI Assessment)
+    try {
+        const localRecsRaw = localStorage.getItem('career_recommendations') || localStorage.getItem('top_recommended_careers');
+        if (localRecsRaw) {
+            const parsed = JSON.parse(localRecsRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                const formatted = parsed.map(r => ({
+                    careerName: r.domain || r.careerName || r.field || 'Software Engineering',
+                    matchPercentage: r.score || r.percentage || r.matchPercentage || 88,
+                    difficultyLevel: r.reason || 'AI Matched Pathway'
+                }));
+                updateCareerList(formatted.slice(0, 3));
+            }
+        }
+    } catch(e) {
+        console.warn('Local recommendations parse error:', e);
+    }
+
+    // 2. Fetch fresh from backend API if available
     try {
         const result = await CareerAPI.getRecommendations();
-        if (result.status === 200 && result.data.success) {
+        if (result.status === 200 && result.data && result.data.success) {
             const recs = result.data.recommendations;
             if (recs && recs.length > 0) {
                 updateCareerList(recs.slice(0, 3));
             }
         }
     } catch (error) {
-        console.error('Career error:', error);
+        console.warn('Backend career recommendations fetch warning:', error);
     }
 }
 
