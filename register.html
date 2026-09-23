@@ -313,9 +313,9 @@ async function goToDashboard(e) {
                 role:     result.data.role || 'STUDENT'
             });
 
-            showSuccess('Account created! Welcome! 🎉');
+            showSuccess('Account created! Launching AI Assessment... 🎉');
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'index.html';
             }, 800);
             return;
         }
@@ -341,9 +341,9 @@ async function goToDashboard(e) {
             currentYear: currentYear
         });
 
-        showSuccess('Account created! Entering dashboard... 🎉');
+        showSuccess('Account created! Launching AI Assessment... 🎉');
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html';
         }, 800);
 
     } catch (error) {
@@ -359,9 +359,9 @@ async function goToDashboard(e) {
             currentYear: currentYear
         });
 
-        showSuccess('Account created! Entering dashboard... 🎉');
+        showSuccess('Account created! Launching AI Assessment... 🎉');
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html';
         }, 800);
     }
 }

@@ -161,13 +161,8 @@
 
  <!-- <script src="api.js"></script> -->
 <script>
-// If already logged in → go to dashboard
-if (TokenManager.exists()) {
-    window.location.href = 'dashboard.html';
-}
-
 // Handle login form
- async function goToDashboard(e) {
+async function goToDashboard(e) {
     e.preventDefault();
 
     const email =
@@ -203,9 +198,9 @@ if (TokenManager.exists()) {
                 role:     result.data.role
             });
 
-            showSuccess('Login successful! 🎉');
+            showSuccess('Login successful! Launching AI Assessment... 🎉');
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'index.html';
             }, 800);
             return;
         }
@@ -229,9 +224,9 @@ if (TokenManager.exists()) {
             role: 'STUDENT'
         });
 
-        showSuccess('Welcome! Entering dashboard... 🎉');
+        showSuccess('Welcome! Launching AI Assessment... 🎉');
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html';
         }, 800);
 
     } catch (error) {
@@ -245,9 +240,9 @@ if (TokenManager.exists()) {
             role: 'STUDENT'
         });
 
-        showSuccess('Welcome! Entering dashboard... 🎉');
+        showSuccess('Welcome! Launching AI Assessment... 🎉');
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html';
         }, 800);
     }
 }
