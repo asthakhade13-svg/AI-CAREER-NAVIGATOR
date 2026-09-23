@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
   <title>Login | First Gen Career Navigator</title>
 
   <!-- Our Global CSS -->
-  <link rel="stylesheet" href="style.css" />
-  <!-- Auth Page CSS (we fill this next) -->
-  <link rel="stylesheet" href="auth.css" />
+  <link rel="stylesheet" href="style.css?v=2.5" />
+  <!-- Auth Page CSS -->
+  <link rel="stylesheet" href="auth.css?v=2.5" />
 
   <!-- Icons from CDN (free) -->
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-    <script src="api.js"></script>
+  <script src="api.js?v=2.5"></script>
 </head>
 
 <body>
@@ -263,6 +266,11 @@ function togglePassword() {
         icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
+
+// Pre-warm the cloud Render server in the background
+try {
+    fetch('https://ai-career-navigator-vzcm.onrender.com/docs', { mode: 'no-cors' }).catch(()=>{});
+} catch(e) {}
 </script>
 
 </body>

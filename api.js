@@ -425,6 +425,40 @@ const ProgressAPI = {
 };
 
 // ============================================
+// AI MENTOR CHATBOT API
+// ============================================
+const ChatAPI = {
+    sendMessage: async (message, category = 'CAREER') => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            const res = await mlApiCall('/chatbot/chat', 'POST', {
+                student_id: studentId,
+                message: message
+            });
+            if (res.status === 200 && res.data) {
+                return {
+                    status: 200,
+                    data: {
+                        success: true,
+                        aiResponse: res.data.response || res.data.reply || res.data
+                    }
+                };
+            }
+            return res;
+        } catch (e) {
+            return {
+                status: 500,
+                data: {
+                    success: false,
+                    aiResponse: 'AI Mentor is currently re-connecting. Please try again in a moment.'
+                }
+            };
+        }
+    }
+};
+const ChatbotAPI = ChatAPI;
+
+// ============================================
 // PROTECT PAGES
 // Call this on every protected page
 // ============================================

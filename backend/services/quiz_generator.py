@@ -79,7 +79,7 @@ def generate_quiz(topic: str, content: str) -> dict:
             # Check if it is a Groq key (starts with gsk_) or Grok key
             if settings.GROK_API_KEY.startswith("gsk_"):
                 api_url = "https://api.groq.com/openai/v1/chat/completions"
-                model_name = "llama-3.3-70b-versatile"
+                model_name = "qwen/qwen3.8-27b"
                 logger.info("Using Groq API for quiz generation")
             else:
                 api_url = "https://api.x.ai/v1/chat/completions"
