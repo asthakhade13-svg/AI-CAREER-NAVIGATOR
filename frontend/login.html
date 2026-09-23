@@ -17,7 +17,7 @@
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-  <script src="api.js?v=2.5"></script>
+  <script src="api.js?v=3.0"></script>
 </head>
 
 <body>
@@ -199,9 +199,7 @@ async function goToDashboard(e) {
             });
 
             showSuccess('Login successful! Launching AI Assessment... 🎉');
-            setTimeout(() => {
-                window.location.href = 'index.html?start=1';
-            }, 600);
+            window.location.href = 'index.html?start=1';
             return;
         }
 
@@ -225,9 +223,7 @@ async function goToDashboard(e) {
         });
 
         showSuccess('Welcome! Launching AI Assessment... 🎉');
-        setTimeout(() => {
-            window.location.href = 'index.html?start=1';
-        }, 600);
+        window.location.href = 'index.html?start=1';
 
     } catch (error) {
         localStorage.clear();
@@ -241,9 +237,7 @@ async function goToDashboard(e) {
         });
 
         showSuccess('Welcome! Launching AI Assessment... 🎉');
-        setTimeout(() => {
-            window.location.href = 'index.html?start=1';
-        }, 600);
+        window.location.href = 'index.html?start=1';
     }
 }
 

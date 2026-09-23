@@ -62,8 +62,18 @@ const UserManager = {
 // API CALL HELPER (Spring Boot)
 // Makes HTTP requests with JWT token
 // ============================================
- async function apiCall(endpoint, method = 'GET',
-                       body = null) {
+async function apiCall(endpoint, method = 'GET', body = null) {
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const custom = localStorage.getItem('SPRING_API_BASE_URL');
+    
+    // On GitHub Pages or HTTPS without a custom Spring URL, immediately skip unreachable localhost:8080
+    if (!isLocal && !custom && API_BASE_URL.includes('localhost')) {
+        return {
+            status: 500,
+            data: { message: 'Standalone cloud mode' }
+        };
+    }
+
     const url = API_BASE_URL + endpoint;
 
     const headers = {
@@ -80,7 +90,8 @@ const UserManager = {
     const options = {
         method: method,
         headers: headers,
-        mode: 'cors'
+        mode: 'cors',
+        signal: AbortSignal.timeout(1500) // Never hang more than 1.5s
     };
 
     if (body) {
@@ -92,11 +103,10 @@ const UserManager = {
         const data = await response.json();
         return { status: response.status, data: data };
     } catch (error) {
-        console.warn('Spring Boot API Error:', error);
         return {
             status: 500,
             data: {
-                message: 'Connection error! Is Spring Boot backend running?'
+                message: 'Connection error! Backend offline or unreachable.'
             }
         };
     }
