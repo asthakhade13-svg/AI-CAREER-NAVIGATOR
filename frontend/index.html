@@ -1581,8 +1581,15 @@ async function pingBackend(){
 window.addEventListener('load', () => {
   animateHeroText();
   setTimeout(startIdleFloat, 1800);
-
   setTimeout(pingBackend, 800);
+
+  // Auto-launch assessment if redirected from registration or login
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('start') === '1' || urlParams.get('autostart') === 'true') {
+    setTimeout(() => {
+      startQuestionnaire();
+    }, 500);
+  }
 });
 
 // ── Rotate nav coords ──

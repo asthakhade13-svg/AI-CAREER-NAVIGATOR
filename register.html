@@ -315,8 +315,8 @@ async function goToDashboard(e) {
 
             showSuccess('Account created! Launching AI Assessment... 🎉');
             setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 800);
+                window.location.href = 'index.html?start=1';
+            }, 600);
             return;
         }
         
@@ -329,7 +329,7 @@ async function goToDashboard(e) {
         }
 
         // Graceful Client-Side Fallback (Offline / Standalone / GitHub Pages Mode)
-        console.warn('Spring Boot backend offline — initializing local student profile.');
+        console.warn('Backend offline — initializing local student profile.');
         const dummyToken = 'jwt_token_' + Date.now();
         TokenManager.save(dummyToken);
         UserManager.save({
@@ -343,8 +343,8 @@ async function goToDashboard(e) {
 
         showSuccess('Account created! Launching AI Assessment... 🎉');
         setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 800);
+            window.location.href = 'index.html?start=1';
+        }, 600);
 
     } catch (error) {
         // Graceful Fallback
@@ -361,8 +361,8 @@ async function goToDashboard(e) {
 
         showSuccess('Account created! Launching AI Assessment... 🎉');
         setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 800);
+            window.location.href = 'index.html?start=1';
+        }, 600);
     }
 }
 
