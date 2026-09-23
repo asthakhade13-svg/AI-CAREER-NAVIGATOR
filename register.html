@@ -89,7 +89,7 @@
         </p>
 
         <!-- Register Form -->
-        <form class="auth-form">
+        <form class="auth-form" onsubmit="goToDashboard(event)">
 
           <!-- Full Name + College (side by side) -->
           <div class="form-row">
@@ -221,7 +221,6 @@
           <button
             type="submit"
             class="btn btn-primary btn-full"
-            onclick="goToDashboard(event)"
           >
             <i class="fas fa-rocket"></i>
             Create Free Account
@@ -257,107 +256,64 @@
 <!-- <script src="api.js"></script> -->
 <script>
 // Handle registration
-async function goToDashboard(e) {
-    e.preventDefault();
+function goToDashboard(e) {
+    if (e && e.preventDefault) e.preventDefault();
 
-    const fullName =
-        document.getElementById('fullname').value || 'Student User';
-    const email =
-        document.getElementById('email').value || 'student@example.com';
-    const password =
-        document.getElementById('password').value;
-    const confirm =
-        document.getElementById('confirm').value;
-    const collegeName =
-        document.getElementById('college').value || 'Engineering College';
-    const branch =
-        document.getElementById('branch').value || 'CSE';
-    const currentYear =
-        document.getElementById('year').value || '1st Year';
+    const fullName = document.getElementById('fullname')?.value || 'Student User';
+    const email = document.getElementById('email')?.value || 'student@example.com';
+    const password = document.getElementById('password')?.value;
+    const confirm = document.getElementById('confirm')?.value;
+    const collegeName = document.getElementById('college')?.value || 'Engineering College';
+    const branch = document.getElementById('branch')?.value || 'CSE';
+    const currentYear = document.getElementById('year')?.value || '1st Year';
 
     // Validate passwords match if entered
     if (password && confirm && password !== confirm) {
         showError('Passwords do not match!');
-        return;
+        return false;
     }
 
     if (password && password.length < 6) {
-        showError(
-            'Password must be at least 6 characters!'
-        );
-        return;
+        showError('Password must be at least 6 characters!');
+        return false;
     }
 
-    // Show loading
-    const btn = document.querySelector('button[type="submit"]') || e.target.closest('button') || e.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-    btn.disabled = true;
-
+    const dummyToken = 'jwt_token_' + Date.now();
     try {
-        const result = await AuthAPI.register({
-            fullName,
-            email,
-            password: password || '123456',
-            collegeName,
-            branch,
-            currentYear
-        });
-
-        if (result.status === 201 && result.data && result.data.success) {
-            TokenManager.save(result.data.token);
-            UserManager.save({
-                fullName: result.data.fullName || fullName,
-                email:    result.data.email || email,
-                role:     result.data.role || 'STUDENT'
-            });
-
-            showSuccess('Account created! Launching AI Assessment... 🎉');
-            window.location.href = 'index.html?start=1';
-            return;
-        }
-        
-        // If backend returned explicit error message other than connection error
-        if (result.status !== 500 && result.data && result.data.message) {
-            showError(result.data.message);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            return;
+        if (typeof TokenManager !== 'undefined') {
+            TokenManager.save(dummyToken);
+        } else {
+            localStorage.setItem('jwt_token', dummyToken);
         }
 
-        // Graceful Client-Side Fallback (Offline / Standalone / GitHub Pages Mode)
-        console.warn('Backend offline — initializing local student profile.');
-        const dummyToken = 'jwt_token_' + Date.now();
-        TokenManager.save(dummyToken);
-        UserManager.save({
+        const userObj = {
             fullName: fullName,
             email: email,
             role: 'STUDENT',
             collegeName: collegeName,
             branch: branch,
             currentYear: currentYear
-        });
+        };
 
-        showSuccess('Account created! Launching AI Assessment... 🎉');
-        window.location.href = 'index.html?start=1';
-
-    } catch (error) {
-        // Graceful Fallback
-        const dummyToken = 'jwt_token_' + Date.now();
-        TokenManager.save(dummyToken);
-        UserManager.save({
-            fullName: fullName,
-            email: email,
-            role: 'STUDENT',
-            collegeName: collegeName,
-            branch: branch,
-            currentYear: currentYear
-        });
-
-        showSuccess('Account created! Launching AI Assessment... 🎉');
-        window.location.href = 'index.html?start=1';
+        if (typeof UserManager !== 'undefined') {
+            UserManager.save(userObj);
+        } else {
+            localStorage.setItem('user_data', JSON.stringify(userObj));
+        }
+    } catch (err) {
+        console.warn('Storage error:', err);
     }
+
+    // Fire background register call if available without blocking
+    try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.register) {
+            AuthAPI.register({ fullName, email, password: password || '123456', collegeName, branch, currentYear }).catch(() => {});
+        }
+    } catch(err) {}
+
+    // Immediate instant redirect to AI assessment
+    window.location.replace('index.html?start=1');
+    return false;
 }
 
 // Password strength checker
