@@ -109,6 +109,13 @@
             </button>
             <button
               class="path-btn"
+              onclick="switchPath('uiux', this)"
+            >
+              <i class="fas fa-palette"></i>
+              <span>UI/UX Design</span>
+            </button>
+            <button
+              class="path-btn"
               onclick="switchPath('cyber', this)"
             >
               <i class="fas fa-shield-alt"></i>
@@ -120,6 +127,20 @@
             >
               <i class="fas fa-chart-bar"></i>
               <span>Data Science</span>
+            </button>
+            <button
+              class="path-btn"
+              onclick="switchPath('cloud', this)"
+            >
+              <i class="fas fa-cloud"></i>
+              <span>Cloud / DevOps</span>
+            </button>
+            <button
+              class="path-btn"
+              onclick="switchPath('mobile', this)"
+            >
+              <i class="fas fa-mobile-alt"></i>
+              <span>Mobile App</span>
             </button>
           </div>
         </div>
@@ -741,6 +762,241 @@ requireAuth();
         { day:"Friday",    task:"Matplotlib Charts Practice",      done: false },
         { day:"Saturday",  task:"Mini Analysis Project",           done: false },
       ]
+    },
+
+    uiux: {
+      title:    "UI/UX Design Roadmap",
+      desc:     "Product Designer & UI/UX Specialist — from wireframes to high-fidelity prototypes",
+      duration: "6 Months",
+      steps: [
+        {
+          title:  "Design Principles & Visual Hierarchy",
+          week:   "Week 1 – 2",
+          status: "done",
+          icon:   "fa-palette",
+          desc:   "Understand typography, spacing, color psychology, and grid systems.",
+          topics: ["Visual hierarchy", "Typography rules", "Color palettes & contrast", "Grid systems & layout"],
+          resources: [
+            { name:"Refactoring UI", url:"https://www.refactoringui.com" },
+            { name:"Material Design Guidelines", url:"https://m3.material.io" }
+          ],
+          tip: "Analyze 5 websites you use daily and sketch their layout hierarchy on paper."
+        },
+        {
+          title:  "Figma Fundamentals & Auto Layout",
+          week:   "Week 3 – 5",
+          status: "active",
+          icon:   "fa-pen-nib",
+          desc:   "Master Figma components, variants, auto layout, vector tools, and constraints.",
+          topics: ["Figma interface & shortcuts", "Frames & Auto Layout", "Component properties & variants", "Interactive prototyping"],
+          resources: [
+            { name:"Figma Learn", url:"https://help.figma.com" },
+            { name:"DesignCode Figma Course", url:"https://designcode.io" }
+          ],
+          tip: "Recreate a popular mobile screen (e.g. Spotify or Airbnb) pixel-for-pixel in Figma."
+        },
+        {
+          title:  "User Research & Wireframing",
+          week:   "Week 6 – 8",
+          status: "locked",
+          icon:   "fa-users",
+          desc:   "Conduct user interviews, create personas, user journey maps, and low-fidelity wireframes.",
+          topics: ["User persona creation", "Empathy maps & journeys", "Information architecture", "Low-fidelity wireframing"],
+          resources: [
+            { name:"Nielsen Norman Group", url:"https://www.nngroup.com" },
+            { name:"Interaction Design Foundation", url:"https://www.interaction-design.org" }
+          ],
+          tip: "Interview 3 real users before designing any solution. Assumptions kill good design!"
+        },
+        {
+          title:  "Design Systems & UI Kits",
+          week:   "Week 9 – 12",
+          status: "locked",
+          icon:   "fa-layer-group",
+          desc:   "Build scalable design systems, tokenized styling, accessible components, and documentation.",
+          topics: ["Design tokens", "Component library build", "Accessibility (WCAG 2.1)", "Dark mode & theming"],
+          resources: [
+            { name:"Design Systems Repo", url:"https://designsystemsrepo.com" },
+            { name:"WebAIM Contrast Checker", url:"https://webaim.org" }
+          ],
+          tip: "A solid design system saves hundreds of design hours and makes developer handoff effortless."
+        },
+        {
+          title:  "Usability Testing & Portfolio Case Studies",
+          week:   "Week 13 – 16",
+          status: "locked",
+          icon:   "fa-briefcase",
+          desc:   "Run usability tests, measure user feedback, and curate 2 in-depth portfolio case studies.",
+          topics: ["Usability testing protocols", "A/B testing basics", "UX case study storytelling", "Portfolio presentation"],
+          resources: [
+            { name:"Behance UI/UX Showcase", url:"https://www.behance.net" },
+            { name:"Uxcel UI/UX Challenges", url:"https://uxcel.com" }
+          ],
+          tip: "Recruiters care more about your problem-solving process than just pretty mockups."
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"Figma Auto Layout Nested Practice", done: true  },
+        { day:"Tuesday",   task:"Design Component Variants & States", done: true  },
+        { day:"Wednesday", task:"Interactive Micro-interaction Prototyping", done: false },
+        { day:"Thursday",  task:"UX Case Study: User Flow Mapping", done: false },
+        { day:"Friday",    task:"Accessibility & Contrast Audit",   done: false },
+        { day:"Saturday",  task:"Portfolio Case Study Documentation", done: false },
+      ]
+    },
+
+    cloud: {
+      title:    "Cloud & DevOps Roadmap",
+      desc:     "Cloud Architecture & DevOps Engineer path — AWS, Docker, Kubernetes & CI/CD",
+      duration: "8 Months",
+      steps: [
+        {
+          title:  "Linux & Cloud Fundamentals",
+          week:   "Week 1 – 3",
+          status: "done",
+          icon:   "fa-server",
+          desc:   "Master Linux server management, networking, bash scripting, and cloud basics.",
+          topics: ["Linux administration", "Bash scripting", "SSH & Networking", "Virtualization basics"],
+          resources: [
+            { name:"Linux Journey", url:"https://linuxjourney.com" },
+            { name:"AWS Skill Builder", url:"https://explore.skillbuilder.aws" }
+          ],
+          tip: "Get comfortable living inside the Linux terminal without a GUI."
+        },
+        {
+          title:  "Docker & Containerization",
+          week:   "Week 4 – 6",
+          status: "active",
+          icon:   "fa-cube",
+          desc:   "Containerize full-stack applications with Docker, multi-stage builds, and Docker Compose.",
+          topics: ["Dockerfile best practices", "Docker Compose", "Volume management", "Container networking"],
+          resources: [
+            { name:"Docker Documentation", url:"https://docs.docker.com" }
+          ],
+          tip: "Containerize a full-stack Node.js or Python app with a database and compose it."
+        },
+        {
+          title:  "AWS Core Services",
+          week:   "Week 7 – 10",
+          status: "locked",
+          icon:   "fa-cloud",
+          desc:   "Deploy and scale infrastructure using EC2, S3, RDS, IAM, VPC, and CloudFront.",
+          topics: ["IAM roles & security", "EC2 & Auto Scaling", "VPC & Subnets", "S3 & CloudFront CDN"],
+          resources: [
+            { name:"AWS Free Tier Hands-on", url:"https://aws.amazon.com/free" }
+          ],
+          tip: "Set up billing alerts on your AWS account on day 1 to prevent unexpected charges."
+        },
+        {
+          title:  "Kubernetes & Orchestration",
+          week:   "Week 11 – 14",
+          status: "locked",
+          icon:   "fa-dharmachakra",
+          desc:   "Orchestrate containers with Kubernetes pods, deployments, services, and ingress.",
+          topics: ["K8s Pods & Deployments", "Services & Ingress", "ConfigMaps & Secrets", "Helm charts"],
+          resources: [
+            { name:"Kubernetes Docs", url:"https://kubernetes.io/docs" }
+          ],
+          tip: "Use Minikube or Kind to run local clusters without cloud expense."
+        },
+        {
+          title:  "CI/CD Pipelines & Terraform",
+          week:   "Week 15 – 18",
+          status: "locked",
+          icon:   "fa-code-branch",
+          desc:   "Automate builds and deployments using GitHub Actions and Infrastructure as Code.",
+          topics: ["GitHub Actions workflows", "Terraform basics", "Automated testing & deployments", "Monitoring with Prometheus"],
+          resources: [
+            { name:"GitHub Actions Docs", url:"https://docs.github.com/en/actions" }
+          ],
+          tip: "Automate your deployments so that pushing to 'main' automatically deploys to production."
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"Dockerfile Multi-stage builds",    done: true },
+        { day:"Tuesday",   task:"Docker Compose Multi-container setup", done: true },
+        { day:"Wednesday", task:"AWS EC2 & Security Groups Setup",  done: false },
+        { day:"Thursday",  task:"GitHub Actions CI Pipeline",       done: false },
+        { day:"Friday",    task:"Terraform AWS Infrastructure",     done: false },
+        { day:"Saturday",  task:"Deploy Portfolio to AWS S3 & CloudFront", done: false },
+      ]
+    },
+
+    mobile: {
+      title:    "Mobile App Development Roadmap",
+      desc:     "Cross-Platform Mobile Engineer — React Native / Flutter",
+      duration: "6 Months",
+      steps: [
+        {
+          title:  "Core Language & Foundations",
+          week:   "Week 1 – 3",
+          status: "done",
+          icon:   "fa-mobile-alt",
+          desc:   "Master Dart / JavaScript and core mobile platform lifecycles.",
+          topics: ["Language fundamentals", "Async programming", "Mobile UI paradigms", "State management"],
+          resources: [
+            { name:"Flutter Docs", url:"https://flutter.dev" },
+            { name:"React Native Docs", url:"https://reactnative.dev" }
+          ],
+          tip: "Test your app on physical devices early to catch performance quirks."
+        },
+        {
+          title:  "Mobile UI & Navigation",
+          week:   "Week 4 – 6",
+          status: "active",
+          icon:   "fa-compass",
+          desc:   "Build responsive mobile layouts, stack navigation, tab bars, and gesture controls.",
+          topics: ["Stack & Tab navigation", "Touch gestures", "Adaptive styling (iOS/Android)", "Custom animations"],
+          resources: [
+            { name:"React Navigation", url:"https://reactnavigation.org" }
+          ],
+          tip: "Ensure your layouts respect the safe area on notched phones."
+        },
+        {
+          title:  "State Management & APIs",
+          week:   "Week 7 – 10",
+          status: "locked",
+          icon:   "fa-sync-alt",
+          desc:   "Integrate REST APIs, offline local storage, Redux Toolkit / Riverpod, and auth.",
+          topics: ["REST API integration", "AsyncStorage / SQLite", "Global state management", "JWT & OAuth2"],
+          resources: [
+            { name:"Redux Toolkit", url:"https://redux-toolkit.js.org" }
+          ],
+          tip: "Always handle offline mode gracefully with cached data."
+        },
+        {
+          title:  "Native Device Features",
+          week:   "Week 11 – 14",
+          status: "locked",
+          icon:   "fa-camera",
+          desc:   "Access device camera, GPS geolocation, push notifications, and biometrics.",
+          topics: ["Camera & Image Picker", "GPS Location & Maps", "Push Notifications (FCM)", "Biometric Auth"],
+          resources: [
+            { name:"Expo Docs", url:"https://docs.expo.dev" }
+          ],
+          tip: "Expo plugins make adding native permissions straightforward without touching Xcode/Android Studio."
+        },
+        {
+          title:  "App Store Deployment",
+          week:   "Week 15 – 18",
+          status: "locked",
+          icon:   "fa-rocket",
+          desc:   "Bundle release builds, configure signing certificates, and publish to Play Store & App Store.",
+          topics: ["Release APK & AAB builds", "Apple certificates & provisioning", "App Store screenshots & metadata", "OTA updates"],
+          resources: [
+            { name:"EAS Build", url:"https://expo.dev/eas" }
+          ],
+          tip: "Prepare screenshots and privacy policy early so app store review passes on the first try."
+        }
+      ],
+      weekly: [
+        { day:"Monday",    task:"Navigation Stacks & Screen Transitions", done: true },
+        { day:"Tuesday",   task:"Bottom Tab Navigation Implementation",   done: true },
+        { day:"Wednesday", task:"Fetch Data & FlatList Optimization",     done: false },
+        { day:"Thursday",  task:"Offline Storage with AsyncStorage",      done: false },
+        { day:"Friday",    task:"Push Notifications Integration",         done: false },
+        { day:"Saturday",  task:"Build Release APK for Testing",          done: false },
+      ]
     }
   };
 
@@ -984,8 +1240,37 @@ requireAuth();
   }
 
   // ========================================
+  // USER PROFILE
+  // ========================================
+  function updateSidebarUser() {
+    try {
+      const rawUser = localStorage.getItem('user_data');
+      if (!rawUser) return;
+      const user = JSON.parse(rawUser);
+      const name = user.fullName || user.username || 'Student';
+      const year = user.currentYear ? `${user.currentYear}${getOrdinal(user.currentYear)} Year` : '1st Year';
+      const branch = user.branch || 'CSE';
+      const college = user.collegeName ? ` · ${user.collegeName}` : '';
+      const initial = name.charAt(0).toUpperCase() || 'S';
+
+      document.querySelectorAll('.user-avatar').forEach(av => av.textContent = initial);
+      const nameEl = document.querySelector('.user-info strong');
+      if (nameEl) nameEl.textContent = name;
+      const subEl = document.querySelector('.user-info p');
+      if (subEl) subEl.textContent = `${year} · ${branch}${college}`;
+    } catch(e) {}
+  }
+
+  function getOrdinal(n) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+  }
+
+  // ========================================
   // INIT
   // ========================================
+  updateSidebarUser();
   const urlParams = new URLSearchParams(window.location.search);
   const careerParam = urlParams.get('career') || localStorage.getItem('selected_career') || 'webdev';
   const initialPath = roadmaps[careerParam] ? careerParam : 'webdev';

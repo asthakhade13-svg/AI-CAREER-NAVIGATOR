@@ -460,32 +460,165 @@
 // Protect page
 requireAuth();
 
-// ---- Update sidebar with logged in user ----
+// Career track definitions with icons, colors, skill bars, and milestone roadmaps
+const CAREER_TRACKS = {
+    uiux: {
+        name: 'UI/UX Design',
+        icon: 'fa-paint-brush',
+        bg: '#FDF4FF',
+        ic: '#9333EA',
+        skills: [
+            { name: 'Figma & UI Design', pct: 85, color: '#9333EA' },
+            { name: 'Wireframing & Prototyping', pct: 75, color: '#A855F7' },
+            { name: 'User Research & Personas', pct: 70, color: '#C084FC' },
+            { name: 'Design Systems', pct: 65, color: '#7E22CE' }
+        ],
+        milestones: [
+            { title: 'Figma Mastery & Wireframing', monthNumber: 1, isCompleted: true, status: 'DONE' },
+            { title: 'User Research & Journey Mapping', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
+            { title: 'Design Systems & Component Libraries', monthNumber: 3, isCompleted: false, status: 'NEXT' },
+            { title: 'Interactive Prototyping & Usability Testing', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ]
+    },
+    aiml: {
+        name: 'AI / Machine Learning',
+        icon: 'fa-robot',
+        bg: '#F0FDF4',
+        ic: '#10B981',
+        skills: [
+            { name: 'Python & Data Analysis', pct: 85, color: '#10B981' },
+            { name: 'Machine Learning (Scikit-Learn)', pct: 75, color: '#059669' },
+            { name: 'Deep Learning & Neural Networks', pct: 65, color: '#34D399' },
+            { name: 'Feature Engineering', pct: 70, color: '#047857' }
+        ],
+        milestones: [
+            { title: 'Python & Linear Algebra Foundations', monthNumber: 1, isCompleted: true, status: 'DONE' },
+            { title: 'Data Analysis with Pandas & NumPy', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
+            { title: 'Supervised & Unsupervised ML Models', monthNumber: 3, isCompleted: false, status: 'NEXT' },
+            { title: 'Deep Learning & PyTorch Model Training', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ]
+    },
+    cyber: {
+        name: 'Cybersecurity',
+        icon: 'fa-shield-alt',
+        bg: '#FFF7ED',
+        ic: '#F59E0B',
+        skills: [
+            { name: 'Network Security & OSI', pct: 80, color: '#F59E0B' },
+            { name: 'Linux System Administration', pct: 75, color: '#D97706' },
+            { name: 'Ethical Hacking & Pentesting', pct: 70, color: '#FBBF24' },
+            { name: 'SOC & Threat Analysis', pct: 60, color: '#B45309' }
+        ],
+        milestones: [
+            { title: 'Networking Protocols & Linux Basics', monthNumber: 1, isCompleted: true, status: 'DONE' },
+            { title: 'Security Principles & Threat Modeling', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
+            { title: 'Ethical Hacking & Vulnerability Scanning', monthNumber: 3, isCompleted: false, status: 'NEXT' },
+            { title: 'SOC Operations & Incident Response', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ]
+    },
+    webdev: {
+        name: 'Web Development',
+        icon: 'fa-code',
+        bg: '#EEF2FF',
+        ic: '#4F46E5',
+        skills: [
+            { name: 'HTML5 & CSS3 Responsive UI', pct: 88, color: '#4F46E5' },
+            { name: 'JavaScript (ES6+) & DOM', pct: 75, color: '#6366F1' },
+            { name: 'React.js & Frontend State', pct: 65, color: '#818CF8' },
+            { name: 'REST APIs & Node.js Backend', pct: 60, color: '#4338CA' }
+        ],
+        milestones: [
+            { title: 'HTML & Modern CSS Basics', monthNumber: 1, isCompleted: true, status: 'DONE' },
+            { title: 'JavaScript ES6+ Fundamentals', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
+            { title: 'React.js & Component Architecture', monthNumber: 3, isCompleted: false, status: 'NEXT' },
+            { title: 'Fullstack APIs & Database Integration', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ]
+    },
+    data: {
+        name: 'Data Science & Analytics',
+        icon: 'fa-chart-bar',
+        bg: '#F0F9FF',
+        ic: '#0284C7',
+        skills: [
+            { name: 'SQL & Relational Databases', pct: 85, color: '#0284C7' },
+            { name: 'Python (Pandas / Seaborn)', pct: 80, color: '#0EA5E9' },
+            { name: 'Exploratory Data Analysis (EDA)', pct: 75, color: '#38BDF8' },
+            { name: 'Statistical & Predictive Modeling', pct: 65, color: '#0369A1' }
+        ],
+        milestones: [
+            { title: 'SQL & Database Querying', monthNumber: 1, isCompleted: true, status: 'DONE' },
+            { title: 'Data Cleaning & Wrangling with Pandas', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
+            { title: 'Data Visualization & Tableau Dashboards', monthNumber: 3, isCompleted: false, status: 'NEXT' },
+            { title: 'Predictive Modeling & Statistical Inference', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ]
+    },
+    cloud: {
+        name: 'Cloud & DevOps',
+        icon: 'fa-cloud',
+        bg: '#CCFBF1',
+        ic: '#0D9488',
+        skills: [
+            { name: 'Linux Shell & Git Workflows', pct: 85, color: '#0D9488' },
+            { name: 'Docker & Containerization', pct: 75, color: '#14B8A6' },
+            { name: 'AWS / Cloud Architecture', pct: 70, color: '#2DD4BF' },
+            { name: 'CI/CD Pipelines & Automation', pct: 65, color: '#0F766E' }
+        ],
+        milestones: [
+            { title: 'Linux & Version Control Basics', monthNumber: 1, isCompleted: true, status: 'DONE' },
+            { title: 'Docker Containers & Microservices', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
+            { title: 'AWS Cloud Compute & Networking', monthNumber: 3, isCompleted: false, status: 'NEXT' },
+            { title: 'CI/CD Automation & Kubernetes', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ]
+    }
+};
+
+function getCareerPathKey(name) {
+    const lower = (name || '').toLowerCase();
+    if (lower.includes('ui') || lower.includes('ux') || lower.includes('design')) return 'uiux';
+    if (lower.includes('ai') || lower.includes('machine') || lower.includes('model') || lower.includes('intelligence')) return 'aiml';
+    if (lower.includes('cyber') || lower.includes('security') || lower.includes('hack')) return 'cyber';
+    if (lower.includes('data') || lower.includes('analytics') || lower.includes('bi')) return 'data';
+    if (lower.includes('cloud') || lower.includes('devops') || lower.includes('aws')) return 'cloud';
+    return 'webdev';
+}
+
+// ---- Update sidebar & topbar with logged in user profile ----
 function updateSidebarUser() {
-    const user = UserManager.get();
-    if (!user) return;
+    let user = null;
+    try {
+        user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+        if (!user) {
+            const raw = localStorage.getItem('user_data');
+            if (raw) user = JSON.parse(raw);
+        }
+    } catch(e){}
+
+    const name = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+    const initial = name.charAt(0).toUpperCase() || 'A';
+    const branch = user?.branch || 'CSE';
+    const year = user?.currentYear || '1st Year';
+    const college = user?.collegeName || 'OIST';
+    const subText = [year, branch, college].filter(Boolean).join(' · ');
 
     // Update ALL name elements
-    document.querySelectorAll('.user-info strong')
-        .forEach(el => {
-            el.textContent = user.fullName;
-        });
+    document.querySelectorAll('.user-info strong').forEach(el => {
+        el.textContent = name;
+    });
+
+    // Update student branch/year/college
+    document.querySelectorAll('.user-info p').forEach(el => {
+        el.textContent = subText;
+    });
 
     // Update ALL avatar circles
-    document.querySelectorAll('.user-avatar')
-        .forEach(el => {
-            if (el.textContent.trim().length <= 2) {
-                el.textContent =
-                    user.fullName.charAt(0).toUpperCase();
-            }
-        });
+    document.querySelectorAll('.user-avatar').forEach(el => {
+        el.textContent = initial;
+    });
 
-    // Update welcome message
+    // Update topbar greeting
     const subEl = document.querySelector('.topbar-sub');
     if (subEl) {
-        subEl.textContent =
-            'Welcome back, ' +
-            user.fullName.split(' ')[0] + '! 👋';
+        subEl.textContent = 'Welcome back, ' + name.split(' ')[0] + '! 👋';
     }
 }
 
@@ -494,9 +627,9 @@ updateSidebarUser();
 
 // ---- Load dashboard data ----
 async function loadDashboard() {
-    // Immediately load local or cached recommendations & roadmaps
+    updateSidebarUser();
     loadCareerRecommendations();
-    loadRoadmap();
+    adaptDashboardToSelectedCareer();
 
     try {
         const result = await ProgressAPI.getStats();
@@ -504,7 +637,7 @@ async function loadDashboard() {
             updateStatCards(result.data);
         }
     } catch (error) {
-        console.error('Dashboard error:', error);
+        console.warn('Progress stats notice:', error);
     }
 }
 
@@ -518,116 +651,124 @@ function updateStatCards(stats) {
 }
 
 async function loadCareerRecommendations() {
-    // 1. First populate from localStorage (from AI Assessment)
+    // 1. Populate from localStorage (fresh from AI Assessment)
+    let recs = [];
     try {
         const localRecsRaw = localStorage.getItem('career_recommendations') || localStorage.getItem('top_recommended_careers');
         if (localRecsRaw) {
             const parsed = JSON.parse(localRecsRaw);
             if (Array.isArray(parsed) && parsed.length > 0) {
-                const formatted = parsed.map(r => ({
-                    careerName: r.domain || r.careerName || r.field || 'Software Engineering',
-                    matchPercentage: r.score || r.percentage || r.matchPercentage || 88,
+                recs = parsed.map(r => ({
+                    careerName: r.domain || r.careerName || r.field || 'UI/UX Design',
+                    matchPercentage: r.score !== undefined ? r.score : (r.percentage || r.matchPercentage || 85),
                     difficultyLevel: r.reason || 'AI Matched Pathway'
                 }));
-                updateCareerList(formatted.slice(0, 3));
             }
         }
     } catch(e) {
         console.warn('Local recommendations parse error:', e);
     }
 
-    // 2. Fetch fresh from backend API if available
-    try {
-        const result = await CareerAPI.getRecommendations();
-        if (result.status === 200 && result.data && result.data.success) {
-            const recs = result.data.recommendations;
-            if (recs && recs.length > 0) {
-                updateCareerList(recs.slice(0, 3));
-            }
-        }
-    } catch (error) {
-        console.warn('Backend career recommendations fetch warning:', error);
+    // Default fallback if no test taken yet
+    if (!recs || recs.length === 0) {
+        recs = [
+            { careerName: 'UI/UX Design', matchPercentage: 65, difficultyLevel: 'Aligned with your Creativity & Communication' },
+            { careerName: 'Web Development', matchPercentage: 10, difficultyLevel: 'Aligned with your Problem Solving' },
+            { careerName: 'Cybersecurity', matchPercentage: 9, difficultyLevel: 'Aligned with your Attention to Detail' }
+        ];
     }
+
+    updateCareerList(recs.slice(0, 3));
 }
 
 function updateCareerList(careers) {
     const careerList = document.querySelector('.career-list');
     if (!careerList) return;
 
-    const colors = [
-        { bg:'#EEF2FF', ic:'#4F46E5', icon:'fa-code' },
-        { bg:'#F0FDF4', ic:'#10B981', icon:'fa-robot' },
-        { bg:'#FFF7ED', ic:'#F59E0B', icon:'fa-shield-alt' },
-        { bg:'#FDF4FF', ic:'#9333EA', icon:'fa-chart-bar' },
-        { bg:'#F0F9FF', ic:'#0284C7', icon:'fa-cloud' }
-    ];
+    const currentSelected = localStorage.getItem('selected_career_name') || careers[0]?.careerName || 'UI/UX Design';
 
     careerList.innerHTML = careers.map((c, i) => {
-        const color = colors[i % colors.length];
+        const key = getCareerPathKey(c.careerName);
+        const track = CAREER_TRACKS[key] || CAREER_TRACKS.webdev;
+        const isSelected = (c.careerName.toLowerCase() === currentSelected.toLowerCase());
+
         return `
-        <div class="career-item" style="cursor:pointer; transition:all 0.2s;" onclick="selectCareerAndOpenRoadmap('${c.careerName}')" title="Click to choose this career and open learning roadmap">
-            <div class="career-icon"
-                 style="background:${color.bg}">
-                <i class="fas ${color.icon}"
-                   style="color:${color.ic}"></i>
+        <div class="career-item" style="cursor:pointer; transition:all 0.25s; border-radius:12px; padding:10px 14px; ${isSelected ? 'background:rgba(99,102,241,0.08); border:1.5px solid rgba(99,102,241,0.4);' : ''}" onclick="selectCareerAndAdapt('${c.careerName}', ${c.matchPercentage})" title="Click to activate this career path">
+            <div class="career-icon" style="background:${track.bg}">
+                <i class="fas ${track.icon}" style="color:${track.ic}"></i>
             </div>
             <div class="career-info" style="flex:1;">
-                <strong>${c.careerName}</strong>
-                <p>${c.difficultyLevel || 'AI Recommended Track'}</p>
+                <strong>${c.careerName} ${isSelected ? '<span style="font-size:0.7rem; color:#4F46E5; background:#EEF2FF; padding:2px 6px; border-radius:10px; margin-left:6px;">Active Track</span>' : ''}</strong>
+                <p>${c.difficultyLevel || 'AI Recommended Pathway'}</p>
             </div>
             <div class="career-match" style="margin-right:12px;">
-                <span>${c.matchPercentage}% Match</span>
+                <span style="font-weight:700; color:${track.ic};">${c.matchPercentage}%</span>
                 <div class="match-bar">
-                    <div class="match-fill"
-                         style="width:${c.matchPercentage}%;
-                                background:${color.ic}">
-                    </div>
+                    <div class="match-fill" style="width:${c.matchPercentage}%; background:${track.ic}"></div>
                 </div>
             </div>
-            <button class="btn btn-outline sm" style="padding:6px 14px; font-size:0.8rem; border-radius:18px;" onclick="event.stopPropagation(); selectCareerAndOpenRoadmap('${c.careerName}')">
-                Choose Path →
+            <button class="btn ${isSelected ? 'btn-primary' : 'btn-outline'} sm" style="padding:6px 14px; font-size:0.8rem; border-radius:18px;" onclick="event.stopPropagation(); selectCareerAndOpenRoadmap('${c.careerName}')">
+                ${isSelected ? 'View Roadmap →' : 'Choose Path →'}
             </button>
         </div>`;
     }).join('');
 }
 
-// Function to select career and open its personalized guideline & roadmap
-function selectCareerAndOpenRoadmap(careerName) {
-    let pathKey = 'webdev';
-    const lower = (careerName || '').toLowerCase();
-    if (lower.includes('ai') || lower.includes('machine') || lower.includes('model')) {
-        pathKey = 'aiml';
-    } else if (lower.includes('cyber') || lower.includes('security') || lower.includes('hack')) {
-        pathKey = 'cyber';
-    } else if (lower.includes('data') || lower.includes('analytics')) {
-        pathKey = 'data';
-    } else if (lower.includes('cloud') || lower.includes('aws') || lower.includes('devops')) {
-        pathKey = 'webdev';
-    }
+// Function to select career and immediately adapt the whole dashboard
+function selectCareerAndAdapt(careerName, matchPct) {
+    const pathKey = getCareerPathKey(careerName);
+    localStorage.setItem('selected_career', pathKey);
+    localStorage.setItem('selected_career_name', careerName);
+    if (matchPct) localStorage.setItem('selected_career_match', matchPct);
 
+    loadCareerRecommendations();
+    adaptDashboardToSelectedCareer();
+}
+
+// Function to select career and navigate to Roadmap page
+function selectCareerAndOpenRoadmap(careerName) {
+    const pathKey = getCareerPathKey(careerName);
     localStorage.setItem('selected_career', pathKey);
     localStorage.setItem('selected_career_name', careerName);
     window.location.href = `roadmap.html?career=${pathKey}`;
 }
 
-async function loadRoadmap() {
-    try {
-        const result = await RoadmapAPI.getMyRoadmap();
-        if (result.status === 200 && result.data.success) {
-            updateRoadmapSteps(result.data.milestones);
-        }
-    } catch (error) {
-        console.error('Roadmap error:', error);
+// Dynamically adapt Hero Banner, Roadmap Steps, and Skill Levels to the selected track
+function adaptDashboardToSelectedCareer() {
+    const selectedName = localStorage.getItem('selected_career_name') || 'UI/UX Design';
+    const pathKey = getCareerPathKey(selectedName);
+    const track = CAREER_TRACKS[pathKey] || CAREER_TRACKS.uiux;
+    const matchPct = localStorage.getItem('selected_career_match') || '65';
+
+    // 1. Update Hero Card
+    const heroTitle = document.querySelector('.card.mb-3 h3');
+    const heroDesc = document.querySelector('.card.mb-3 p');
+    const heroBadge = document.querySelector('.card.mb-3 .badge');
+    const heroIcon = document.querySelector('.card.mb-3 .fas');
+    const heroRoadmapBtn = document.querySelector('.card.mb-3 a[href*="roadmap"]');
+
+    if (heroTitle) heroTitle.textContent = `Active Track: ${selectedName} (${matchPct}% Match)`;
+    if (heroDesc) heroDesc.textContent = `Your tailored career roadmap for ${selectedName}. Complete milestones, build portfolio projects, and practice with AI Mentor.`;
+    if (heroBadge) heroBadge.textContent = `🎯 Selected Pathway: ${selectedName}`;
+    if (heroIcon) heroIcon.className = `fas ${track.icon}`;
+    if (heroRoadmapBtn) {
+        heroRoadmapBtn.href = `roadmap.html?career=${pathKey}`;
+        heroRoadmapBtn.innerHTML = `<i class="fas fa-map"></i> View ${selectedName} Roadmap`;
     }
+
+    // 2. Update Roadmap Steps
+    updateRoadmapSteps(track.milestones);
+
+    // 3. Update Skill Levels
+    updateSkillLevels(track.skills);
 }
 
 function updateRoadmapSteps(milestones) {
-    const roadmapSteps =
-        document.querySelector('.roadmap-steps');
+    const roadmapSteps = document.querySelector('.roadmap-steps');
     if (!roadmapSteps || !milestones) return;
 
     roadmapSteps.innerHTML = milestones.slice(0, 4).map(m => {
-        const isDone   = m.isCompleted;
+        const isDone   = m.isCompleted || m.status === 'DONE';
         const isActive = m.status === 'ACTIVE';
         return `
         <div class="road-step ${isDone ? 'done' : isActive ? 'active' : ''}">
@@ -640,7 +781,7 @@ function updateRoadmapSteps(milestones) {
             </div>
             <div class="step-body">
                 <strong>${m.title}</strong>
-                <p>Month ${m.monthNumber}</p>
+                <p>Month ${m.monthNumber} · ${isDone ? 'Completed' : isActive ? 'In Progress' : 'Upcoming'}</p>
             </div>
             <span class="badge ${
                 isDone ? 'badge-success' :
@@ -653,9 +794,25 @@ function updateRoadmapSteps(milestones) {
     }).join('');
 }
 
+function updateSkillLevels(skills) {
+    const container = document.querySelector('.skill-bars');
+    if (!container || !skills) return;
+
+    container.innerHTML = skills.map(s => `
+        <div class="skill-row" style="margin-bottom:12px;">
+            <div class="skill-label" style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem; font-weight:600;">
+                <span>${s.name}</span>
+                <span style="color:${s.color}; font-weight:700;">${s.pct}%</span>
+            </div>
+            <div class="skill-track" style="height:7px; background:rgba(100,120,200,0.1); border-radius:10px; overflow:hidden;">
+                <div class="skill-fill" style="width:${s.pct}%; background:${s.color}; height:100%; border-radius:10px;"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
 function toggleSidebar() {
-    document.getElementById('sidebar')
-        .classList.toggle('open');
+    document.getElementById('sidebar').classList.toggle('open');
 }
 
 document.addEventListener('DOMContentLoaded', loadDashboard);
