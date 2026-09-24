@@ -53,7 +53,7 @@
         <span>My Roadmap</span>
       </a>
 
-      <a href="pages/internships.html" class="nav-item">
+      <a href="internships.html" class="nav-item">
         <i class="fas fa-building"></i>
         <span>Internships</span>
       </a>
@@ -70,7 +70,7 @@
         <span>AI Mentor</span>
       </a>
 
-      <a href="#" class="nav-item">
+      <a href="javascript:void(0)" class="nav-item" onclick="openSettingsModal()">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>
@@ -402,39 +402,80 @@
             </div>
           </div>
 
+          <!-- Curated Learning Resources Card -->
+          <div class="card mt-3" id="trackResourcesCard">
+            <div class="card-header">
+              <h4>📚 Recommended Free Resources</h4>
+              <span class="badge badge-primary sm" id="trackResourceBadge">UI/UX Track</span>
+            </div>
+            <div class="resource-list" id="trackResourcesList" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+              <a href="https://help.figma.com" target="_blank" class="resource-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.15); border-radius:10px; text-decoration:none; color:var(--text);">
+                <i class="fas fa-play-circle" style="color:#9333EA; font-size:1.2rem;"></i>
+                <div style="flex:1;">
+                  <strong style="font-size:0.88rem; display:block;">Figma Official Tutorials &amp; UI Basics</strong>
+                  <span style="font-size:0.75rem; color:var(--text-muted);">Free Figma Masterclass &amp; Auto Layout Guides</span>
+                </div>
+                <i class="fas fa-external-link-alt" style="font-size:0.75rem; color:var(--text-muted);"></i>
+              </a>
+              <a href="https://www.refactoringui.com" target="_blank" class="resource-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.15); border-radius:10px; text-decoration:none; color:var(--text);">
+                <i class="fas fa-book-open" style="color:#DB2777; font-size:1.2rem;"></i>
+                <div style="flex:1;">
+                  <strong style="font-size:0.88rem; display:block;">Refactoring UI Design Principles</strong>
+                  <span style="font-size:0.75rem; color:var(--text-muted);">Visual Hierarchy, Contrast &amp; Spacing</span>
+                </div>
+                <i class="fas fa-external-link-alt" style="font-size:0.75rem; color:var(--text-muted);"></i>
+              </a>
+              <a href="https://www.nngroup.com/articles/" target="_blank" class="resource-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.15); border-radius:10px; text-decoration:none; color:var(--text);">
+                <i class="fas fa-users" style="color:#059669; font-size:1.2rem;"></i>
+                <div style="flex:1;">
+                  <strong style="font-size:0.88rem; display:block;">Nielsen Norman Group UX Articles</strong>
+                  <span style="font-size:0.75rem; color:var(--text-muted);">Usability Testing &amp; User Research Guides</span>
+                </div>
+                <i class="fas fa-external-link-alt" style="font-size:0.75rem; color:var(--text-muted);"></i>
+              </a>
+            </div>
+          </div>
+
           <!-- Internship Card -->
           <div class="card mt-3">
             <div class="card-header">
               <h4>💼 Latest Internships</h4>
-              <a href="pages/internships.html" class="see-all">See all</a>
+              <a href="internships.html" class="see-all">See all</a>
             </div>
             <div class="internship-list">
 
-              <div class="intern-item">
+              <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('google')">
                 <div class="intern-logo">G</div>
-                <div class="intern-info">
-                  <strong>Google STEP</strong>
-                  <p>Software Engineering · Remote</p>
+                <div class="intern-info" style="flex:1;">
+                  <strong>Google STEP Intern</strong>
+                  <p>Software Engineering &amp; UI · Remote / Hybrid</p>
                 </div>
                 <span class="badge badge-success">Open</span>
               </div>
 
-              <div class="intern-item">
-                <div class="intern-logo"
-                     style="background:#E0F2FE;color:#0284C7">M</div>
-                <div class="intern-info">
+              <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('microsoft')">
+                <div class="intern-logo" style="background:#E0F2FE;color:#0284C7">M</div>
+                <div class="intern-info" style="flex:1;">
                   <strong>Microsoft Engage</strong>
-                  <p>Dev · Hybrid</p>
+                  <p>Product &amp; Dev Mentorship · Virtual</p>
                 </div>
                 <span class="badge badge-success">Open</span>
               </div>
 
-              <div class="intern-item">
-                <div class="intern-logo"
-                     style="background:#FEF3C7;color:#D97706">A</div>
-                <div class="intern-info">
-                  <strong>Amazon SDE Intern</strong>
-                  <p>Backend · Onsite</p>
+              <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('figma')">
+                <div class="intern-logo" style="background:#FDF4FF;color:#9333EA">F</div>
+                <div class="intern-info" style="flex:1;">
+                  <strong>Figma UX Design Fellowship</strong>
+                  <p>UI/UX &amp; Design Systems · Remote</p>
+                </div>
+                <span class="badge badge-success">New</span>
+              </div>
+
+              <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('amazon')">
+                <div class="intern-logo" style="background:#FEF3C7;color:#D97706">A</div>
+                <div class="intern-info" style="flex:1;">
+                  <strong>Amazon SDE / UI Intern</strong>
+                  <p>Frontend &amp; Cloud · Bangalore / Hyderabad</p>
                 </div>
                 <span class="badge badge-warning">Closing</span>
               </div>
@@ -450,6 +491,53 @@
 
     </div>
     <!-- end page-body -->
+
+    <!-- ===== SETTINGS MODAL ===== -->
+    <div id="settingsModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+      <div class="card" style="max-width:480px; width:100%; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+          <h3 style="font-size:1.25rem;"><i class="fas fa-user-cog" style="color:var(--primary); margin-right:8px;"></i> Student Profile Settings</h3>
+          <button onclick="closeSettingsModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        </div>
+        <form onsubmit="saveSettings(event)" style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Full Name</label>
+            <input type="text" id="settingFullName" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Current Year</label>
+              <select id="settingYear" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                <option>1st Year</option>
+                <option>2nd Year</option>
+                <option>3rd Year</option>
+                <option>4th Year</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Branch</label>
+              <input type="text" id="settingBranch" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+            </div>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">College / University</label>
+            <input type="text" id="settingCollege" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-full" style="padding:12px; font-weight:700;">Save Changes</button>
+            <button type="button" class="btn btn-outline" style="padding:12px 18px;" onclick="closeSettingsModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== INTERNSHIP DETAILS MODAL ===== -->
+    <div id="internshipModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+      <div class="card" style="max-width:520px; width:100%; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative;">
+        <button onclick="closeInternshipModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        <div id="internshipModalContent"></div>
+      </div>
+    </div>
 
   </main>
 
@@ -476,6 +564,11 @@ const CAREER_TRACKS = {
             { title: 'User Research & Journey Mapping', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
             { title: 'Design Systems & Component Libraries', monthNumber: 3, isCompleted: false, status: 'NEXT' },
             { title: 'Interactive Prototyping & Usability Testing', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ],
+        resources: [
+            { title: "Figma Official Masterclass & Auto Layout", desc: "Interactive exercises for components & layout", icon: "fa-play-circle", color: "#9333EA", url: "https://help.figma.com" },
+            { title: "Refactoring UI — Design Rules", desc: "Hierarchy, spacing, contrast & typography guides", icon: "fa-book-open", color: "#DB2777", url: "https://www.refactoringui.com" },
+            { title: "Nielsen Norman Group UX Research", desc: "Usability testing & user interview framework", icon: "fa-users", color: "#059669", url: "https://www.nngroup.com/articles/" }
         ]
     },
     aiml: {
@@ -494,6 +587,11 @@ const CAREER_TRACKS = {
             { title: 'Data Analysis with Pandas & NumPy', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
             { title: 'Supervised & Unsupervised ML Models', monthNumber: 3, isCompleted: false, status: 'NEXT' },
             { title: 'Deep Learning & PyTorch Model Training', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ],
+        resources: [
+            { title: "fast.ai — Practical Deep Learning for Coders", desc: "Top-down neural network training", icon: "fa-brain", color: "#10B981", url: "https://course.fast.ai" },
+            { title: "Kaggle Learn & ML Micro-Courses", desc: "Hands-on pandas, scikit-learn notebooks", icon: "fa-trophy", color: "#059669", url: "https://www.kaggle.com/learn" },
+            { title: "Hugging Face NLP & Transformers Guide", desc: "Modern LLMs and open-source models", icon: "fa-robot", color: "#047857", url: "https://huggingface.co/learn" }
         ]
     },
     cyber: {
@@ -512,6 +610,11 @@ const CAREER_TRACKS = {
             { title: 'Security Principles & Threat Modeling', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
             { title: 'Ethical Hacking & Vulnerability Scanning', monthNumber: 3, isCompleted: false, status: 'NEXT' },
             { title: 'SOC Operations & Incident Response', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ],
+        resources: [
+            { title: "OverTheWire Bandit Linux Wargame", desc: "Hands-on Linux command line and security challenges", icon: "fa-terminal", color: "#F59E0B", url: "https://overthewire.org/wargames/bandit/" },
+            { title: "TryHackMe — Free Cyber Labs", desc: "Guided penetration testing and networking rooms", icon: "fa-shield-alt", color: "#D97706", url: "https://tryhackme.com" },
+            { title: "Professor Messer Network+ & Security+", desc: "Comprehensive free video courses for certifications", icon: "fa-play-circle", color: "#B45309", url: "https://www.professormesser.com" }
         ]
     },
     webdev: {
@@ -530,6 +633,11 @@ const CAREER_TRACKS = {
             { title: 'JavaScript ES6+ Fundamentals', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
             { title: 'React.js & Component Architecture', monthNumber: 3, isCompleted: false, status: 'NEXT' },
             { title: 'Fullstack APIs & Database Integration', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ],
+        resources: [
+            { title: "freeCodeCamp Responsive Web Design", desc: "Interactive HTML5, CSS3, Flexbox & Grid certification", icon: "fa-code", color: "#4F46E5", url: "https://www.freecodecamp.org/learn" },
+            { title: "JavaScript.info — The Modern JS Tutorial", desc: "Deep dive from basics to advanced closures and async", icon: "fa-file-code", color: "#6366F1", url: "https://javascript.info" },
+            { title: "The Odin Project — Full Stack Curriculum", desc: "Project-based Node.js, React, and MongoDB track", icon: "fa-laptop-code", color: "#4338CA", url: "https://www.theodinproject.com" }
         ]
     },
     data: {
@@ -548,6 +656,11 @@ const CAREER_TRACKS = {
             { title: 'Data Cleaning & Wrangling with Pandas', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
             { title: 'Data Visualization & Tableau Dashboards', monthNumber: 3, isCompleted: false, status: 'NEXT' },
             { title: 'Predictive Modeling & Statistical Inference', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ],
+        resources: [
+            { title: "Mode Analytics — SQL for Data Science", desc: "Interactive SQL queries, joins, and aggregates", icon: "fa-database", color: "#0284C7", url: "https://mode.com/sql-tutorial" },
+            { title: "StatQuest with Josh Starmer", desc: "Visual explanations of statistics and probability", icon: "fa-chart-pie", color: "#0EA5E9", url: "https://statquest.org" },
+            { title: "Pandas & Seaborn Python Docs", desc: "Exploratory data analysis & data wrangling", icon: "fa-table", color: "#0369A1", url: "https://pandas.pydata.org" }
         ]
     },
     cloud: {
@@ -566,6 +679,11 @@ const CAREER_TRACKS = {
             { title: 'Docker Containers & Microservices', monthNumber: 2, isCompleted: false, status: 'ACTIVE' },
             { title: 'AWS Cloud Compute & Networking', monthNumber: 3, isCompleted: false, status: 'NEXT' },
             { title: 'CI/CD Automation & Kubernetes', monthNumber: 4, isCompleted: false, status: 'NEXT' }
+        ],
+        resources: [
+            { title: "AWS Skill Builder & Cloud Practitioner", desc: "Free official AWS cloud foundational courses", icon: "fa-cloud", color: "#0D9488", url: "https://explore.skillbuilder.aws" },
+            { title: "Docker 101 Tutorial & Interactive Labs", desc: "Containerize web apps and microservices", icon: "fa-cube", color: "#14B8A6", url: "https://www.docker.com/101-tutorial/" },
+            { title: "GitHub Actions CI/CD Complete Guide", desc: "Automate build, test, and production deployment", icon: "fa-code-branch", color: "#0F766E", url: "https://docs.github.com/en/actions" }
         ]
     }
 };
@@ -759,6 +877,171 @@ function adaptDashboardToSelectedCareer() {
 
     // 3. Update Skill Levels
     updateSkillLevels(track.skills);
+
+    // 4. Update Curated Free Resources
+    updateTrackResources(track.resources, selectedName);
+}
+
+function updateTrackResources(resources, trackName) {
+    const listEl = document.getElementById('trackResourcesList');
+    const badgeEl = document.getElementById('trackResourceBadge');
+    if (badgeEl) badgeEl.textContent = `${trackName} Track`;
+    if (!listEl || !resources) return;
+
+    listEl.innerHTML = resources.map(r => `
+      <a href="${r.url}" target="_blank" class="resource-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.15); border-radius:10px; text-decoration:none; color:var(--text); transition:all 0.2s;">
+        <i class="fas ${r.icon}" style="color:${r.color}; font-size:1.2rem;"></i>
+        <div style="flex:1;">
+          <strong style="font-size:0.88rem; display:block;">${r.title}</strong>
+          <span style="font-size:0.75rem; color:var(--text-muted);">${r.desc}</span>
+        </div>
+        <i class="fas fa-external-link-alt" style="font-size:0.75rem; color:var(--text-muted);"></i>
+      </a>
+    `).join('');
+}
+
+const INTERNSHIP_DETAILS = {
+  google: {
+    company: 'Google',
+    logo: 'G',
+    bg: '#EA4335',
+    title: 'Google STEP Intern (Summer 2027)',
+    location: 'Bangalore / Hyderabad / Remote',
+    stipend: '₹1,10,000 / month',
+    eligibility: '1st & 2nd Year CS/IT students',
+    description: 'Student Training in Engineering Program (STEP) is a 12-week development internship focusing on software engineering, product design, and scalable algorithms with dedicated 1:1 Google mentorship.',
+    skills: ['Data Structures & Algorithms', 'Python or C++', 'System Basics', 'Problem Solving'],
+    link: 'https://careers.google.com/students/'
+  },
+  microsoft: {
+    company: 'Microsoft',
+    logo: 'M',
+    bg: '#00A4EF',
+    title: 'Microsoft Engage Mentorship & Internship',
+    location: 'Virtual / Hyderabad / Noida',
+    stipend: '₹1,25,000 / month',
+    eligibility: '1st, 2nd & 3rd Year engineering students',
+    description: 'Engage is a direct project-based mentorship program by Microsoft engineers where you build real-world web, cloud, or AI solutions and qualify for fast-track internship interview rounds.',
+    skills: ['Web Dev / React', 'Azure Cloud / AI', 'Git & Agile', 'API Design'],
+    link: 'https://careers.microsoft.com/students/us/en'
+  },
+  figma: {
+    company: 'Figma',
+    logo: 'F',
+    bg: '#A259FF',
+    title: 'Figma UX Design & Product Fellowship',
+    location: 'Remote / Global',
+    stipend: '$3,500 / month (₹2,90,000)',
+    eligibility: 'All college students interested in UI/UX & Product Design',
+    description: 'Work alongside Figma design advocates and product managers to create community design systems, prototype interactive design challenges, and master auto layout.',
+    skills: ['Figma Mastery', 'Design Systems', 'User Research', 'Interactive Prototyping'],
+    link: 'https://www.figma.com/careers/'
+  },
+  amazon: {
+    company: 'Amazon',
+    logo: 'A',
+    bg: '#FF9900',
+    title: 'Amazon SDE / Frontend Intern',
+    location: 'Bangalore / Chennai / Hyderabad',
+    stipend: '₹1,15,000 / month',
+    eligibility: '1st to 4th Year B.Tech students',
+    description: 'Develop high-performance customer-facing services, AWS cloud integrations, and intuitive internal tools used by millions across Amazon operations worldwide.',
+    skills: ['Java / Python / JS', 'AWS Services', 'Object Oriented Design', 'Data Structures'],
+    link: 'https://www.amazon.jobs/en/teams/internships-for-students'
+  }
+};
+
+function openInternshipModal(key) {
+  const item = INTERNSHIP_DETAILS[key] || INTERNSHIP_DETAILS.google;
+  const container = document.getElementById('internshipModalContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <div style="width:48px; height:48px; border-radius:12px; background:${item.bg}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.3rem;">
+        ${item.logo}
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; margin-bottom:2px;">${item.title}</h3>
+        <p style="font-size:0.8rem; color:var(--text-muted);">${item.company} · ${item.location}</p>
+      </div>
+    </div>
+    
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> ${item.stipend}</span>
+      <span class="badge badge-primary"><i class="fas fa-graduation-cap"></i> ${item.eligibility}</span>
+    </div>
+
+    <p style="font-size:0.88rem; line-height:1.6; color:var(--text-muted); margin-bottom:16px;">
+      ${item.description}
+    </p>
+
+    <div style="margin-bottom:18px;">
+      <strong style="font-size:0.82rem; display:block; margin-bottom:8px;">Required Key Skills:</strong>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        ${item.skills.map(s => `<span style="background:rgba(99,102,241,0.08); color:var(--primary); font-size:0.75rem; padding:4px 10px; border-radius:12px; font-weight:600;">${s}</span>`).join('')}
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="${item.link}" target="_blank" class="btn btn-primary btn-full" style="padding:12px; font-weight:700; text-align:center;">
+        <i class="fas fa-paper-plane"></i> Apply on Official Portal →
+      </a>
+      <button class="btn btn-outline" style="padding:12px 18px;" onclick="closeInternshipModal()">Close</button>
+    </div>
+  `;
+
+  document.getElementById('internshipModal').style.display = 'flex';
+}
+
+function closeInternshipModal() {
+  document.getElementById('internshipModal').style.display = 'none';
+}
+
+// Settings Modal Handlers
+function openSettingsModal() {
+  let user = null;
+  try {
+    const raw = localStorage.getItem('user_data');
+    if (raw) user = JSON.parse(raw);
+  } catch(e){}
+
+  document.getElementById('settingFullName').value = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+  document.getElementById('settingYear').value = user?.currentYear || '1st Year';
+  document.getElementById('settingBranch').value = user?.branch || 'CSE';
+  document.getElementById('settingCollege').value = user?.collegeName || 'OIST';
+
+  document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function closeSettingsModal() {
+  document.getElementById('settingsModal').style.display = 'none';
+}
+
+function saveSettings(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  
+  const fullName = document.getElementById('settingFullName').value.trim() || 'Astha Khade';
+  const currentYear = document.getElementById('settingYear').value;
+  const branch = document.getElementById('settingBranch').value.trim() || 'CSE';
+  const collegeName = document.getElementById('settingCollege').value.trim() || 'OIST';
+
+  let user = {};
+  try {
+    const raw = localStorage.getItem('user_data');
+    if (raw) user = JSON.parse(raw);
+  } catch(e){}
+
+  user.fullName = fullName;
+  user.currentYear = currentYear;
+  user.branch = branch;
+  user.collegeName = collegeName;
+
+  localStorage.setItem('user_data', JSON.stringify(user));
+  localStorage.setItem('user_fullname', fullName);
+
+  updateSidebarUser();
+  closeSettingsModal();
 }
 
 function updateRoadmapSteps(milestones) {

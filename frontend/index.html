@@ -1929,10 +1929,12 @@ async function submitQuestionnaire(){
         const topDomain = data.recommended_careers[0].domain;
         let pathKey = 'webdev';
         const lower = (topDomain || '').toLowerCase();
-        if (lower.includes('ai') || lower.includes('machine') || lower.includes('model')) pathKey = 'aiml';
+        if (lower.includes('ui') || lower.includes('ux') || lower.includes('design') || lower.includes('product')) pathKey = 'uiux';
+        else if (lower.includes('ai') || lower.includes('machine') || lower.includes('model') || lower.includes('intelligence')) pathKey = 'aiml';
         else if (lower.includes('cyber') || lower.includes('security') || lower.includes('hack')) pathKey = 'cyber';
-        else if (lower.includes('data') || lower.includes('analytics')) pathKey = 'data';
-        else if (lower.includes('cloud') || lower.includes('devops')) pathKey = 'webdev';
+        else if (lower.includes('data') || lower.includes('analytics') || lower.includes('bi')) pathKey = 'data';
+        else if (lower.includes('cloud') || lower.includes('devops') || lower.includes('aws')) pathKey = 'cloud';
+        else if (lower.includes('mobile') || lower.includes('android') || lower.includes('ios') || lower.includes('flutter')) pathKey = 'mobile';
         localStorage.setItem('selected_career', pathKey);
         localStorage.setItem('selected_career_name', topDomain);
       }
@@ -2276,10 +2278,12 @@ function renderAdaptiveResults(data){
 function openCareerRoadmap(fieldName) {
   let key = 'webdev';
   const lower = (fieldName || '').toLowerCase();
-  if (lower.includes('ai') || lower.includes('machine') || lower.includes('model')) key = 'aiml';
+  if (lower.includes('ui') || lower.includes('ux') || lower.includes('design') || lower.includes('product')) key = 'uiux';
+  else if (lower.includes('ai') || lower.includes('machine') || lower.includes('model') || lower.includes('intelligence')) key = 'aiml';
   else if (lower.includes('cyber') || lower.includes('security') || lower.includes('network')) key = 'cyber';
-  else if (lower.includes('data') || lower.includes('analytics')) key = 'data';
-  else if (lower.includes('cloud') || lower.includes('devops')) key = 'webdev';
+  else if (lower.includes('data') || lower.includes('analytics') || lower.includes('bi')) key = 'data';
+  else if (lower.includes('cloud') || lower.includes('devops') || lower.includes('aws')) key = 'cloud';
+  else if (lower.includes('mobile') || lower.includes('android') || lower.includes('ios') || lower.includes('flutter')) key = 'mobile';
   localStorage.setItem('selected_career', key);
   localStorage.setItem('selected_career_name', fieldName);
   window.location.href = `roadmap.html?career=${key}`;
