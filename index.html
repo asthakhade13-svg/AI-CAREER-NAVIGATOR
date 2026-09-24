@@ -1324,8 +1324,8 @@ nav{
       <h2 id="profile-result-title" style="margin-bottom:13px;font-size:1.7rem;color:var(--gold)">Profile Analyzed!</h2>
       <p id="profile-result-text" style="color:var(--text-muted);line-height:1.8;font-size:.92rem;margin-bottom:22px"></p>
       <div style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:20px">
-        <button class="btn btn-lavender" id="profile-dashboard-btn" style="font-weight:700;padding:14px 28px;font-size:0.95rem;box-shadow:0 8px 25px rgba(109,40,217,0.25);" onclick="window.location.href='dashboard.html'">📊 Step 3: Go to Student Dashboard →</button>
-        <button class="btn btn-gold" id="profile-result-btn" style="font-weight:600;padding:14px 24px;font-size:0.92rem;" onclick="proceedToQuiz()">⚡ Launch Adaptive Test (Optional) →</button>
+        <button class="btn btn-lavender" id="profile-dashboard-btn" style="font-weight:700;padding:14px 28px;font-size:0.95rem;box-shadow:0 8px 25px rgba(109,40,217,0.25);" onclick="window.location.href='dashboard.html'">📊 Go to Student Dashboard →</button>
+        <button class="btn btn-gold" id="profile-result-btn" style="font-weight:600;padding:14px 24px;font-size:0.92rem;" onclick="proceedToQuiz()">⚡ Launch Adaptive Test →</button>
       </div>
     </div>
   </div>
@@ -1973,7 +1973,7 @@ async function submitQuestionnaire(){
             </p>
 
             <button class="btn btn-lavender" style="width:100%;padding:9px 16px;font-size:0.82rem;font-weight:700;cursor:pointer;" onclick="openCareerRoadmap('${rc.domain}')">
-              🗺️ Step 5: Choose ${rc.domain} &amp; Open Learning Roadmap →
+              🗺️ Choose ${rc.domain} &amp; Open Learning Roadmap →
             </button>
           </div>
         `;
@@ -1998,10 +1998,10 @@ async function submitQuestionnaire(){
     html += `
       <div style="margin-top:16px;padding:16px;background:rgba(255,255,255,0.35);border:1px dashed rgba(180,83,9,0.30);border-radius:14px">
         <h4 style="font-size:0.88rem;color:var(--gold);margin-bottom:6px;font-family:var(--font-heading)">
-          🎯 Optional Precision Skill Calibration
+          🎯 Precision Skill Calibration
         </h4>
         <p style="color:var(--text-muted);font-size:0.82rem;line-height:1.6;margin:0">
-          You can immediately click any suggested career above to access your learning roadmap and guidelines. Alternatively, if you want real-time dynamic IRT evaluation, you can take the optional <strong>15-question Computer Adaptive Test (CAT)</strong> below.
+          You can immediately click any suggested career above to access your learning roadmap and guidelines. Alternatively, if you want real-time dynamic IRT evaluation, you can take the <strong>15-question Computer Adaptive Test (CAT)</strong> below.
         </p>
       </div>
     `;
@@ -2144,7 +2144,7 @@ function renderAdaptiveResults(data){
         <span>Correct: <strong>${p.correct}</strong> / ${p.total} questions answered</span>
       </div>
       <button class="btn btn-lavender" style="margin-top:10px;padding:8px 16px;font-size:0.80rem;width:100%;font-weight:600;" onclick="openCareerRoadmap('${p.field}')">
-        🗺️ Step 5: Open ${p.field} Roadmap &amp; Guidelines →
+        🗺️ Open ${p.field} Roadmap &amp; Guidelines →
       </button>
     </div>`;
   }).join('');
@@ -2220,10 +2220,9 @@ function renderAdaptiveResults(data){
       <div class="bracket-badge" style="background:${bl.color}18;border:1px solid ${bl.color}40;color:${bl.color}">${bl.icon}&nbsp;${bl.label} Level&nbsp;·&nbsp;${acc}% Accuracy</div>
       <p style="color:var(--text-muted);margin-top:10px;font-size:.86rem;font-family:var(--mono)">${bl.desc}</p>
       
-      <!-- Primary Step 5 Action Button -->
       <div style="margin-top:16px;">
         <button class="btn btn-lavender" style="font-weight:700;font-size:0.95rem;padding:12px 28px;box-shadow:0 6px 22px rgba(109,40,217,0.30);" onclick="openCareerRoadmap('${topDomainName}')">
-          🗺️ Step 5: Open Personalized Learning Roadmap (${topDomainName}) →
+          🗺️ Open Personalized Learning Roadmap (${topDomainName}) →
         </button>
       </div>
     </div>
@@ -2231,10 +2230,10 @@ function renderAdaptiveResults(data){
     <div class="section-title"><span class="dot"></span>Score Summary<span class="label-tag">OVERVIEW</span></div>
     ${summaryBar}
 
-    <div class="section-title"><span class="dot"></span>Top Suggested Career Paths<span class="label-tag">STEP 4: SELECTION</span></div>
+    <div class="section-title"><span class="dot"></span>Top Suggested Career Paths<span class="label-tag">SELECTION</span></div>
     <div class="rec-list">${pathCards||'<p style="color:var(--text-muted)">No data.</p>'}</div>
 
-    <div class="section-title"><span class="dot"></span>Learning Path Guidelines<span class="label-tag">STEP 5: SYLLABUS</span></div>
+    <div class="section-title"><span class="dot"></span>Learning Path Guidelines<span class="label-tag">SYLLABUS</span></div>
     <div class="learning-path-card">
       <h3>📡 ${lp.label||'Your Path'} — ${lp.description||''}</h3>
       <div style="margin-top:8px">${resources||'<p style="color:var(--text-muted)">Resources loading…</p>'}</div>
@@ -2256,7 +2255,7 @@ function renderAdaptiveResults(data){
 
     <div class="result-footer" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
       <button class="btn btn-lavender" style="font-weight:700;padding:12px 24px;" onclick="openCareerRoadmap('${topDomainName}')">
-        🗺️ Step 5: Open Roadmap
+        🗺️ Open Roadmap
       </button>
       <button class="btn btn-outline" onclick="proceedToQuiz()">↺ Retake Quiz</button>
       <button class="btn btn-outline" onclick="window.location.href='dashboard.html'">📊 Go to Dashboard</button>
