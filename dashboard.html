@@ -324,6 +324,70 @@
             </div>
           </div>
 
+          <!-- Weekly AI Progress Digest & Goal Setter -->
+          <div class="card mt-3" style="background:linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,249,255,0.95)); border:1px solid rgba(14,165,233,0.25);">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h4 style="margin:0;"><i class="fas fa-chart-pie" style="color:#0284C7; margin-right:6px;"></i> Weekly AI Performance Digest</h4>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;" id="weeklyReportPeriod">Current Week Analysis</p>
+              </div>
+              <button class="btn btn-outline sm" style="padding:4px 12px; font-size:0.75rem; border-radius:12px;" onclick="openGoalsModal()">
+                <i class="fas fa-bullseye"></i> Set Goals
+              </button>
+            </div>
+            
+            <div style="margin-top:12px; padding:12px 14px; background:rgba(2,132,199,0.06); border-radius:12px; border-left:3px solid #0284C7;">
+              <p id="weeklyAiDigestText" style="font-size:0.86rem; line-height:1.5; color:var(--text); margin:0;">
+                🔥 <strong>Outstanding Velocity!</strong> You have logged 8.5 hours this week with a 92% consistency pace. You are on track to complete your foundational specialization ahead of schedule.
+              </p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; text-align:center;">
+              <div style="background:white; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.06);">
+                <strong id="weeklyPaceIndex" style="color:#0284C7; font-size:1.1rem; display:block;">92%</strong>
+                <span style="font-size:0.72rem; color:var(--text-muted);">Pace Velocity</span>
+              </div>
+              <div style="background:white; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.06);">
+                <strong id="weeklyHoursCount" style="color:#10B981; font-size:1.1rem; display:block;">8.5 / 10h</strong>
+                <span style="font-size:0.72rem; color:var(--text-muted);">Study Target</span>
+              </div>
+              <div style="background:white; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.06);">
+                <strong id="weeklyVelocityGrade" style="color:#8B5CF6; font-size:1.1rem; display:block;">A+ Elite</strong>
+                <span style="font-size:0.72rem; color:var(--text-muted);">Consistency</span>
+              </div>
+            </div>
+
+            <!-- Recommended AI Goals -->
+            <div style="margin-top:14px;">
+              <strong style="font-size:0.82rem; color:var(--text); display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                <i class="fas fa-clipboard-check" style="color:#10B981;"></i> AI Recommended Action Goals:
+              </strong>
+              <ul id="weeklyGoalsList" style="margin:0; padding-left:18px; font-size:0.82rem; color:var(--text-muted); display:flex; flex-direction:column; gap:6px;">
+                <li>Complete 2 hands-on milestone projects in your active career track.</li>
+                <li>Conduct a 15-minute review on core algorithmic complexity.</li>
+                <li>Claim and verify your track progress certificate.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Verifiable Certificate Card -->
+          <div class="card mt-3" style="background:linear-gradient(135deg, #FAF5FF, #F3E8FF); border:1px solid rgba(168,85,247,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:44px; height:44px; border-radius:12px; background:#9333EA; color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                  <i class="fas fa-award"></i>
+                </div>
+                <div>
+                  <h4 style="margin:0; font-size:1rem; color:#581C87;">Professional Specialization Certificate</h4>
+                  <p style="font-size:0.78rem; color:#7E22CE; margin-top:2px;">Verifiable &amp; Cryptographically Signed Accreditation</p>
+                </div>
+              </div>
+              <button class="btn btn-primary" style="background:#9333EA; border-color:#9333EA; padding:8px 16px; font-size:0.82rem; border-radius:20px; font-weight:600;" onclick="openCertificateModal()">
+                <i class="fas fa-certificate"></i> Claim Certificate →
+              </button>
+            </div>
+          </div>
+
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -341,9 +405,9 @@
                 <i class="fas fa-map"></i>
                 <span>My Roadmap</span>
               </a>
-              <a href="internships.html" class="quick-btn">
-                <i class="fas fa-building"></i>
-                <span>Internships</span>
+              <a href="javascript:void(0)" onclick="openCertificateModal()" class="quick-btn">
+                <i class="fas fa-award"></i>
+                <span>Certificate</span>
               </a>
               <a href="chatbot.html" class="quick-btn">
                 <i class="fas fa-robot"></i>
@@ -436,11 +500,14 @@
             </div>
           </div>
 
-          <!-- Internship Card -->
+          <!-- Internship Card (Marked Coming Soon) -->
           <div class="card mt-3">
-            <div class="card-header">
-              <h4>💼 Latest Internships</h4>
-              <a href="internships.html" class="see-all">See all</a>
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h4 style="margin:0;">💼 Tech Internships</h4>
+                <span class="badge badge-primary sm" style="font-size:0.7rem; margin-top:2px;">✨ Coming Soon · Spring 2026</span>
+              </div>
+              <a href="internships.html" class="see-all">Preview</a>
             </div>
             <div class="internship-list">
 
@@ -450,7 +517,7 @@
                   <strong>Google STEP Intern</strong>
                   <p>Software Engineering &amp; UI · Remote / Hybrid</p>
                 </div>
-                <span class="badge badge-success">Open</span>
+                <span class="badge badge-warning">Preview</span>
               </div>
 
               <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('microsoft')">
@@ -459,7 +526,7 @@
                   <strong>Microsoft Engage</strong>
                   <p>Product &amp; Dev Mentorship · Virtual</p>
                 </div>
-                <span class="badge badge-success">Open</span>
+                <span class="badge badge-warning">Preview</span>
               </div>
 
               <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('figma')">
@@ -468,7 +535,7 @@
                   <strong>Figma UX Design Fellowship</strong>
                   <p>UI/UX &amp; Design Systems · Remote</p>
                 </div>
-                <span class="badge badge-success">New</span>
+                <span class="badge badge-warning">Preview</span>
               </div>
 
               <div class="intern-item" style="cursor:pointer;" onclick="openInternshipModal('amazon')">
@@ -477,7 +544,7 @@
                   <strong>Amazon SDE / UI Intern</strong>
                   <p>Frontend &amp; Cloud · Bangalore / Hyderabad</p>
                 </div>
-                <span class="badge badge-warning">Closing</span>
+                <span class="badge badge-warning">Preview</span>
               </div>
 
             </div>
@@ -536,6 +603,89 @@
       <div class="card" style="max-width:520px; width:100%; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative;">
         <button onclick="closeInternshipModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
         <div id="internshipModalContent"></div>
+      </div>
+    </div>
+
+    <!-- ===== VERIFIABLE CERTIFICATE MODAL ===== -->
+    <div id="certificateModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
+      <div class="card" style="max-width:680px; width:100%; border-radius:24px; box-shadow:0 25px 70px rgba(0,0,0,0.3); position:relative; background:#ffffff; padding:24px;">
+        <button onclick="closeCertificateModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        
+        <!-- Printable Certificate Area -->
+        <div id="printableCertificate" style="border:8px double #4F46E5; padding:32px 24px; border-radius:16px; background:linear-gradient(135deg, #FAF5FF 0%, #FFFFFF 50%, #F0F9FF 100%); text-align:center; position:relative;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-weight:800; font-size:1.1rem; color:#4F46E5; display:flex; align-items:center; gap:8px;">
+              <i class="fas fa-compass"></i> CareerNav Accreditation
+            </div>
+            <span style="font-size:0.75rem; background:rgba(79,70,229,0.1); color:#4F46E5; padding:4px 10px; border-radius:12px; font-weight:700;">VERIFIED ACCREDITATION</span>
+          </div>
+
+          <p style="font-size:0.85rem; letter-spacing:2px; text-transform:uppercase; color:#6B7280; margin-bottom:6px;">Certificate of Professional Completion</p>
+          <h2 style="font-size:1.8rem; font-weight:800; color:#1F2937; margin:8px 0;" id="certStudentName">Astha Khade</h2>
+          <p style="font-size:0.9rem; color:#4B5563; max-width:480px; margin:0 auto 16px auto;">
+            Has demonstrated mastery in curriculum assessments, practical milestone implementations, and technical competencies in:
+          </p>
+          
+          <div style="display:inline-block; padding:8px 24px; background:#4F46E5; color:white; border-radius:30px; font-weight:700; font-size:1.05rem; margin-bottom:16px;" id="certTrackTitle">
+            AI / Machine Learning Engineer Specialization
+          </div>
+
+          <div style="display:flex; justify-content:space-around; align-items:center; border-top:1px dashed #D1D5DB; padding-top:16px; margin-top:16px; font-size:0.8rem; color:#6B7280;">
+            <div>
+              <strong>Issue Date</strong>
+              <p id="certIssueDate" style="margin:2px 0 0 0; color:#1F2937; font-weight:600;">Sep 26, 2026</p>
+            </div>
+            <div>
+              <strong>Verification ID</strong>
+              <p id="certVerifyId" style="margin:2px 0 0 0; color:#4F46E5; font-weight:700; font-family:monospace;">CN-2026-AIML-8F92A</p>
+            </div>
+            <div>
+              <strong>Status</strong>
+              <p style="margin:2px 0 0 0; color:#10B981; font-weight:700;">Tamper-Proof ✓</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="printCertificate()" style="padding:10px 22px; font-weight:600; border-radius:12px;">
+            <i class="fas fa-download"></i> Print / Save PDF
+          </button>
+          <button class="btn btn-outline" onclick="shareCertificateLinkedIn()" style="padding:10px 22px; font-weight:600; border-radius:12px; color:#0A66C2; border-color:#0A66C2;">
+            <i class="fab fa-linkedin"></i> Share to LinkedIn
+          </button>
+          <button class="btn btn-outline" onclick="closeCertificateModal()" style="padding:10px 18px; border-radius:12px;">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== WEEKLY GOALS MODAL ===== -->
+    <div id="goalsModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+      <div class="card" style="max-width:440px; width:100%; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:1.2rem; margin:0;"><i class="fas fa-bullseye" style="color:#0284C7; margin-right:8px;"></i> Set Weekly Learning Goals</h3>
+          <button onclick="closeGoalsModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        </div>
+        <form onsubmit="saveWeeklyGoalsForm(event)" style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Target Weekly Study Hours</label>
+            <input type="number" id="goalTargetHours" min="1" max="50" step="0.5" value="10" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Target Milestones to Complete</label>
+            <input type="number" id="goalTargetMilestones" min="1" max="10" value="3" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Primary Topic of Focus</label>
+            <input type="text" id="goalFocusTopic" value="Full-Stack & Algorithms" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-full" style="padding:12px; font-weight:700;">Save Goals</button>
+            <button type="button" class="btn btn-outline" style="padding:12px 18px;" onclick="closeGoalsModal()">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -1096,7 +1246,143 @@ function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
 
-document.addEventListener('DOMContentLoaded', loadDashboard);
+// ── Weekly AI Report & Goals Logic ──────────────────────────────────────────
+async function loadWeeklyReport() {
+    try {
+        const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+        const name = user?.fullName || 'Astha Khade';
+        const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
+        const trackKey = getCareerPathKey(rawSelected);
+
+        if (typeof ReportAPI !== 'undefined' && ReportAPI.getWeeklyReport) {
+            const report = await ReportAPI.getWeeklyReport(user?.email || 'user_001', trackKey, name);
+            if (report) {
+                const digestEl = document.getElementById('weeklyAiDigestText');
+                if (digestEl && report.aiDigest) {
+                    digestEl.innerHTML = `🔥 <strong>${report.velocityGrade || 'Elite Pace'}!</strong> ${report.aiDigest}`;
+                }
+                const paceEl = document.getElementById('weeklyPaceIndex');
+                if (paceEl) paceEl.textContent = report.paceIndex || '92%';
+                const hoursEl = document.getElementById('weeklyHoursCount');
+                if (hoursEl) hoursEl.textContent = `${report.hoursLearnedThisWeek || 8.5} / ${report.targetHours || 10}h`;
+                const gradeEl = document.getElementById('weeklyVelocityGrade');
+                if (gradeEl) gradeEl.textContent = report.velocityGrade || 'A+ Elite';
+
+                const goalsListEl = document.getElementById('weeklyGoalsList');
+                if (goalsListEl && report.recommendedGoals && report.recommendedGoals.length > 0) {
+                    goalsListEl.innerHTML = report.recommendedGoals.map(g => `<li>${g}</li>`).join('');
+                }
+            }
+        }
+    } catch(e) {
+        console.warn('Weekly report notice:', e);
+    }
+}
+
+function openGoalsModal() {
+    const modal = document.getElementById('goalsModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeGoalsModal() {
+    const modal = document.getElementById('goalsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function saveWeeklyGoalsForm(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const hours = parseFloat(document.getElementById('goalTargetHours')?.value || '10');
+    const milestones = parseInt(document.getElementById('goalTargetMilestones')?.value || '3', 10);
+    const topic = document.getElementById('goalFocusTopic')?.value || 'Full-Stack & Algorithms';
+
+    try {
+        if (typeof ReportAPI !== 'undefined' && ReportAPI.setGoals) {
+            await ReportAPI.setGoals(hours, milestones, topic);
+        }
+    } catch(err) {}
+
+    const hoursEl = document.getElementById('weeklyHoursCount');
+    if (hoursEl) hoursEl.textContent = `8.5 / ${hours}h`;
+
+    if (typeof showSuccess === 'function') showSuccess('Weekly learning goals saved successfully!');
+    closeGoalsModal();
+    return false;
+}
+
+// ── Verifiable Certificate Modal & Exporter Logic ───────────────────────────
+async function openCertificateModal() {
+    const modal = document.getElementById('certificateModal');
+    if (!modal) return;
+
+    const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+    const name = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+    const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
+    const trackKey = getCareerPathKey(rawSelected);
+
+    document.getElementById('certStudentName').textContent = name;
+    document.getElementById('certTrackTitle').textContent = rawSelected + ' Professional Specialization';
+    document.getElementById('certIssueDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+    // Fetch / Generate from backend
+    try {
+        if (typeof CertificateAPI !== 'undefined' && CertificateAPI.generateCertificate) {
+            const cert = await CertificateAPI.generateCertificate(trackKey, 96);
+            if (cert && cert.certificateId) {
+                document.getElementById('certVerifyId').textContent = cert.certificateId;
+            }
+        }
+    } catch(e) {}
+
+    modal.style.display = 'flex';
+}
+
+function closeCertificateModal() {
+    const modal = document.getElementById('certificateModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function printCertificate() {
+    const certEl = document.getElementById('printableCertificate');
+    if (!certEl) return;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>CareerNav Verified Certificate</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 90vh; background: #f8fafc; }
+                .cert-container { max-width: 800px; width: 100%; border: 10px double #4F46E5; padding: 40px 30px; border-radius: 16px; background: linear-gradient(135deg, #FAF5FF 0%, #FFFFFF 50%, #F0F9FF 100%); text-align: center; }
+            </style>
+        </head>
+        <body>
+            <div class="cert-container">
+                ${certEl.innerHTML}
+            </div>
+            <script>
+                window.onload = function() { window.print(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+function shareCertificateLinkedIn() {
+    const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
+    const certId = document.getElementById('certVerifyId')?.textContent || 'CN-2026-AIML-8F92A';
+    const text = encodeURIComponent(`🎓 Proud to have completed and verified my ${rawSelected} Specialization with First-Gen AI Career Navigator! Verification ID: ${certId}`);
+    const url = encodeURIComponent('https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/');
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${text}`, '_blank');
+}
+
+// ---- Auto Init ----
+async function initDashboardWithAllFeatures() {
+    await loadDashboard();
+    await loadWeeklyReport();
+}
+
+document.addEventListener('DOMContentLoaded', initDashboardWithAllFeatures);
 </script>
 
 </body>

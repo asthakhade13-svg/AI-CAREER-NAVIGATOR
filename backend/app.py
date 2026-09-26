@@ -46,6 +46,12 @@ FRONTEND_DIR = os.path.dirname(INDEX_FILE) if INDEX_FILE else None
 async def lifespan(app: FastAPI):
     """Modern lifespan event handler — replaces deprecated on_event."""
     # ── Startup ──────────────────────────────────────────────────────────────
+    try:
+        from services.auth_service import init_sqlite_db
+        init_sqlite_db()
+    except Exception as e:
+        logger.warning(f"SQLite init note: {e}")
+
     Database.connect_db()           # graceful — won't crash if Mongo is offline
     os.makedirs("output", exist_ok=True)
     os.makedirs("data", exist_ok=True)
@@ -71,7 +77,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes, basic_info_routes, adaptive_quiz_routes, internship_routes
+from routes import (
+    quiz_routes,
+    recommendation_routes,
+    roadmap_routes,
+    progress_routes,
+    chatbot_routes,
+    basic_info_routes,
+    adaptive_quiz_routes,
+    internship_routes,
+    auth_routes,
+    certificate_routes
+)
 
 # ── Health check (used by frontend ping) ─────────────────────────────────────
 @app.get("/health")
@@ -101,6 +118,8 @@ def serve_index_html():
     return _serve_index()
 
 # Include API routers
+app.include_router(auth_routes.router)
+app.include_router(certificate_routes.router)
 app.include_router(basic_info_routes.router,        prefix="/api/v1/basic_info",         tags=["Basic Info"])
 app.include_router(adaptive_quiz_routes.router,     prefix="/api/v1/quiz/adaptive",      tags=["Adaptive Quiz"])
 app.include_router(quiz_routes.router,              prefix="/api/v1/quiz",               tags=["Quiz"])
