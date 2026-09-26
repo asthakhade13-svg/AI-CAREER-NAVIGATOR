@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional, Dict, Any, List
 from models.quiz_evaluation_model import (
     QuizGenerateRequest,
     QuizOutput,
@@ -114,5 +115,73 @@ async def api_evaluate_cs_quiz(request: CSQuizEvaluationRequest):
     except Exception as e:
         logger.error(f"Error evaluating CS quiz: {e}")
         raise HTTPException(status_code=500, detail="Failed to evaluate CS quiz.")
+
+
+# ── 6. Quiz Attempt History Ledger Endpoints ─────────────────────────────────
+from services.auth_service import get_db_connection
+
+class LogQuizAttemptRequest(BaseModel):
+    student_id: str
+    track_key: str
+    score: int
+    total_questions: Optional[int] = 10
+    correct_answers: Optional[int] = 8
+    time_taken_sec: Optional[int] = 120
+
+@router.post("/log-attempt")
+def log_quiz_attempt(req: LogQuizAttemptRequest):
+    """
+    Records a completed quiz attempt in the persistent SQLite history ledger.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO quiz_attempts (student_id, track_key, score, total_questions, correct_answers, time_taken_sec)
+    VALUES (?, ?, ?, ?, ?, ?)
+    """, (req.student_id, req.track_key, req.score, req.total_questions or 10, req.correct_answers or 8, req.time_taken_sec or 120))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Quiz attempt logged successfully",
+        "score": req.score
+    }
+
+@router.get("/history/{student_id}")
+def get_quiz_history(student_id: str):
+    """
+    Retrieves all past quiz attempts for graphing and progress tracking.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT * FROM quiz_attempts WHERE student_id = ? ORDER BY created_at DESC
+    """, (student_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    attempts = [
+        {
+            "id": r["id"],
+            "trackKey": r["track_key"],
+            "score": r["score"],
+            "totalQuestions": r["total_questions"],
+            "correctAnswers": r["correct_answers"],
+            "timeTakenSec": r["time_taken_sec"],
+            "createdAt": r["created_at"]
+        }
+        for r in rows
+    ]
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "totalAttempts": len(attempts),
+        "history": attempts
+    }
+
 
 

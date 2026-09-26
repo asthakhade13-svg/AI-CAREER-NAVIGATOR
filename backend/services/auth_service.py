@@ -46,10 +46,15 @@ def init_sqlite_db():
             branch TEXT DEFAULT 'Computer Science & Engineering',
             career_track TEXT DEFAULT 'aiml',
             bio TEXT DEFAULT '',
+            avatar_url TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
+        except Exception:
+            pass
         
         # 2. Weekly Goals Table
         cursor.execute("""
@@ -92,6 +97,69 @@ def init_sqlite_db():
             milestone_id TEXT DEFAULT '',
             hours_spent REAL DEFAULT 0.5,
             log_date DATE DEFAULT (DATE('now')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # 5. Saved / Bookmarked Careers Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS saved_careers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            career_id TEXT NOT NULL,
+            career_title TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, career_id)
+        )
+        """)
+
+        # 6. Notifications Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            type TEXT DEFAULT 'info',
+            is_read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # 7. Goal Items Table (Individual Goal Checklists)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS goal_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            goal_text TEXT NOT NULL,
+            is_completed INTEGER DEFAULT 0,
+            week_id TEXT DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, goal_text)
+        )
+        """)
+
+        # 8. Password Resets Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            reset_token TEXT NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            is_used INTEGER DEFAULT 0
+        )
+        """)
+
+        # 9. Quiz Attempt History Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS quiz_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            track_key TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            total_questions INTEGER DEFAULT 10,
+            correct_answers INTEGER DEFAULT 8,
+            time_taken_sec INTEGER DEFAULT 120,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)

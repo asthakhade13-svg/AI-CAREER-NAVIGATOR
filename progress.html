@@ -679,7 +679,16 @@ async function loadProgress() {
         if (typeof ReportAPI !== 'undefined' && ReportAPI.getWeeklyReport) {
             const report = await ReportAPI.getWeeklyReport(user?.email || 'user_001', track, name);
             if (report && report.recommendedGoals) {
-                goals = report.recommendedGoals.map(g => ({ text: g, done: false }));
+                // Fetch saved goal items check state from SQLite
+                let savedItems = {};
+                try {
+                    if (typeof GoalAPI !== 'undefined') savedItems = await GoalAPI.getItems();
+                } catch(e) {}
+
+                goals = report.recommendedGoals.map(g => ({
+                    text: g,
+                    done: savedItems[g] !== undefined ? savedItems[g] : false
+                }));
                 renderGoals();
             }
         }
@@ -717,9 +726,15 @@ function renderGoals() {
     updateGoalsProgress();
 }
 
-function toggleGoal(idx, checkbox) {
+async function toggleGoal(idx, checkbox) {
     goals[idx].done = checkbox.checked;
     renderGoals();
+
+    try {
+        if (typeof GoalAPI !== 'undefined' && GoalAPI.toggleItem) {
+            await GoalAPI.toggleItem(goals[idx].text, goals[idx].done);
+        }
+    } catch(e) {}
 }
 
 function updateGoalsProgress() {
@@ -733,7 +748,12 @@ function updateGoalsProgress() {
 }
 
 function resetGoals() {
-    goals.forEach(g => g.done = false);
+    goals.forEach(g => {
+        g.done = false;
+        if (typeof GoalAPI !== 'undefined' && GoalAPI.toggleItem) {
+            GoalAPI.toggleItem(g.text, false).catch(() => {});
+        }
+    });
     renderGoals();
 }
 

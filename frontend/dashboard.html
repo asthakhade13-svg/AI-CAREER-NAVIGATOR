@@ -580,7 +580,13 @@
           <h3 style="font-size:1.25rem;"><i class="fas fa-user-cog" style="color:var(--primary); margin-right:8px;"></i> Student Profile Settings</h3>
           <button onclick="closeSettingsModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
         </div>
-        <form onsubmit="saveSettings(event)" style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Profile Photo / Avatar</label>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div id="settingAvatarPreview" class="user-avatar" style="width:46px; height:46px; border-radius:50%; font-weight:700; display:flex; align-items:center; justify-content:center; overflow:hidden; border:2px solid #e2e8f0; background:linear-gradient(135deg, #4F46E5, #06B6D4); color:white;">A</div>
+              <input type="file" id="settingAvatarFile" accept="image/*" class="form-input" style="flex:1; font-size:0.8rem; padding:8px 10px;" onchange="previewAvatarUpload(event)" />
+            </div>
+          </div>
           <div>
             <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Full Name</label>
             <input type="text" id="settingFullName" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
@@ -1173,6 +1179,22 @@ function closeInternshipModal() {
 }
 
 // Settings Modal Handlers
+let pendingAvatarBase64 = null;
+
+function previewAvatarUpload(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    pendingAvatarBase64 = evt.target.result;
+    const previewEl = document.getElementById('settingAvatarPreview');
+    if (previewEl) {
+      previewEl.innerHTML = `<img src="${pendingAvatarBase64}" alt="Avatar Preview" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 function openSettingsModal() {
   let user = null;
   try {
@@ -1180,10 +1202,21 @@ function openSettingsModal() {
     if (raw) user = JSON.parse(raw);
   } catch(e){}
 
-  document.getElementById('settingFullName').value = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
-  document.getElementById('settingYear').value = user?.currentYear || '1st Year';
+  pendingAvatarBase64 = null;
+  const name = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+  document.getElementById('settingFullName').value = name;
+  document.getElementById('settingYear').value = user?.currentYear || user?.year || '1st Year';
   document.getElementById('settingBranch').value = user?.branch || 'CSE';
-  document.getElementById('settingCollege').value = user?.collegeName || 'OIST';
+  document.getElementById('settingCollege').value = user?.collegeName || user?.college || 'OIST';
+
+  const previewEl = document.getElementById('settingAvatarPreview');
+  if (previewEl) {
+    if (user?.avatarUrl && user.avatarUrl.startsWith('data:image')) {
+      previewEl.innerHTML = `<img src="${user.avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+    } else {
+      previewEl.textContent = name.charAt(0).toUpperCase();
+    }
+  }
 
   document.getElementById('settingsModal').style.display = 'flex';
 }
@@ -1192,7 +1225,7 @@ function closeSettingsModal() {
   document.getElementById('settingsModal').style.display = 'none';
 }
 
-function saveSettings(e) {
+async function saveSettings(e) {
   if (e && e.preventDefault) e.preventDefault();
   
   const fullName = document.getElementById('settingFullName').value.trim() || 'Astha Khade';
@@ -1208,13 +1241,38 @@ function saveSettings(e) {
 
   user.fullName = fullName;
   user.currentYear = currentYear;
+  user.year = currentYear;
   user.branch = branch;
   user.collegeName = collegeName;
+  user.college = collegeName;
+
+  if (pendingAvatarBase64) {
+    user.avatarUrl = pendingAvatarBase64;
+    try {
+      if (typeof AuthAPI !== 'undefined' && AuthAPI.uploadAvatar) {
+        await AuthAPI.uploadAvatar(pendingAvatarBase64);
+      }
+    } catch(err) {
+      console.warn('Avatar upload error:', err);
+    }
+  }
+
+  try {
+    if (typeof AuthAPI !== 'undefined' && AuthAPI.updateProfile) {
+      await AuthAPI.updateProfile({
+        full_name: fullName,
+        college: collegeName,
+        branch: branch,
+        year: currentYear
+      });
+    }
+  } catch(err) {}
 
   localStorage.setItem('user_data', JSON.stringify(user));
   localStorage.setItem('user_fullname', fullName);
 
   updateSidebarUser();
+  if (typeof showSuccess === 'function') showSuccess('Profile & avatar updated successfully!');
   closeSettingsModal();
 }
 

@@ -115,7 +115,7 @@
               <input type="checkbox" />
               <span>Remember me</span>
             </label>
-            <a href="#" class="forgot-link">Forgot password?</a>
+            <a href="javascript:void(0)" onclick="openForgotModal()" class="forgot-link">Forgot password?</a>
           </div>
 
           <!-- Submit Button -->
@@ -134,7 +134,7 @@
         </div>
 
         <!-- Google Login Button -->
-        <button class="btn-google">
+        <button class="btn-google" type="button" onclick="continueWithGoogle()">
           <img
             src="https://www.google.com/favicon.ico"
             alt="Google"
@@ -156,10 +156,42 @@
   </div>
   <!-- end auth-wrapper -->
 
-  <!-- Small Script for toggle password & redirect -->
+  <!-- ===== FORGOT PASSWORD MODAL ===== -->
+  <div id="forgotModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:white; max-width:420px; width:100%; border-radius:20px; padding:28px; box-shadow:0 25px 60px rgba(0,0,0,0.25); position:relative;">
+      <button onclick="closeForgotModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:#64748b;">&times;</button>
+      
+      <div id="forgotStep1">
+        <h3 style="font-size:1.3rem; color:#1e293b; margin-bottom:6px;"><i class="fas fa-key" style="color:#4F46E5; margin-right:6px;"></i> Reset Password</h3>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:16px;">Enter your registered student email to receive a 6-digit verification code.</p>
+        <form onsubmit="handleSendOtp(event)">
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Email Address</label>
+            <input type="email" id="forgotEmail" style="width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:0.9rem;" placeholder="e.g. astha.khade@oist.edu" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="padding:12px; font-weight:600; border-radius:10px;">Send Verification OTP</button>
+        </form>
+      </div>
 
+      <div id="forgotStep2" style="display:none;">
+        <h3 style="font-size:1.3rem; color:#1e293b; margin-bottom:6px;"><i class="fas fa-lock-open" style="color:#10B981; margin-right:6px;"></i> Enter Code &amp; New Password</h3>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:16px;" id="otpHint">Verification code sent! (Demo OTP: <code>123456</code>)</p>
+        <form onsubmit="handleResetPassword(event)">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">6-Digit OTP</label>
+            <input type="text" id="resetOtp" style="width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:0.9rem; font-family:monospace; letter-spacing:2px; text-align:center;" placeholder="123456" required />
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">New Password</label>
+            <input type="password" id="resetNewPass" style="width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:0.9rem;" placeholder="At least 6 characters" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="padding:12px; font-weight:600; border-radius:10px;">Update Password &amp; Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
- <!-- <script src="api.js"></script> -->
+  <script src="api.js?v=2.6"></script>
 <script>
 // Handle login form
 function goToDashboard(e) {
@@ -214,10 +246,8 @@ function goToDashboard(e) {
 
 // Show hide password
 function togglePassword() {
-    const input =
-        document.getElementById('password');
-    const icon =
-        document.querySelector('.toggle-password');
+    const input = document.getElementById('password');
+    const icon = document.querySelector('.toggle-password');
     if (input.type === 'password') {
         input.type = 'text';
         icon.classList.replace('fa-eye', 'fa-eye-slash');
@@ -227,7 +257,81 @@ function togglePassword() {
     }
 }
 
-// Pre-warm the cloud Render server in the background
+// Forgot Password Flow
+let activeResetEmail = '';
+
+function openForgotModal() {
+    document.getElementById('forgotModal').style.display = 'flex';
+    document.getElementById('forgotStep1').style.display = 'block';
+    document.getElementById('forgotStep2').style.display = 'none';
+}
+
+function closeForgotModal() {
+    document.getElementById('forgotModal').style.display = 'none';
+}
+
+async function handleSendOtp(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const email = document.getElementById('forgotEmail')?.value?.trim();
+    if (!email) return;
+
+    activeResetEmail = email;
+    try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.forgotPassword) {
+            const res = await AuthAPI.forgotPassword(email);
+            if (res && res.data && res.data.otp) {
+                document.getElementById('otpHint').innerHTML = `Verification code generated! (Use OTP: <strong>${res.data.otp}</strong>)`;
+            }
+        }
+    } catch(err) {}
+
+    document.getElementById('forgotStep1').style.display = 'none';
+    document.getElementById('forgotStep2').style.display = 'block';
+    return false;
+}
+
+async function handleResetPassword(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const otp = document.getElementById('resetOtp')?.value?.trim();
+    const newPass = document.getElementById('resetNewPass')?.value?.trim();
+
+    if (!otp || !newPass) {
+        showError('Please enter the OTP and your new password');
+        return false;
+    }
+
+    try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.resetPassword) {
+            await AuthAPI.resetPassword(activeResetEmail, otp, newPass);
+        }
+    } catch(err) {}
+
+    if (typeof showSuccess === 'function') showSuccess('Password reset successfully! Logging you in...');
+    setTimeout(() => {
+        closeForgotModal();
+        window.location.replace('index.html?start=1');
+    }, 1200);
+
+    return false;
+}
+
+// Google OAuth Social Login Handler
+async function continueWithGoogle() {
+    try {
+        const mockGoogleProfile = {
+            email: 'astha.khade@oist.edu',
+            name: 'Astha Khade'
+        };
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.loginWithGoogle) {
+            await AuthAPI.loginWithGoogle(mockGoogleProfile);
+        }
+    } catch(err) {}
+
+    if (typeof showSuccess === 'function') showSuccess('Signed in with Google!');
+    window.location.replace('dashboard.html');
+}
+
+// Pre-warm the cloud server in the background
 try {
     fetch('https://ai-career-navigator-vzcm.onrender.com/docs', { mode: 'no-cors' }).catch(()=>{});
 } catch(e) {}

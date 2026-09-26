@@ -245,3 +245,59 @@ def get_goals(student_id: str = Query("user_001")):
             "status": row["status"]
         }
     }
+
+
+class GoalItemToggleRequest(BaseModel):
+    student_id: str
+    goal_text: str
+    is_completed: bool
+
+@router.post("/goals/items/toggle")
+def toggle_individual_goal(payload: GoalItemToggleRequest):
+    """
+    Persists checked/unchecked state of an individual weekly goal item in SQLite.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO goal_items (student_id, goal_text, is_completed, updated_at)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(student_id, goal_text) DO UPDATE SET
+        is_completed = excluded.is_completed,
+        updated_at = CURRENT_TIMESTAMP
+    """, (payload.student_id, payload.goal_text, 1 if payload.is_completed else 0))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "goalText": payload.goal_text,
+        "isCompleted": payload.is_completed
+    }
+
+@router.get("/goals/items/{student_id}")
+def get_individual_goals(student_id: str):
+    """
+    Retrieves the persisted goal item states for the student.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT * FROM goal_items WHERE student_id = ?
+    """, (student_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    items = {
+        r["goal_text"]: bool(r["is_completed"])
+        for r in rows
+    }
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "items": items
+    }
+

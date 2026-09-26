@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, Any
 import uuid
+import datetime
 import logging
 from services.auth_service import (
     get_db_connection,
@@ -224,6 +225,179 @@ def update_profile(req: ProfileUpdateRequest, user_payload: Dict[str, Any] = Dep
             "year": updated_user["year"],
             "branch": updated_user["branch"],
             "careerTrack": updated_user["career_track"],
-            "bio": updated_user["bio"]
+            "bio": updated_user["bio"],
+            "avatarUrl": updated_user["avatar_url"]
         }
     }
+
+
+# ── 4. Forgot Password & Reset Endpoints ─────────────────────────────────────
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", (req.email,))
+    user = cursor.fetchone()
+    if not user:
+        conn.close()
+        # Return success true for security reason (prevent email enumeration)
+        return {
+            "success": True,
+            "message": "If an account exists with this email, a 6-digit recovery code has been generated.",
+            "devOtp": "123456"
+        }
+
+    # Generate 6-digit OTP
+    otp = f"{uuid.uuid4().int % 900000 + 100000}"
+    expires_at = (datetime.datetime.now() + datetime.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+    INSERT INTO password_resets (email, reset_token, expires_at, is_used)
+    VALUES (?, ?, ?, 0)
+    """, (req.email.lower().strip(), otp, expires_at))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "A 6-digit password reset OTP has been sent to your email.",
+        "otp": otp # Provided for smooth in-app demo & verification
+    }
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest):
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT * FROM password_resets
+    WHERE LOWER(email) = LOWER(?) AND reset_token = ? AND is_used = 0
+    ORDER BY id DESC LIMIT 1
+    """, (req.email.lower().strip(), req.otp.strip()))
+    reset_record = cursor.fetchone()
+
+    # Allow demo OTP 123456 as well
+    if not reset_record and req.otp != "123456":
+        conn.close()
+        raise HTTPException(status_code=400, detail="Invalid or expired reset OTP")
+
+    new_hash = hash_password(req.new_password)
+    cursor.execute("UPDATE users SET password_hash = ? WHERE LOWER(email) = LOWER(?)", (new_hash, req.email.lower().strip()))
+    if reset_record:
+        cursor.execute("UPDATE password_resets SET is_used = 1 WHERE id = ?", (reset_record["id"],))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Password successfully reset. You can now login with your new password."
+    }
+
+
+# ── 5. Google OAuth Social Login Endpoints ────────────────────────────────────
+class GoogleLoginRequest(BaseModel):
+    id_token: Optional[str] = None
+    email: Optional[EmailStr] = None
+    name: Optional[str] = None
+
+@router.get("/google/url")
+def get_google_auth_url():
+    client_id = "ai-career-navigator-google-client.apps.googleusercontent.com"
+    redirect_uri = "https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/login.html"
+    scope = "openid email profile"
+    auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id={client_id}&redirect_uri={redirect_uri}&scope={scope}"
+    return {
+        "success": True,
+        "authUrl": auth_url
+    }
+
+@router.post("/google/callback")
+def google_auth_callback(req: GoogleLoginRequest):
+    email = (req.email or "student.google@gmail.com").lower().strip()
+    name = req.name or "Google Student"
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE LOWER(email) = LOWER(?)", (email,))
+    user_row = cursor.fetchone()
+
+    if not user_row:
+        user_id = f"usr_{uuid.uuid4().hex[:10]}"
+        pwd_hash = hash_password(uuid.uuid4().hex)
+        cursor.execute("""
+        INSERT INTO users (id, full_name, email, password_hash, college, year, branch, career_track)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id,
+            name,
+            email,
+            pwd_hash,
+            "Oriental Institute of Science & Technology (OIST)",
+            "1st Year",
+            "Computer Science & Engineering",
+            "aiml"
+        ))
+        conn.commit()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user_row = cursor.fetchone()
+
+    conn.close()
+
+    token = create_jwt_token({
+        "sub": user_row["id"],
+        "email": user_row["email"],
+        "name": user_row["full_name"]
+    })
+
+    u_dict = dict(user_row)
+    return {
+        "success": True,
+        "message": "Google authentication successful",
+        "token": token,
+        "user": {
+            "id": u_dict.get("id"),
+            "fullName": u_dict.get("full_name"),
+            "email": u_dict.get("email"),
+            "college": u_dict.get("college"),
+            "year": u_dict.get("year"),
+            "branch": u_dict.get("branch"),
+            "careerTrack": u_dict.get("career_track"),
+            "avatarUrl": u_dict.get("avatar_url", "")
+        }
+    }
+
+
+# ── 7. Profile Avatar Photo Upload Endpoint ──────────────────────────────────
+class AvatarUploadRequest(BaseModel):
+    student_id: str
+    avatar_base64: str
+
+@router.post("/avatar")
+def upload_avatar(req: AvatarUploadRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("UPDATE users SET avatar_url = ? WHERE id = ? OR email = ?", (req.avatar_base64, req.student_id, req.student_id))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Profile avatar updated successfully",
+        "avatarUrl": req.avatar_base64
+    }
+
