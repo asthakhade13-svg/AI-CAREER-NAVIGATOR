@@ -23,3 +23,4 @@ class QuizSubmission(BaseModel):
 class ChatMessage(BaseModel):
     student_id: str
     message: str
+    api_key: Optional[str] = None

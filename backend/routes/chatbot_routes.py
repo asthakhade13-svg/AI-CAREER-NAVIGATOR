@@ -8,10 +8,10 @@ router = APIRouter()
 @router.post("/chat")
 async def api_mentor_chat(request: ChatMessage):
     """
-    Interact with the AI Mentor Chatbot.
+    Interact with the Generative AI Mentor Chatbot.
     """
     try:
-        response_text = mentor_chat(request.student_id, request.message)
+        response_text = mentor_chat(request.student_id, request.message, custom_api_key=request.api_key)
         return {"response": response_text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Chatbot service unavailable.")
+        raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")

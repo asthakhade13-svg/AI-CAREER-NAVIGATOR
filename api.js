@@ -406,44 +406,63 @@ const ChatAPI = {
 // ============================================
 const ProgressAPI = {
 
-    getDashboard: async () => {
-        const res = await apiCall('/progress/dashboard', 'GET');
-        if (res.status === 200 && res.data && res.data.success) return res;
-        return {
-            status: 200,
-            data: {
-                completedMilestones: 2,
-                totalMilestones: 8,
-                overallProgress: 25.0
-            }
-        };
-    },
-
     getStats: async () => {
-        const res = await apiCall('/progress/stats', 'GET');
-        if (res.status === 200 && res.data && res.data.success) return res;
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            const res = await mlApiCall(`/progress/stats?student_id=${encodeURIComponent(studentId)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.data) {
+                return { status: 200, data: res.data.data };
+            }
+        } catch(e) {}
         return {
             status: 200,
             data: {
                 completedMilestones: 2,
                 totalMilestones: 8,
                 streakDays: 7,
-                hoursLearned: 34
+                hoursLearned: 34,
+                skillsLearned: 5,
+                readinessScore: 78
             }
         };
+    },
+
+    checkin: async () => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            return await mlApiCall('/progress/checkin', 'POST', { student_id: studentId });
+        } catch(e) {
+            return { status: 200, streakDays: 7 };
+        }
+    },
+
+    toggleMilestone: async (trackKey, milestoneId, isCompleted) => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            return await mlApiCall('/progress/milestone/toggle', 'POST', {
+                student_id: studentId,
+                track_key: trackKey,
+                milestone_id: milestoneId,
+                is_completed: isCompleted
+            });
+        } catch(e) {
+            return { status: 200, isCompleted: isCompleted };
+        }
     }
 };
 
 // ============================================
-// AI MENTOR CHATBOT API
+// AI MENTOR GENERATIVE CHATBOT API
 // ============================================
 const ChatAPI = {
-    sendMessage: async (message, category = 'CAREER') => {
+    sendMessage: async (message, apiKey = null) => {
         const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        const savedKey = apiKey || localStorage.getItem('GEMINI_API_KEY') || null;
         try {
             const res = await mlApiCall('/chatbot/chat', 'POST', {
                 student_id: studentId,
-                message: message
+                message: message,
+                api_key: savedKey
             });
             if (res.status === 200 && res.data) {
                 return {
@@ -467,6 +486,31 @@ const ChatAPI = {
     }
 };
 const ChatbotAPI = ChatAPI;
+
+// ============================================
+// INTERNSHIPS API
+// ============================================
+const InternshipsAPI = {
+    getList: async (track = 'all', search = '') => {
+        try {
+            let query = `/internships/list?track=${encodeURIComponent(track)}`;
+            if (search) query += `&search=${encodeURIComponent(search)}`;
+            const res = await mlApiCall(query, 'GET');
+            if (res.status === 200 && res.data && res.data.internships) {
+                return res.data.internships;
+            }
+        } catch(e) {}
+        return null; // Signals frontend to use rich fallback
+    },
+
+    getDetail: async (id) => {
+        try {
+            const res = await mlApiCall(`/internships/${id}`, 'GET');
+            if (res.status === 200 && res.data) return res.data.internship;
+        } catch(e) {}
+        return null;
+    }
+};
 
 // ============================================
 // PROTECT PAGES

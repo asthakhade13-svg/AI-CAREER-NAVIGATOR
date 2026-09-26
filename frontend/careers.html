@@ -50,10 +50,10 @@
       </a>
     </nav>
     <div class="sidebar-user">
-      <div class="user-avatar">R</div>
+      <div class="user-avatar">A</div>
       <div class="user-info">
-        <strong>Rahul Sharma</strong>
-        <p>1st Year · CSE</p>
+        <strong>Astha Khade</strong>
+        <p>1st Year · CSE · OIST</p>
       </div>
        <a href="#" title="Logout" onclick="logout()">
     <i class="fas fa-sign-out-alt"></i>
@@ -77,7 +77,7 @@
           <i class="fas fa-bell"></i>
           <span class="notif-dot"></span>
         </div>
-        <div class="user-avatar sm">R</div>
+        <div class="user-avatar sm">A</div>
       </div>
     </header>
 
@@ -983,6 +983,16 @@ updateSidebarUser();
       }
     });
   });
+
+  // Dynamic User Info
+  const user = (typeof UserManager !== 'undefined' && UserManager.get()) || null;
+  if (user) {
+    const avatarEls = document.querySelectorAll('.user-avatar');
+    const initial = (user.fullName || 'Astha').charAt(0).toUpperCase();
+    avatarEls.forEach(el => el.textContent = initial);
+    const userNameEl = document.querySelector('.sidebar-user .user-info strong');
+    if (userNameEl && user.fullName) userNameEl.textContent = user.fullName;
+  }
 
   // Sidebar toggle
   function toggleSidebar() {

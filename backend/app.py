@@ -71,7 +71,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes, basic_info_routes, adaptive_quiz_routes
+from routes import quiz_routes, recommendation_routes, roadmap_routes, progress_routes, chatbot_routes, basic_info_routes, adaptive_quiz_routes, internship_routes
 
 # ── Health check (used by frontend ping) ─────────────────────────────────────
 @app.get("/health")
@@ -108,6 +108,7 @@ app.include_router(recommendation_routes.router,    prefix="/api/v1/recommendati
 app.include_router(roadmap_routes.router,           prefix="/api/v1/roadmap",            tags=["Roadmap"])
 app.include_router(progress_routes.router,          prefix="/api/v1/progress",           tags=["Progress"])
 app.include_router(chatbot_routes.router,           prefix="/api/v1/chatbot",            tags=["Chatbot"])
+app.include_router(internship_routes.router,        prefix="/api/v1/internships",        tags=["Internships"])
 
 # Mount static assets (images, etc.) from the frontend directory.
 # html=False so this NEVER intercepts / or /index.html — those are handled above.

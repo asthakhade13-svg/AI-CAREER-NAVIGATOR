@@ -53,10 +53,10 @@
       </a>
     </nav>
     <div class="sidebar-user">
-      <div class="user-avatar">R</div>
+      <div class="user-avatar">A</div>
       <div class="user-info">
-        <strong>Rahul Sharma</strong>
-        <p>1st Year · CSE</p>
+        <strong>Astha Khade</strong>
+        <p>1st Year · CSE · OIST</p>
       </div>
        <a href="#" title="Logout" onclick="logout()">
     <i class="fas fa-sign-out-alt"></i>
@@ -82,7 +82,7 @@
           <i class="fas fa-bell"></i>
           <span class="notif-dot"></span>
         </div>
-        <div class="user-avatar sm">R</div>
+        <div class="user-avatar sm">A</div>
       </div>
     </header>
 
@@ -345,17 +345,18 @@
 requireAuth();
 
 // Load user info
- // Update welcome message with user name
 const user = UserManager.get();
 if (user) {
-    const welcomeEl =
-        document.getElementById('welcomeMsg');
+    const welcomeEl = document.getElementById('welcomeMsg');
     if (welcomeEl) {
-        welcomeEl.innerHTML =
-            '👋 Hi <strong>' +
-            user.fullName.split(' ')[0] +
-            '</strong>! I\'m <strong>CareerBot</strong>,';
+        const name = user.fullName ? user.fullName.split(' ')[0] : 'Astha';
+        welcomeEl.innerHTML = '👋 Hi <strong>' + name + '</strong>! I\'m <strong>CareerBot</strong>, your AI career mentor.';
     }
+    const avatarEls = document.querySelectorAll('.user-avatar:not(.bot-avatar)');
+    const initial = (user.fullName || 'Astha').charAt(0).toUpperCase();
+    avatarEls.forEach(el => el.textContent = initial);
+    const userNameEl = document.querySelector('.sidebar-user .user-info strong');
+    if (userNameEl && user.fullName) userNameEl.textContent = user.fullName;
 }
 
 let messageCount = 0;
@@ -363,8 +364,7 @@ let isTyping = false;
 
 // Send message
 async function sendMessage() {
-    const input =
-        document.getElementById('userInput');
+    const input = document.getElementById('userInput');
     const text = input.value.trim();
 
     if (!text || isTyping) return;
@@ -377,26 +377,20 @@ async function sendMessage() {
     input.value = '';
     input.style.height = 'auto';
     messageCount++;
-    document.getElementById('msgCount')
-        .textContent = messageCount;
+    document.getElementById('msgCount').textContent = messageCount;
 
     showTyping();
 
     try {
-        const result = await ChatAPI.sendMessage(
-            text,
-            'CAREER'
-        );
+        const result = await ChatAPI.sendMessage(text);
 
         removeTyping();
 
-        if (result.status === 200 &&
-            result.data.success) {
-            addMessage(result.data.aiResponse, 'bot');
+        if (result.status === 200 && result.data && (result.data.success || result.data.aiResponse)) {
+            addMessage(result.data.aiResponse || result.data.reply || result.data.response, 'bot');
         } else {
             addMessage(
-                '⚠️ Sorry, I could not process that. ' +
-                'Please try again!',
+                result.data && result.data.message ? result.data.message : '⚠️ Sorry, I could not process that. Please try again!',
                 'bot'
             );
         }
@@ -404,8 +398,7 @@ async function sendMessage() {
     } catch (error) {
         removeTyping();
         addMessage(
-            '⚠️ Connection error. ' +
-            'Please check if backend is running!',
+            '⚠️ Connection error. Please check if backend is running!',
             'bot'
         );
     }
