@@ -128,17 +128,17 @@
       </div>
 
       <!-- ===== YOUR MATCH BANNER ===== -->
-      <div class="match-banner">
+      <div class="match-banner" id="topMatchBanner">
         <div class="match-banner-left">
           <div class="match-banner-icon">
             <i class="fas fa-star"></i>
           </div>
           <div>
-            <strong>Your Top Match: Web Development</strong>
-            <p>Based on your skill assessment — 92% match</p>
+            <strong id="topMatchTitle">Your Top Match: Web Development</strong>
+            <p id="topMatchSubtitle">Based on your skill assessment — 92% match</p>
           </div>
         </div>
-        <a href="roadmap.html" class="btn btn-primary">
+        <a href="roadmap.html" class="btn btn-primary" id="topMatchBtn">
           <i class="fas fa-map"></i>
           View Roadmap
         </a>
@@ -1028,12 +1028,26 @@ updateSidebarUser();
     if (userNameEl && user.fullName) userNameEl.textContent = user.fullName;
   }
 
+  // Dynamic Top Match Banner Binding
+  function bindMatchBanner() {
+    const careerName = localStorage.getItem('selected_career_name') || (user && user.careerTrack) || 'Web Development';
+    const careerMatch = localStorage.getItem('selected_career_match') || '92%';
+    
+    const titleEl = document.getElementById('topMatchTitle');
+    if (titleEl) titleEl.textContent = `Your Top Match: ${careerName}`;
+    const subEl = document.getElementById('topMatchSubtitle');
+    if (subEl) subEl.textContent = `Based on your skill assessment — ${careerMatch} match`;
+  }
+
   // Sidebar toggle
   function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
   }
 
-  document.addEventListener('DOMContentLoaded', loadSavedBookmarks);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSavedBookmarks();
+    bindMatchBanner();
+  });
   </script>
 
 </body>

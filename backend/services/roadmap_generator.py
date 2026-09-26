@@ -1,23 +1,101 @@
-from typing import List
+from typing import List, Optional
 
-
-def generate_roadmap(target_domain: str, missing_skills: List[str]) -> dict:
+def generate_roadmap(target_domain: str, missing_skills: Optional[List[str]] = None, timeframe: Optional[str] = "6 Months", custom_prompt: Optional[str] = None) -> dict:
     """
-    Generates a personalized learning roadmap.
-    Currently uses static templates, but can be extended to use Gemini.
+    Generates a structured, rich learning roadmap with milestones, topics, and free resources.
     """
-    roadmap = []
+    missing = missing_skills or []
+    dom_clean = target_domain.replace('_', ' ').title()
 
-    roadmap.append(f"Step 1: Understand the basics of {target_domain}.")
-
-    for i, skill in enumerate(missing_skills, start=2):
-        roadmap.append(f"Step {i}: Learn {skill}. Focus on foundational concepts and practical exercises.")
-
-    roadmap.append(f"Step {len(missing_skills) + 2}: Build 2-3 projects incorporating all these skills.")
-    roadmap.append(f"Step {len(missing_skills) + 3}: Create a GitHub portfolio and update your resume.")
-    roadmap.append(f"Step {len(missing_skills) + 4}: Apply for beginner internships in {target_domain}.")
+    if "ai" in target_domain.lower() or "ml" in target_domain.lower():
+        steps = [
+            {
+                "title": "Python Programming & Math Foundations",
+                "week": "Month 1 (Week 1–4)",
+                "desc": "Master Python syntax, NumPy, Pandas, Linear Algebra, and Calculus fundamentals for data pipelines.",
+                "topics": ["Python OOP & Iterators", "NumPy Vectorization", "Pandas DataFrames", "Matrix Multiplication & Gradients"],
+                "resources": [
+                    {"title": "Kaggle Python Course", "type": "Interactive", "url": "https://www.kaggle.com/learn/python"},
+                    {"title": "3Blue1Brown Essence of Linear Algebra", "type": "Video", "url": "https://www.youtube.com/@3blue1brown"}
+                ],
+                "status": "done"
+            },
+            {
+                "title": "Classical Machine Learning Algorithms",
+                "week": "Month 2 (Week 5–8)",
+                "desc": "Understand regression, decision trees, random forests, SVMs, and scikit-learn evaluation metrics.",
+                "topics": ["Supervised vs Unsupervised Learning", "Cross-Validation & GridSearch", "Hyperparameter Tuning", "Scikit-Learn Workflows"],
+                "resources": [
+                    {"title": "Andrew Ng Machine Learning Specialization", "type": "Course", "url": "https://www.coursera.org"},
+                    {"title": "StatQuest ML Fundamentals", "type": "Video", "url": "https://www.youtube.com/@statquest"}
+                ],
+                "status": "active"
+            },
+            {
+                "title": "Deep Learning & Neural Architectures",
+                "week": "Month 3 (Week 9–12)",
+                "desc": "Build neural networks with PyTorch, understand backpropagation, activation functions, and CNNs/RNNs.",
+                "topics": ["PyTorch Tensors & Autograd", "Loss Functions & Optimizers", "CNNs for Computer Vision", "Transformers Basics"],
+                "resources": [
+                    {"title": "Fast.ai Practical Deep Learning", "type": "Course", "url": "https://course.fast.ai"},
+                    {"title": "PyTorch Official Tutorials", "type": "Docs", "url": "https://pytorch.org/tutorials"}
+                ],
+                "status": "locked"
+            },
+            {
+                "title": "Generative AI, RAG & LLM Deployment",
+                "week": "Month 4–5 (Week 13–20)",
+                "desc": "Develop RAG pipelines with vector databases (FAISS/Chroma), LangChain, and deploy FastAPI endpoints.",
+                "topics": ["Embeddings & Vector Search", "LangChain & LlamaIndex", "Prompt Engineering", "FastAPI Serving & Docker"],
+                "resources": [
+                    {"title": "DeepLearning.AI LangChain Guide", "type": "Interactive", "url": "https://www.deeplearning.ai"},
+                    {"title": "Hugging Face NLP Course", "type": "Course", "url": "https://huggingface.co/learn"}
+                ],
+                "status": "locked"
+            }
+        ]
+    else:
+        steps = [
+            {
+                "title": f"{dom_clean} Core Foundations",
+                "week": "Month 1 (Week 1–4)",
+                "desc": f"Understand core architecture, essential syntax, and tooling for modern {dom_clean}.",
+                "topics": ["Foundational Theory", "Development Environment Setup", "Version Control with Git", "Core Syntax"],
+                "resources": [
+                    {"title": f"{dom_clean} MDN / Official Documentation", "type": "Docs", "url": "https://developer.mozilla.org"},
+                    {"title": "FreeCodeCamp Complete Course", "type": "Course", "url": "https://www.freecodecamp.org"}
+                ],
+                "status": "done"
+            },
+            {
+                "title": "Intermediate Architecture & State Management",
+                "week": "Month 2–3 (Week 5–12)",
+                "desc": "Implement modular components, asynchronous API integration, and performance optimizations.",
+                "topics": ["Component Lifecycle", "RESTful API Integration", "State Management", "Error Handling & Debugging"],
+                "resources": [
+                    {"title": "Roadmap.sh Developer Guides", "type": "Visual", "url": "https://roadmap.sh"},
+                    {"title": "JavaScript.info Modern Tutorial", "type": "Tutorial", "url": "https://javascript.info"}
+                ],
+                "status": "active"
+            },
+            {
+                "title": "Full-Stack Portfolio Projects & Testing",
+                "week": "Month 4–5 (Week 13–20)",
+                "desc": "Build 2 production-grade full-stack capstone projects with unit tests and continuous deployment.",
+                "topics": ["Project Architecture", "Unit & Integration Testing", "CI/CD Deployment", "Database Modeling"],
+                "resources": [
+                    {"title": "Full Stack Open (University of Helsinki)", "type": "Course", "url": "https://fullstackopen.com"},
+                    {"title": "GitHub Student Developer Pack", "type": "Tools", "url": "https://education.github.com/pack"}
+                ],
+                "status": "locked"
+            }
+        ]
 
     return {
         "domain": target_domain,
-        "roadmap": roadmap
+        "title": f"{dom_clean} AI Roadmap",
+        "timeframe": timeframe,
+        "customPrompt": custom_prompt or "Standard Track Progression",
+        "totalSteps": len(steps),
+        "steps": steps
     }

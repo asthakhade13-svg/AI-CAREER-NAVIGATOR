@@ -74,7 +74,10 @@
           Track your learning journey day by day
         </p>
       </div>
-      <div class="topbar-right">
+      <div class="topbar-right" style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-outline sm" onclick="openProgressReportModal()" style="font-size:0.8rem; padding:6px 14px; border-radius:12px; border-color:#4F46E5; color:#4F46E5; cursor:pointer;">
+          <i class="fas fa-file-pdf"></i> Export Report
+        </button>
         <div class="notif-btn">
           <i class="fas fa-bell"></i>
           <span class="notif-dot"></span>
@@ -183,54 +186,33 @@
             </div>
 
             <div class="bar-chart">
-              <div class="bar-chart-bars">
+              <div class="bar-chart-bars" id="weeklyBars">
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:40%">
-                    <span class="bar-tip">2h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:40%"><span class="bar-tip">2h</span></div>
                   <span class="bar-label">Mon</span>
                 </div>
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:60%">
-                    <span class="bar-tip">3h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:60%"><span class="bar-tip">3h</span></div>
                   <span class="bar-label">Tue</span>
                 </div>
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:30%">
-                    <span class="bar-tip">1.5h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:30%"><span class="bar-tip">1.5h</span></div>
                   <span class="bar-label">Wed</span>
                 </div>
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:80%">
-                    <span class="bar-tip">4h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:80%"><span class="bar-tip">4h</span></div>
                   <span class="bar-label">Thu</span>
                 </div>
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:50%">
-                    <span class="bar-tip">2.5h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:50%"><span class="bar-tip">2.5h</span></div>
                   <span class="bar-label">Fri</span>
                 </div>
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:100%">
-                    <span class="bar-tip">5h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:100%"><span class="bar-tip">5h</span></div>
                   <span class="bar-label">Sat</span>
                 </div>
                 <div class="bar-col">
-                  <div class="bar-fill purple"
-                       style="height:70%">
-                    <span class="bar-tip">3.5h</span>
-                  </div>
+                  <div class="bar-fill purple" style="height:70%"><span class="bar-tip">3.5h</span></div>
                   <span class="bar-label">Sun</span>
                 </div>
               </div>
@@ -238,15 +220,15 @@
 
             <div class="chart-footer">
               <div class="chart-foot-item">
-                <strong>21.5h</strong>
+                <strong id="statWeekHours">21.5h</strong>
                 <span>This week</span>
               </div>
               <div class="chart-foot-item">
-                <strong>+4.5h</strong>
+                <strong id="statVsLast">+4.5h</strong>
                 <span>vs last week</span>
               </div>
               <div class="chart-foot-item">
-                <strong>3h/day</strong>
+                <strong id="statDailyAvg">3h/day</strong>
                 <span>Daily average</span>
               </div>
             </div>
@@ -262,7 +244,7 @@
               </span>
             </div>
 
-            <div class="skill-progress-list">
+            <div class="skill-progress-list" id="skillProgressList">
 
               <div class="skill-prog-item">
                 <div class="skill-prog-header">
@@ -401,10 +383,9 @@
           <div class="card mt-3">
             <div class="card-header">
               <h4>📋 Recent Activity</h4>
-              <span class="see-all">View all</span>
+              <span class="see-all" style="cursor:pointer;" onclick="refreshActivities()">Refresh</span>
             </div>
-            <div class="activity-log">
-
+            <div class="activity-log" id="activityLogList">
               <div class="activity-item">
                 <div class="activity-icon green">
                   <i class="fas fa-check"></i>
@@ -415,51 +396,6 @@
                 </div>
                 <span class="activity-time">Today</span>
               </div>
-
-              <div class="activity-item">
-                <div class="activity-icon purple">
-                  <i class="fas fa-brain"></i>
-                </div>
-                <div class="activity-info">
-                  <strong>Took Skill Assessment Quiz</strong>
-                  <p>Scored 70% — Web Dev recommended</p>
-                </div>
-                <span class="activity-time">Yesterday</span>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon blue">
-                  <i class="fas fa-bookmark"></i>
-                </div>
-                <div class="activity-info">
-                  <strong>Saved: Google STEP Internship</strong>
-                  <p>Added to saved internships</p>
-                </div>
-                <span class="activity-time">2 days ago</span>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon orange">
-                  <i class="fas fa-trophy"></i>
-                </div>
-                <div class="activity-info">
-                  <strong>Badge Earned: Quick Learner 🏅</strong>
-                  <p>Completed 5 topics in one week</p>
-                </div>
-                <span class="activity-time">3 days ago</span>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon green">
-                  <i class="fas fa-map"></i>
-                </div>
-                <div class="activity-info">
-                  <strong>Started Web Dev Roadmap</strong>
-                  <p>Began your personalized learning path</p>
-                </div>
-                <span class="activity-time">1 week ago</span>
-              </div>
-
             </div>
           </div>
 
@@ -472,7 +408,7 @@
           <div class="card">
             <div class="card-header">
               <h4>🔥 Activity Calendar</h4>
-              <span class="badge badge-warning">
+              <span class="badge badge-warning" id="streakBadgeText">
                 7 Day Streak
               </span>
             </div>
@@ -522,83 +458,11 @@
           <div class="card mt-3">
             <div class="card-header">
               <h4>🏆 Badges Earned</h4>
-              <span class="badge badge-success">5 / 12</span>
+              <span class="badge badge-success" id="badgesCountBadge">5 / 12</span>
             </div>
 
-            <div class="badges-grid">
-
-              <div class="badge-item earned"
-                   title="First Steps">
-                <div class="badge-icon">🚀</div>
-                <span>First Steps</span>
-              </div>
-
-              <div class="badge-item earned"
-                   title="Quiz Taker">
-                <div class="badge-icon">🧠</div>
-                <span>Quiz Taker</span>
-              </div>
-
-              <div class="badge-item earned"
-                   title="Quick Learner">
-                <div class="badge-icon">⚡</div>
-                <span>Quick Learner</span>
-              </div>
-
-              <div class="badge-item earned"
-                   title="Streak Master">
-                <div class="badge-icon">🔥</div>
-                <span>Streak Master</span>
-              </div>
-
-              <div class="badge-item earned"
-                   title="Job Hunter">
-                <div class="badge-icon">💼</div>
-                <span>Job Hunter</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="Complete 10 topics">
-                <div class="badge-icon">🔒</div>
-                <span>Topic Master</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="30 day streak">
-                <div class="badge-icon">🔒</div>
-                <span>30 Day Streak</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="Apply to 10 internships">
-                <div class="badge-icon">🔒</div>
-                <span>Go-Getter</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="Score 90%+ on quiz">
-                <div class="badge-icon">🔒</div>
-                <span>Quiz Master</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="Complete roadmap">
-                <div class="badge-icon">🔒</div>
-                <span>Road Warrior</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="100 hours learned">
-                <div class="badge-icon">🔒</div>
-                <span>Century Club</span>
-              </div>
-
-              <div class="badge-item locked"
-                   title="Get an internship offer">
-                <div class="badge-icon">🔒</div>
-                <span>Intern Ready</span>
-              </div>
-
+            <div class="badges-grid" id="badgesGrid">
+              <!-- Dynamically populated -->
             </div>
           </div>
 
@@ -608,7 +472,7 @@
             <div class="overall-ring-wrap">
               <div class="overall-ring">
                 <div class="ring-inner">
-                  <strong>25%</strong>
+                  <strong id="overallPercentText">60%</strong>
                   <span>Complete</span>
                 </div>
               </div>
@@ -617,7 +481,7 @@
                   <i class="fas fa-check-circle"
                      style="color:var(--success)"></i>
                   <div>
-                    <strong>2</strong>
+                    <strong id="overallStepsDone">12</strong>
                     <p>Steps done</p>
                   </div>
                 </div>
@@ -625,7 +489,7 @@
                   <i class="fas fa-spinner"
                      style="color:var(--warning)"></i>
                   <div>
-                    <strong>1</strong>
+                    <strong id="overallStepsProgress">1</strong>
                     <p>In progress</p>
                   </div>
                 </div>
@@ -633,7 +497,7 @@
                   <i class="fas fa-lock"
                      style="color:var(--gray-400)"></i>
                   <div>
-                    <strong>5</strong>
+                    <strong id="overallStepsRemain">7</strong>
                     <p>Remaining</p>
                   </div>
                 </div>
@@ -648,16 +512,96 @@
     </div>
   </main>
 
-   <!-- <script src="api.js"></script> -->
+  <!-- Progress Report Summary Modal -->
+  <div class="report-modal-backdrop" id="progressReportModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:20px;">
+    <div class="report-modal-card" style="background:#ffffff; border-radius:20px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); padding:32px; border:1px solid #e2e8f0; font-family:var(--font-sans, system-ui, sans-serif);">
+      
+      <!-- Modal Top -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #f1f5f9; padding-bottom:16px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg, #4F46E5, #06B6D4); color:white; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:1.25rem; font-weight:700; color:#1e293b;">AI Career Navigator</h3>
+            <p style="margin:2px 0 0 0; font-size:0.82rem; color:#64748b;">Official Student Learning Progress & Performance Digest</p>
+          </div>
+        </div>
+        <button onclick="closeProgressReportModal()" style="background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer; padding:4px 8px;">✕</button>
+      </div>
+
+      <!-- Printable Card Content -->
+      <div id="printableReportArea">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; font-weight:600;">Student</span>
+            <h4 id="repStudentName" style="margin:2px 0 0 0; font-size:1.05rem; color:#0f172a;">Astha Khade</h4>
+            <p id="repTrackName" style="margin:2px 0 0 0; font-size:0.8rem; color:#4F46E5; font-weight:500;">AI / Machine Learning Engineer Track</p>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.75rem; color:#64748b; display:block;">Report Issued</span>
+            <strong id="repIssueDate" style="font-size:0.85rem; color:#334155;">Today</strong>
+            <span style="display:block; font-size:0.72rem; color:#10B981; font-weight:600; margin-top:2px;">● Verified Active</span>
+          </div>
+        </div>
+
+        <!-- 4-metric overview -->
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:24px;">
+          <div style="background:#EEF2FF; border-radius:12px; padding:12px; text-align:center;">
+            <span style="font-size:0.72rem; color:#4338CA; font-weight:600; display:block;">Streak</span>
+            <strong id="repStreak" style="font-size:1.3rem; color:#312E81;">7 Days</strong>
+          </div>
+          <div style="background:#ECFDF5; border-radius:12px; padding:12px; text-align:center;">
+            <span style="font-size:0.72rem; color:#065F46; font-weight:600; display:block;">Study Time</span>
+            <strong id="repHours" style="font-size:1.3rem; color:#064E3B;">34 hrs</strong>
+          </div>
+          <div style="background:#EFF6FF; border-radius:12px; padding:12px; text-align:center;">
+            <span style="font-size:0.72rem; color:#1E40AF; font-weight:600; display:block;">Milestones</span>
+            <strong id="repMilestones" style="font-size:1.3rem; color:#1E3A8A;">12 / 20</strong>
+          </div>
+          <div style="background:#FEF3C7; border-radius:12px; padding:12px; text-align:center;">
+            <span style="font-size:0.72rem; color:#92400E; font-weight:600; display:block;">Badges</span>
+            <strong id="repBadges" style="font-size:1.3rem; color:#78350F;">5 / 12</strong>
+          </div>
+        </div>
+
+        <!-- Progress status & skills -->
+        <h5 style="margin:0 0 10px 0; font-size:0.9rem; color:#1e293b; font-weight:700;">Top Verified Skills</h5>
+        <div id="repSkillsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- AI Digest Notes -->
+        <div style="background:#FAF5FF; border-left:4px solid #A855F7; border-radius:0 10px 10px 0; padding:12px 16px; margin-bottom:20px;">
+          <h6 style="margin:0 0 4px 0; color:#6B21A8; font-size:0.85rem; font-weight:700;">🤖 AI Mentor Evaluation</h6>
+          <p style="margin:0; font-size:0.82rem; color:#581C87; line-height:1.45;">
+            Excellent pace! Consistent daily study habit with top performance in core problem solving. Next milestone: Complete Capstone Architecture.
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px solid #f1f5f9; padding-top:16px;">
+        <button onclick="closeProgressReportModal()" style="padding:8px 18px; border-radius:10px; border:1px solid #cbd5e1; background:white; color:#475569; font-weight:600; cursor:pointer; font-size:0.85rem;">Close</button>
+        <button onclick="printProgressReport()" style="padding:8px 20px; border-radius:10px; border:none; background:linear-gradient(135deg, #4F46E5, #6366F1); color:white; font-weight:600; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-print"></i> Print / Save PDF
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 <script>
 // Protect page
 requireAuth();
+
+let currentTrackKey = 'aiml';
 
 // Load progress data from live API and SQLite
 async function loadProgress() {
     const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
     const name = user?.fullName || 'Astha Khade';
-    const track = user?.careerTrack || localStorage.getItem('selected_career') || 'aiml';
+    currentTrackKey = user?.careerTrack || localStorage.getItem('selected_career') || 'aiml';
 
     try {
         // 1. Fetch live stats
@@ -669,17 +613,43 @@ async function loadProgress() {
             if (statHeaders[1]) statHeaders[1].textContent = data.hoursLearned || '34';
             if (statHeaders[2]) statHeaders[2].textContent = `${data.completedMilestones || 12}/${data.totalMilestones || 20}`;
             if (statHeaders[3]) statHeaders[3].textContent = data.skillsLearned || '5';
+
+            const sBadge = document.getElementById('streakBadgeText');
+            if (sBadge) sBadge.textContent = `${data.streakDays || 7} Day Streak`;
+
+            const done = data.completedMilestones || 12;
+            const total = data.totalMilestones || 20;
+            const pct = Math.round((done / total) * 100);
+            const pText = document.getElementById('overallPercentText');
+            if (pText) pText.textContent = pct + '%';
+            const sDone = document.getElementById('overallStepsDone');
+            if (sDone) sDone.textContent = done;
+            const sProg = document.getElementById('overallStepsProgress');
+            if (sProg) sProg.textContent = Math.max(1, total - done > 0 ? 1 : 0);
+            const sRem = document.getElementById('overallStepsRemain');
+            if (sRem) sRem.textContent = Math.max(0, total - done - 1);
         }
     } catch(e) {
         console.warn('Progress stats notice:', e);
     }
 
+    // 2. Load weekly study hours activity
+    await loadWeeklyActivity();
+
+    // 3. Load skills breakdown
+    await loadSkillsProgress(currentTrackKey);
+
+    // 4. Load Badges
+    await loadBadges();
+
+    // 5. Load Recent Activities
+    await loadRecentActivities();
+
     try {
-        // 2. Fetch weekly AI digest
+        // 6. Fetch weekly AI digest
         if (typeof ReportAPI !== 'undefined' && ReportAPI.getWeeklyReport) {
-            const report = await ReportAPI.getWeeklyReport(user?.email || 'user_001', track, name);
+            const report = await ReportAPI.getWeeklyReport(user?.email || 'user_001', currentTrackKey, name);
             if (report && report.recommendedGoals) {
-                // Fetch saved goal items check state from SQLite
                 let savedItems = {};
                 try {
                     if (typeof GoalAPI !== 'undefined') savedItems = await GoalAPI.getItems();
@@ -695,6 +665,121 @@ async function loadProgress() {
     } catch(e) {
         console.warn('Weekly report notice:', e);
     }
+}
+
+// 1. Weekly Activity Chart
+async function loadWeeklyActivity() {
+    try {
+        const data = await ProgressAPI.getWeeklyActivity();
+        if (data && data.days) {
+            const barsContainer = document.getElementById('weeklyBars');
+            if (barsContainer) {
+                barsContainer.innerHTML = data.days.map(d => `
+                    <div class="bar-col">
+                      <div class="bar-fill purple" style="height:${Math.max(15, d.pct || 40)}%">
+                        <span class="bar-tip">${d.hours}h</span>
+                      </div>
+                      <span class="bar-label">${d.day}</span>
+                    </div>
+                `).join('');
+            }
+            const sWeek = document.getElementById('statWeekHours');
+            if (sWeek) sWeek.textContent = (data.totalHours || '21.5') + 'h';
+            const sVs = document.getElementById('statVsLast');
+            if (sVs) sVs.textContent = data.vsLastWeek || '+4.5h';
+            const sDaily = document.getElementById('statDailyAvg');
+            if (sDaily) sDaily.textContent = data.dailyAverage || '3h/day';
+        }
+    } catch(e) {
+        console.warn('Weekly activity error:', e);
+    }
+}
+
+// 2. Skills Progress
+async function loadSkillsProgress(trackKey) {
+    try {
+        const skills = await ProgressAPI.getSkillsProgress(trackKey);
+        const list = document.getElementById('skillProgressList');
+        if (list && skills && skills.length > 0) {
+            list.innerHTML = skills.map(s => `
+                <div class="skill-prog-item">
+                  <div class="skill-prog-header">
+                    <div class="skill-prog-left">
+                      <div class="skill-icon ${s.color || 'purple'}" style="${s.color?.startsWith('#') ? 'background:'+s.color+'20; color:'+s.color : ''}">
+                        <i class="fas ${s.icon || 'fa-code'}"></i>
+                      </div>
+                      <div>
+                        <strong>${s.name}</strong>
+                        <p>${s.category || 'Core Skill'}</p>
+                      </div>
+                    </div>
+                    <div class="skill-prog-right">
+                      <span class="skill-pct">${s.pct || s.percentage || 70}%</span>
+                      <span class="skill-change up">${s.change || '+5% ↑'}</span>
+                    </div>
+                  </div>
+                  <div class="skill-track">
+                    <div class="skill-fill animated" style="width:${s.pct || s.percentage || 70}%; background:${s.color?.startsWith('#') ? s.color : 'var(--primary)'}"></div>
+                  </div>
+                </div>
+            `).join('');
+        }
+    } catch(e) {
+        console.warn('Skills progress error:', e);
+    }
+}
+
+// 3. Badges Earned
+async function loadBadges() {
+    try {
+        const res = await ProgressAPI.getBadges();
+        const grid = document.getElementById('badgesGrid');
+        const badgeCount = document.getElementById('badgesCountBadge');
+        if (res && res.badges) {
+            if (badgeCount) badgeCount.textContent = `${res.unlockedCount || res.earned_count || 5} / ${res.totalBadges || res.total_count || 12}`;
+            if (grid) {
+                grid.innerHTML = res.badges.map(b => {
+                    const isEarned = b.isUnlocked || b.earned;
+                    return `
+                      <div class="badge-item ${isEarned ? 'earned' : 'locked'}" title="${b.desc || b.description || b.name}">
+                        <div class="badge-icon">${isEarned ? (b.icon || '🏆') : '🔒'}</div>
+                        <span>${b.name}</span>
+                      </div>
+                    `;
+                }).join('');
+            }
+        }
+    } catch(e) {
+        console.warn('Badges load error:', e);
+    }
+}
+
+// 4. Recent Activity Log
+async function loadRecentActivities() {
+    try {
+        const activities = await ProgressAPI.getRecentActivities();
+        const list = document.getElementById('activityLogList');
+        if (list && activities && activities.length > 0) {
+            list.innerHTML = activities.map(a => `
+                <div class="activity-item">
+                  <div class="activity-icon ${a.color || 'purple'}">
+                    <i class="fas ${a.icon || 'fa-check'}"></i>
+                  </div>
+                  <div class="activity-info">
+                    <strong>${a.title}</strong>
+                    <p>${a.description || ''}</p>
+                  </div>
+                  <span class="activity-time">${a.timestamp || a.time_ago || 'Today'}</span>
+                </div>
+            `).join('');
+        }
+    } catch(e) {
+        console.warn('Activities load error:', e);
+    }
+}
+
+async function refreshActivities() {
+    await loadRecentActivities();
 }
 
 // Weekly goals
@@ -759,13 +844,12 @@ function resetGoals() {
 
 // Streak calendar
 function buildCalendar() {
-    const cal =
-        document.getElementById('streakCalendar');
+    const cal = document.getElementById('streakCalendar');
     if (!cal) return;
 
+    cal.innerHTML = '';
     const days = ['S','M','T','W','T','F','S'];
-    const labelRow =
-        document.createElement('div');
+    const labelRow = document.createElement('div');
     labelRow.className = 'cal-labels';
     days.forEach(d => {
         const span = document.createElement('span');
@@ -789,8 +873,7 @@ function buildCalendar() {
             active = Math.random() > 0.55;
         }
 
-        dot.className =
-            `cal-dot ${active ? 'active' : ''}`;
+        dot.className = `cal-dot ${active ? 'active' : ''}`;
 
         if (active) {
             const intensity = Math.random();
@@ -806,20 +889,62 @@ function buildCalendar() {
     cal.appendChild(grid);
 }
 
+// Progress Report Modal Functions
+async function openProgressReportModal() {
+    const modal = document.getElementById('progressReportModal');
+    if (!modal) return;
+    
+    const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+    const name = user?.fullName || 'Astha Khade';
+    const track = user?.careerTrack || localStorage.getItem('selected_career_name') || 'AI / Machine Learning Engineer';
+    
+    const nameEl = document.getElementById('repStudentName');
+    if (nameEl) nameEl.textContent = name;
+    const trackEl = document.getElementById('repTrackName');
+    if (trackEl) trackEl.textContent = `${track} Pathway`;
+    const dateEl = document.getElementById('repIssueDate');
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+    // Populate skills inside report
+    try {
+        const skills = await ProgressAPI.getSkillsProgress(currentTrackKey);
+        const sContainer = document.getElementById('repSkillsList');
+        if (sContainer && skills) {
+            sContainer.innerHTML = skills.slice(0, 4).map(s => `
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem;">
+                  <span style="color:#334155; font-weight:600;"><i class="fas ${s.icon || 'fa-code'}" style="margin-right:6px; color:#4F46E5;"></i> ${s.name}</span>
+                  <span style="color:#64748b; font-weight:600;">${s.pct || s.percentage || 75}%</span>
+                </div>
+                <div style="width:100%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
+                  <div style="width:${s.pct || s.percentage || 75}%; height:100%; background:#4F46E5; border-radius:3px;"></div>
+                </div>
+            `).join('');
+        }
+    } catch(e) {}
+
+    modal.style.display = 'flex';
+}
+
+function closeProgressReportModal() {
+    const modal = document.getElementById('progressReportModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function printProgressReport() {
+    window.print();
+}
+
 // Sidebar toggle
 function toggleSidebar() {
-    document.getElementById('sidebar')
-        .classList.toggle('open');
+    document.getElementById('sidebar').classList.toggle('open');
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded',
-    async () => {
-        await loadProgress();
-        buildCalendar();
-        renderGoals();
-    }
-);
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadProgress();
+    buildCalendar();
+    renderGoals();
+});
 </script>
 
 </body>

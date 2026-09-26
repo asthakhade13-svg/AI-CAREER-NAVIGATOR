@@ -408,8 +408,28 @@ async function sendMessage() {
 
 
 
+// Load chat history from backend SQLite
+async function loadChatHistory() {
+    try {
+        const history = await ChatAPI.getHistory();
+        if (history && history.length > 0) {
+            const qp = document.getElementById('quickPrompts');
+            if (qp) qp.style.display = 'none';
+
+            history.forEach(m => {
+                addMessage(m.content, m.sender, false);
+            });
+            messageCount = history.length;
+            const countEl = document.getElementById('msgCount');
+            if (countEl) countEl.textContent = messageCount;
+        }
+    } catch(e) {
+        console.warn('History load notice:', e);
+    }
+}
+
 // Add message to chat
-function addMessage(text, sender) {
+function addMessage(text, sender, autoScroll = true) {
     const container =
         document.getElementById('chatMessages');
     const now = new Date();
@@ -450,7 +470,7 @@ function addMessage(text, sender) {
     }
 
     container.appendChild(wrapper);
-    scrollToBottom();
+    if (autoScroll) scrollToBottom();
 }
 
 // Typing indicator
@@ -521,7 +541,7 @@ function fillPrompt(text) {
     autoResize(input);
 }
 
-function clearChat() {
+async function clearChat() {
     if (!confirm('Clear chat history?')) return;
     const container =
         document.getElementById('chatMessages');
@@ -529,6 +549,13 @@ function clearChat() {
     const qp =
         document.getElementById('quickPrompts');
     if (qp) qp.style.display = 'block';
+    
+    try {
+        if (typeof ChatAPI !== 'undefined' && ChatAPI.clearHistory) {
+            await ChatAPI.clearHistory();
+        }
+    } catch(e) {}
+
     addMessage(
         'Chat cleared! 👋 How can I help you?',
         'bot'
@@ -542,6 +569,10 @@ function toggleSidebar() {
     document.getElementById('sidebar')
         .classList.toggle('open');
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
+});
 </script>
 
 </body>

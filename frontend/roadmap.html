@@ -90,7 +90,12 @@
 
         <!-- Career Path Selector -->
         <div class="path-selector card">
-          <h4 class="mb-2">🎯 Your Career Path</h4>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="margin:0;">🎯 Your Career Path</h4>
+            <button class="btn btn-outline sm" style="font-size:0.78rem; padding:6px 12px; border-radius:12px; border-color:#4F46E5; color:#4F46E5;" onclick="openAiRoadmapModal()">
+              <i class="fas fa-magic"></i> Customize with AI
+            </button>
+          </div>
 
           <div class="path-options">
             <button
@@ -329,6 +334,49 @@
 
       </div>
 
+    </div>
+
+    <!-- ===== AI ROADMAP CUSTOMIZER MODAL ===== -->
+    <div id="aiRoadmapModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+      <div class="card" style="max-width:500px; width:100%; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative; background:#ffffff; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:1.25rem; margin:0;"><i class="fas fa-robot" style="color:var(--primary); margin-right:8px;"></i> AI Custom Roadmap Generator</h3>
+          <button onclick="closeAiRoadmapModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        </div>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:16px;">Tell CareerNav your available timeframe or current skills, and our AI will adapt your milestone pacing.</p>
+        <form onsubmit="handleAiRoadmapSubmit(event)" style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Target Career Track</label>
+            <select id="aiRoadmapTrack" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;">
+              <option value="webdev">Full-Stack Web Development</option>
+              <option value="aiml">AI / Machine Learning</option>
+              <option value="uiux">UI/UX Design</option>
+              <option value="cyber">Cybersecurity</option>
+              <option value="data">Data Science</option>
+              <option value="cloud">Cloud / DevOps</option>
+              <option value="mobile">Mobile App Development</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Available Timeframe</label>
+            <select id="aiRoadmapTimeframe" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;">
+              <option value="3 Months (Intensive)">3 Months (Intensive / Fast-Track)</option>
+              <option value="6 Months (Standard)" selected>6 Months (Standard Pace)</option>
+              <option value="9 Months (Deep Specialization)">9 Months (Deep Specialization)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Custom Prompt / Skills You Already Know</label>
+            <textarea id="aiRoadmapCustomPrompt" rows="3" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; resize:none;" placeholder="e.g. I already know basic Python and Git, focus heavily on RAG and vector databases for summer placement."></textarea>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-full" style="padding:12px; font-weight:700;">
+              <i class="fas fa-sparkles"></i> Generate AI Roadmap
+            </button>
+            <button type="button" class="btn btn-outline" style="padding:12px 18px;" onclick="closeAiRoadmapModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </main>
 
@@ -1204,21 +1252,80 @@ requireAuth();
   }
 
   // ========================================
-  // MARK COMPLETE
+  // MARK COMPLETE (With Backend Persistence)
   // ========================================
-  function markComplete() {
+  async function markComplete() {
     const steps = roadmaps[currentPath].steps;
     const activeIdx = steps.findIndex(
       s => s.status === 'active'
     );
     if (activeIdx === -1) return;
 
-    steps[activeIdx].status = 'done';
+    const completedStep = steps[activeIdx];
+    completedStep.status = 'done';
+    const milestoneId = (completedStep.title || `step_${activeIdx}`).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
     if (activeIdx + 1 < steps.length) {
       steps[activeIdx + 1].status = 'active';
     }
 
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.toggleMilestone) {
+        await RoadmapAPI.toggleMilestone(currentPath, milestoneId, true);
+      }
+    } catch(e) {
+      console.warn('Milestone toggle notice:', e);
+    }
+
+    if (typeof showSuccess === 'function') showSuccess(`Milestone "${completedStep.title}" completed!`);
     renderRoadmap(currentPath);
+  }
+
+  // ========================================
+  // AI CUSTOM ROADMAP MODAL HANDLERS
+  // ========================================
+  function openAiRoadmapModal() {
+    const modal = document.getElementById('aiRoadmapModal');
+    if (modal) {
+      document.getElementById('aiRoadmapTrack').value = currentPath || 'webdev';
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeAiRoadmapModal() {
+    const modal = document.getElementById('aiRoadmapModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function handleAiRoadmapSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const track = document.getElementById('aiRoadmapTrack')?.value || 'webdev';
+    const timeframe = document.getElementById('aiRoadmapTimeframe')?.value || '6 Months';
+    const prompt = document.getElementById('aiRoadmapCustomPrompt')?.value || '';
+
+    closeAiRoadmapModal();
+    if (typeof showSuccess === 'function') showSuccess('Generating custom AI roadmap pacing...');
+
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.generate) {
+        const res = await RoadmapAPI.generate(track, [], timeframe, prompt);
+        if (res && res.data && res.data.steps) {
+          roadmaps[track] = {
+            title: res.data.title || `${track.toUpperCase()} AI Roadmap`,
+            desc: `Custom AI Pacing (${timeframe}) — ${prompt || 'Tailored to your background'}`,
+            duration: timeframe,
+            steps: res.data.steps
+          };
+          switchPath(track, document.querySelector(`.path-btn[onclick*="${track}"]`) || document.querySelector('.path-btn'));
+          if (typeof showSuccess === 'function') showSuccess('AI Roadmap generated successfully!');
+          return;
+        }
+      }
+    } catch(err) {
+      console.warn('AI Roadmap error:', err);
+    }
+
+    switchPath(track, document.querySelector(`.path-btn[onclick*="${track}"]`) || document.querySelector('.path-btn'));
   }
 
   // ========================================
@@ -1253,7 +1360,13 @@ requireAuth();
       const college = user.collegeName ? ` · ${user.collegeName}` : '';
       const initial = name.charAt(0).toUpperCase() || 'S';
 
-      document.querySelectorAll('.user-avatar').forEach(av => av.textContent = initial);
+      document.querySelectorAll('.user-avatar').forEach(av => {
+        if (user.avatarUrl && user.avatarUrl.startsWith('data:image')) {
+          av.innerHTML = `<img src="${user.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        } else {
+          av.textContent = initial;
+        }
+      });
       const nameEl = document.querySelector('.user-info strong');
       if (nameEl) nameEl.textContent = name;
       const subEl = document.querySelector('.user-info p');

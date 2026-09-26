@@ -163,6 +163,71 @@ def init_sqlite_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # 10. Milestones Progress Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS milestones_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            track_key TEXT NOT NULL,
+            milestone_id TEXT NOT NULL,
+            is_completed INTEGER DEFAULT 0,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, track_key, milestone_id)
+        )
+        """)
+
+        # 11. Student Badges Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS student_badges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            badge_id TEXT NOT NULL,
+            badge_name TEXT NOT NULL,
+            icon TEXT DEFAULT '🏆',
+            description TEXT DEFAULT '',
+            is_unlocked INTEGER DEFAULT 1,
+            unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, badge_id)
+        )
+        """)
+
+        # 12. Activity Logs Stream Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            action_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            icon TEXT DEFAULT 'fa-check',
+            color TEXT DEFAULT 'green',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # 13. Study Logs Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS study_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            day_name TEXT NOT NULL,
+            hours_spent REAL DEFAULT 2.0,
+            log_date DATE DEFAULT (DATE('now')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # 14. Chat Messages History Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            sender TEXT NOT NULL,
+            message_text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")
