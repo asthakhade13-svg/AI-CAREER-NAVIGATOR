@@ -87,7 +87,8 @@ from routes import (
     adaptive_quiz_routes,
     internship_routes,
     auth_routes,
-    certificate_routes
+    certificate_routes,
+    project_routes
 )
 
 # ── Health check (used by frontend ping) ─────────────────────────────────────
@@ -120,6 +121,7 @@ def serve_index_html():
 # Include API routers
 app.include_router(auth_routes.router)
 app.include_router(certificate_routes.router)
+app.include_router(project_routes.router)
 app.include_router(basic_info_routes.router,        prefix="/api/v1/basic_info",         tags=["Basic Info"])
 app.include_router(adaptive_quiz_routes.router,     prefix="/api/v1/quiz/adaptive",      tags=["Adaptive Quiz"])
 app.include_router(quiz_routes.router,              prefix="/api/v1/quiz",               tags=["Quiz"])

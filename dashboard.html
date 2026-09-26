@@ -500,6 +500,20 @@
             </div>
           </div>
 
+          <!-- AI Portfolio & Capstone Blueprints Card -->
+          <div class="card mt-3" style="border: 1.5px solid rgba(79,70,229,0.25); background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(245,243,255,0.98));">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h4 style="margin:0;"><i class="fas fa-laptop-code" style="color:#4F46E5; margin-right:6px;"></i> Capstone Blueprints</h4>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">AI-Guided Portfolio Projects with Architecture</p>
+              </div>
+              <span class="badge badge-primary sm" id="projectTrackBadge">AI/ML Track</span>
+            </div>
+            <div id="recommendedProjectsList" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
           <!-- Internship Card (Marked Coming Soon) -->
           <div class="card mt-3">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -686,6 +700,14 @@
             <button type="button" class="btn btn-outline" style="padding:12px 18px;" onclick="closeGoalsModal()">Cancel</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- ===== PROJECT BLUEPRINT MODAL ===== -->
+    <div id="projectModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
+      <div class="card" style="max-width:640px; width:100%; border-radius:22px; box-shadow:0 25px 70px rgba(0,0,0,0.3); position:relative; max-height:90vh; overflow-y:auto; padding:24px;">
+        <button onclick="closeProjectModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        <div id="projectModalContent"></div>
       </div>
     </div>
 
@@ -989,6 +1011,8 @@ function selectCareerAndAdapt(careerName, matchPct) {
 
     loadCareerRecommendations();
     adaptDashboardToSelectedCareer();
+    loadTrackProjects();
+    loadWeeklyReport();
 }
 
 // Function to select career and navigate to Roadmap page
@@ -1376,10 +1400,128 @@ function shareCertificateLinkedIn() {
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${text}`, '_blank');
 }
 
+// ── AI Capstone Project Blueprints Logic ────────────────────────────────────
+let currentTrackProjects = [];
+
+async function loadTrackProjects() {
+    const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
+    const trackKey = getCareerPathKey(rawSelected);
+    const badgeEl = document.getElementById('projectTrackBadge');
+    if (badgeEl) badgeEl.textContent = rawSelected.replace('Specialization', '').trim() + ' Track';
+
+    const container = document.getElementById('recommendedProjectsList');
+    if (!container) return;
+
+    try {
+        let projects = null;
+        if (typeof ProjectAPI !== 'undefined' && ProjectAPI.getRecommendations) {
+            projects = await ProjectAPI.getRecommendations(trackKey);
+        }
+
+        if (!projects || projects.length === 0) {
+            projects = [
+                {
+                    id: "proj_aiml_rag",
+                    title: "Autonomous Multi-Document RAG Knowledge Assistant",
+                    difficulty: "Intermediate",
+                    duration: "2 - 3 Weeks",
+                    description: "End-to-end Retrieval-Augmented Generation system with vector embeddings & local LLM reasoning.",
+                    techStack: ["Python", "FastAPI", "LangChain", "FAISS", "HuggingFace"],
+                    architecture: "Client Web UI -> FastAPI API Gateway -> FAISS Semantic Vector Index -> LLM Context Synthesizer -> Streaming Answer",
+                    folderStructure: "rag-assistant/\n├── backend/\n│   ├── app.py\n│   └── services/\n├── frontend/\n└── README.md",
+                    milestones: [
+                        "Step 1: Document parser & text chunking pipeline",
+                        "Step 2: Dense embeddings generation with FAISS",
+                        "Step 3: Context-injected LLM response streamer"
+                    ],
+                    resumeBulletPoint: "Architected an end-to-end RAG system indexing 500+ documents with FAISS and FastAPI, reducing search latency by 45%."
+                }
+            ];
+        }
+
+        currentTrackProjects = projects;
+        container.innerHTML = projects.slice(0, 2).map((p, i) => `
+            <div style="background: white; border: 1px solid rgba(79,70,229,0.15); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: transform 0.2s;" onclick="openProjectModal('${p.id}')">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <strong style="font-size: 0.88rem; color: #1e293b; display: block; flex: 1;">${p.title}</strong>
+                    <span class="badge badge-primary sm" style="font-size: 0.7rem; margin-left: 8px;">${p.difficulty}</span>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 8px 0; line-height: 1.4;">${p.description.substring(0, 85)}...</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.72rem; color: #4F46E5; font-weight: 600;">🛠️ ${(p.techStack || []).slice(0, 3).join(', ')}</span>
+                    <button class="btn btn-outline sm" style="padding: 3px 10px; font-size: 0.72rem; border-radius: 12px;" onclick="event.stopPropagation(); openProjectModal('${p.id}')">
+                        Blueprint →
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch(e) {
+        console.warn('Track projects notice:', e);
+    }
+}
+
+function openProjectModal(projId) {
+    const proj = currentTrackProjects.find(p => p.id === projId) || currentTrackProjects[0];
+    if (!proj) return;
+
+    const modal = document.getElementById('projectModal');
+    const content = document.getElementById('projectModalContent');
+    if (!modal || !content) return;
+
+    content.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div>
+                <span class="badge badge-primary sm" style="margin-bottom: 6px;">${proj.difficulty} · ${proj.duration}</span>
+                <h3 style="font-size: 1.25rem; color: #1e293b; margin: 4px 0;">${proj.title}</h3>
+            </div>
+        </div>
+        
+        <p style="font-size: 0.88rem; color: #475569; line-height: 1.5; margin-bottom: 16px;">${proj.description}</p>
+        
+        <div style="margin-bottom: 16px;">
+            <strong style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">Tech Stack:</strong>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${(proj.techStack || []).map(t => `<span class="badge-tag" style="background: rgba(79,70,229,0.08); color: #4F46E5; padding: 4px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600;">${t}</span>`).join('')}
+            </div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+            <strong style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">System Architecture:</strong>
+            <p style="font-size: 0.82rem; font-family: monospace; color: #334155; margin: 0;">${proj.architecture}</p>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <strong style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">Milestone Implementation Checklist:</strong>
+            <ul style="margin: 0; padding-left: 18px; font-size: 0.82rem; color: #475569; display: flex; flex-direction: column; gap: 4px;">
+                ${(proj.milestones || []).map(m => `<li>${m}</li>`).join('')}
+            </ul>
+        </div>
+
+        <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10B981; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px;">
+            <strong style="font-size: 0.8rem; color: #065F46; display: block; margin-bottom: 2px;">💼 Ready-to-use Resume Impact Bullet:</strong>
+            <p style="font-size: 0.8rem; color: #047857; margin: 0;">"${proj.resumeBulletPoint || ''}"</p>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="btn btn-outline sm" onclick="closeProjectModal()" style="padding: 8px 16px;">Close</button>
+            <a href="roadmap.html" class="btn btn-primary sm" style="padding: 8px 16px; text-decoration: none;">Build in Roadmap →</a>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function closeProjectModal() {
+    const modal = document.getElementById('projectModal');
+    if (modal) modal.style.display = 'none';
+}
+
 // ---- Auto Init ----
 async function initDashboardWithAllFeatures() {
     await loadDashboard();
     await loadWeeklyReport();
+    await loadTrackProjects();
 }
 
 document.addEventListener('DOMContentLoaded', initDashboardWithAllFeatures);

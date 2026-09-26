@@ -508,6 +508,17 @@ const InternshipsAPI = {
             const res = await mlApiCall(`/internships/${id}`, 'GET');
             if (res.status === 200 && res.data) return res.data.internship;
         } catch(e) {}
+// ============================================
+// AI PROJECT & CAPSTONE BLUEPRINT API
+// ============================================
+const ProjectAPI = {
+    getRecommendations: async (track = 'aiml') => {
+        try {
+            const res = await mlApiCall(`/projects/recommend?track=${encodeURIComponent(track)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.projects) {
+                return res.data.projects;
+            }
+        } catch(e) {}
         return null;
     }
 };

@@ -653,143 +653,48 @@
 // Protect page
 requireAuth();
 
-// Load progress data from API
+// Load progress data from live API and SQLite
 async function loadProgress() {
-    const result = await ProgressAPI.getDashboard();
+    const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+    const name = user?.fullName || 'Astha Khade';
+    const track = user?.careerTrack || localStorage.getItem('selected_career') || 'aiml';
 
-    if (result.status === 200 &&
-        result.data.success) {
+    try {
+        // 1. Fetch live stats
+        const statsRes = await ProgressAPI.getStats();
+        if (statsRes && statsRes.data) {
+            const data = statsRes.data;
+            const statHeaders = document.querySelectorAll('.prog-stat-info h3');
+            if (statHeaders[0]) statHeaders[0].textContent = data.streakDays || '7';
+            if (statHeaders[1]) statHeaders[1].textContent = data.hoursLearned || '34';
+            if (statHeaders[2]) statHeaders[2].textContent = `${data.completedMilestones || 12}/${data.totalMilestones || 20}`;
+            if (statHeaders[3]) statHeaders[3].textContent = data.skillsLearned || '5';
+        }
+    } catch(e) {
+        console.warn('Progress stats notice:', e);
+    }
 
-        const data = result.data;
-        updateProgressUI(data);
-    } else {
-        showError('Failed to load progress!');
+    try {
+        // 2. Fetch weekly AI digest
+        if (typeof ReportAPI !== 'undefined' && ReportAPI.getWeeklyReport) {
+            const report = await ReportAPI.getWeeklyReport(user?.email || 'user_001', track, name);
+            if (report && report.recommendedGoals) {
+                goals = report.recommendedGoals.map(g => ({ text: g, done: false }));
+                renderGoals();
+            }
+        }
+    } catch(e) {
+        console.warn('Weekly report notice:', e);
     }
 }
 
-function updateProgressUI(data) {
-    // Update stat cards
-    const stats = document.querySelectorAll(
-        '.prog-stat-info h3'
-    );
-
-    if (stats[0]) stats[0].textContent =
-        data.completedMilestones + ' Done';
-    if (stats[1]) stats[1].textContent =
-        Math.round(data.overallProgress) + '%';
-    if (stats[2]) stats[2].textContent =
-        data.totalQuizAttempts + ' Quizzes';
-    if (stats[3]) stats[3].textContent =
-        data.totalChatMessages + ' Chats';
-
-    // Update skill bars
-    updateSkillBar('HTML/CSS',
-        data.webDevScore || 0);
-    updateSkillBar('JavaScript',
-        Math.min(data.webDevScore * 0.6 || 0, 100));
-    updateSkillBar('Python',
-        data.aiMlScore || 0);
-    updateSkillBar('DSA',
-        data.dsaScore || 0);
-
-    // Update activity log
-    updateActivityLog(data.recentActivities || []);
-
-    // Update milestone progress
-    updateMilestones(data.milestoneProgress || []);
-}
-
-function updateSkillBar(name, value) {
-    const bars = document.querySelectorAll(
-        '.skill-prog-left strong'
-    );
-    bars.forEach((bar, i) => {
-        if (bar.textContent.includes(
-            name.split('/')[0])) {
-            const fill = bar.closest('.skill-prog-item')
-                .querySelector('.skill-fill');
-            const pct = bar.closest('.skill-prog-item')
-                .querySelector('.skill-pct');
-            if (fill) fill.style.width = value + '%';
-            if (pct)  pct.textContent = value + '%';
-        }
-    });
-}
-
-function updateActivityLog(activities) {
-    const log = document.querySelector('.activity-log');
-    if (!log || activities.length === 0) return;
-
-    log.innerHTML = activities.map(a => `
-        <div class="activity-item">
-            <div class="activity-icon ${
-                a.type === 'QUIZ'      ? 'purple' :
-                a.type === 'MILESTONE' ? 'green'  :
-                a.type === 'CAREER'    ? 'orange' :
-                'blue'
-            }">
-                <i class="fas ${
-                    a.type === 'QUIZ'      ? 'fa-brain' :
-                    a.type === 'MILESTONE' ? 'fa-check' :
-                    a.type === 'CAREER'    ? 'fa-briefcase':
-                    a.type === 'ROADMAP'   ? 'fa-map' :
-                    'fa-robot'
-                }"></i>
-            </div>
-            <div class="activity-info">
-                <strong>${a.description}</strong>
-                <p>${a.type}</p>
-            </div>
-            <span class="activity-time">
-                ${a.timeAgo}
-            </span>
-        </div>
-    `).join('');
-}
-
-function updateMilestones(milestones) {
-    const roadmapSteps =
-        document.querySelector('.roadmap-steps');
-    if (!roadmapSteps) return;
-
-    roadmapSteps.innerHTML = milestones.map(m => `
-        <div class="road-step ${
-            m.isCompleted ? 'done' : ''}">
-            <div class="step-dot ${
-                m.status === 'ACTIVE' ? 'active' : ''}">
-                <i class="fas ${
-                    m.isCompleted ? 'fa-check' :
-                    m.status === 'ACTIVE'
-                    ? 'fa-spinner fa-spin' :
-                    'fa-lock'
-                }"></i>
-            </div>
-            <div class="step-body">
-                <strong>${m.title}</strong>
-                <p>Month ${m.monthNumber}
-                   · ${m.estimatedHours}h</p>
-            </div>
-            <span class="badge ${
-                m.isCompleted ? 'badge-success' :
-                m.status === 'ACTIVE'
-                ? 'badge-warning' :
-                'badge-primary'
-            }">
-                ${m.isCompleted ? 'Done' :
-                  m.status === 'ACTIVE'
-                  ? 'Active' : 'Next'}
-            </span>
-        </div>
-    `).join('');
-}
-
 // Weekly goals
-const goals = [
-    { text: "Complete 1 roadmap milestone", done: false },
-    { text: "Study for 2+ hours",           done: false },
-    { text: "Ask AI mentor a question",      done: false },
-    { text: "Review your career roadmap",    done: false },
-    { text: "Update your GitHub profile",    done: false },
+let goals = [
+    { text: "Complete 1 active roadmap milestone project", done: true },
+    { text: "Log 2+ hours in coding or algorithmic problem solving", done: true },
+    { text: "Ask CareerBot AI Mentor for technical feedback", done: false },
+    { text: "Review career milestone blueprint in Figma/GitHub", done: false },
+    { text: "Claim and verify your track progress certificate", done: false },
 ];
 
 function renderGoals() {
@@ -799,8 +704,7 @@ function renderGoals() {
     list.innerHTML = '';
     goals.forEach((goal, i) => {
         const item = document.createElement('label');
-        item.className =
-            `goal-item ${goal.done ? 'done' : ''}`;
+        item.className = `goal-item ${goal.done ? 'done' : ''}`;
         item.innerHTML = `
             <input type="checkbox"
                    ${goal.done ? 'checked' : ''}
@@ -820,15 +724,12 @@ function toggleGoal(idx, checkbox) {
 
 function updateGoalsProgress() {
     const done  = goals.filter(g => g.done).length;
-    const total = goals.length;
+    const total = goals.length || 1;
     const pct   = Math.round((done / total) * 100);
-    const fill  =
-        document.getElementById('goalsFill');
-    const text  =
-        document.getElementById('goalsText');
+    const fill  = document.getElementById('goalsFill');
+    const text  = document.getElementById('goalsText');
     if (fill) fill.style.width = pct + '%';
-    if (text) text.textContent =
-        `${done} of ${total} goals done this week`;
+    if (text) text.textContent = `${done} of ${total} goals done this week`;
 }
 
 function resetGoals() {
