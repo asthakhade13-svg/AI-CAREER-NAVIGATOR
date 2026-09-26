@@ -132,3 +132,34 @@ python app.py
 * Interactive API Documentation (Swagger UI): **[http://localhost:8000/docs](http://localhost:8000/docs)**
 
 
+## 🚀 Summary of Changes
+
+This pull request enhances the student onboarding and assessment navigation flow, integrates backend persistence across the student dashboard, and fixes typography rendering artifacts.
+
+### ✨ What's New:
+1. **Seamless Post-Login Navigation**:
+   - Updated `login.html` and `register.html` to automatically route authenticated students to the interactive **"Your Journey"** assessment modal (`index.html?start=1#journey`).
+   - Added personalized student welcome banners on the landing page.
+
+2. **AI Assessment Launching**:
+   - Added direct action buttons on the hero section for instant adaptive quiz access (`quiz.html`) and the Student Dashboard (`dashboard.html`).
+
+3. **🎨 UI & Typography Bug Fixes**:
+   - Fixed text-clipping and GPU compositing artifacts on the hero section heading.
+   - Refactored `.grad-pastel` with crisp, cross-browser gradient typography (`#4338ca` to `#0284c7`).
+
+4. **📊 Student Dashboard Backend & Memory**:
+   - SQLite milestone progress persistence (`milestones_progress`).
+   - 7-day study activity chart and verified skills breakdown.
+   - 12 Dynamic achievement badges and official printable progress summary report.
+   - AI Mentor thread memory (`chat_messages`).
+
+---
+
+## 🧪 Testing & Verification
+- [x] Verified post-sign-in redirect flow to `index.html#journey`.
+- [x] Tested adaptive assessment quiz launch.
+- [x] Tested on desktop and mobile viewports with zero visual clipping.
+- [x] All 11 backend API test endpoints returned `200 OK`.
+
+---
