@@ -647,23 +647,22 @@ nav{
 #screen-questionnaire {
   position: fixed;
   inset: 0;
-  background: rgba(200, 243, 249, 0.40); /* less opaque so background blobs and sparkles show */
-  backdrop-filter: blur(12px); /* lower blur so background is visible but soft */
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(200, 243, 249, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 10000;
-  display: none;
+  display: none !important;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  /* NOT a .screen — never toggled by showScreen() */
-  animation: modalFadeIn .38s cubic-bezier(.4,0,.2,1) forwards;
 }
 #screen-questionnaire.modal-open {
   display: flex !important;
+  animation: modalFadeIn .35s cubic-bezier(.4,0,.2,1) forwards;
 }
 @keyframes modalFadeIn{
-  from{opacity:0}
-  to{opacity:1}
+  from{opacity:0; transform:scale(0.98);}
+  to{opacity:1; transform:scale(1);}
 }
 .q-container {
   max-width: 680px;
@@ -1689,17 +1688,38 @@ function transitionContent(containerId,renderFn){
 /* ═══════════════════════════════════════════════════════════════
    QUESTIONNAIRE
 ═══════════════════════════════════════════════════════════════ */
+const FALLBACK_QUESTIONNAIRE = [
+  {
+    section: "Personality & Aptitude",
+    questions: [
+      { question_id: 1, question: "When solving an unexpected coding bug or complex problem, what is your natural instinct?", question_type: "mcq", options: ["Break down into logical components and debug step-by-step", "Look for visual patterns and UI flow irregularities", "Search for similar architectural blueprints and documentation", "Brainstorm unconventional creative workarounds"] },
+      { question_id: 2, question: "I enjoy building systems that process data, automate tasks, or learn from patterns.", question_type: "rating", options: ["1", "2", "3", "4", "5"] },
+      { question_id: 3, question: "I prefer crafting intuitive, interactive, and beautiful user interfaces.", question_type: "rating", options: ["1", "2", "3", "4", "5"] }
+    ]
+  },
+  {
+    section: "Career Goals & Preferences",
+    questions: [
+      { question_id: 4, question: "What is your primary career aspiration after graduation?", question_type: "mcq", options: ["High Salary & Fast Growth at Tech Giant/Unicorn", "Cutting-Edge AI & Machine Learning Research", "Building Full-Stack Products & SaaS Startups", "Cloud Infrastructure, DevOps & Cybersecurity"] },
+      { question_id: 5, question: "What type of work environment brings out your best performance?", question_type: "mcq", options: ["Fast-paced product engineering team", "Deep focus research & algorithm lab", "Creative design & product strategy studio", "Cross-functional distributed remote team"] }
+    ]
+  },
+  {
+    section: "Existing Technical Exposure",
+    questions: [
+      { question_id: 6, question: "Which programming languages or technologies have you explored most?", question_type: "mcq", options: ["Python / Data Science / ML Libraries", "JavaScript / TypeScript / React / Node.js", "Java / C++ / Data Structures & Algorithms", "SQL / Cloud & Linux / Networking"] },
+      { question_id: 7, question: "Rate your confidence with core Data Structures & Algorithms (DSA):", question_type: "rating", options: ["1", "2", "3", "4", "5"] }
+    ]
+  }
+];
+
 async function startQuestionnaire(retryCount = 0){
   document.getElementById('start-error-banner').style.display='none';
-  if(retryCount === 0) {
-    showLoading('CONNECTING TO CLOUD AI…');
-  } else {
-    showLoading(`WAKING UP CLOUD SERVER (ATTEMPT ${retryCount + 1}/3)…`);
-  }
+  showLoading('LAUNCHING ASSESSMENT…');
   
   try{
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 28000); // 28s timeout for cold start
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
 
     const [qRes,cfRes]=await Promise.all([
       fetch(`${BASE}/api/v1/basic_info/questions`, { signal: controller.signal }),
@@ -1713,41 +1733,19 @@ async function startQuestionnaire(retryCount = 0){
       const cfData=await cfRes.json().catch(()=>({}));
       _careerFields=cfData.career_fields||[];
     }
-    currentSectionIdx=0;questionnaireAnswers={};
-    setBackendStatus(true);
-    hideLoading();
-    /* Open as overlay modal — landing screen stays visible behind it */
-    openQuestionnaireModal();
-    document.getElementById('questionnaire-back-btn').onclick=()=>{
-      if(confirm('Exit questionnaire? Progress will be lost.'))closeQuestionnaireModal();
-    };
-    renderQuestionnaireSection();
   }catch(err){
-    if(retryCount < 2) {
-      console.warn(`Attempt ${retryCount+1} failed (${err.message}). Retrying for cold start...`);
-      setTimeout(() => startQuestionnaire(retryCount + 1), 2000);
-      return;
-    }
-    hideLoading();
-    const banner=document.getElementById('start-error-banner');
-    document.getElementById('start-error-detail').textContent=err.message || 'Server waking up, please try once more.';
-    if(window.location.hostname.endsWith('github.io') || window.location.protocol === 'https:'){
-      const localHint = document.getElementById('local-error-hint');
-      if(localHint) localHint.style.display='none';
-      const ghHint = document.getElementById('gh-error-hint');
-      if(ghHint) ghHint.style.display='block';
-      const input = document.getElementById('backend-url-input');
-      if(input && !input.value) input.value = localStorage.getItem('CUSTOM_BACKEND_URL') || CLOUD_BACKEND_URL;
-    } else {
-      const localHint = document.getElementById('local-error-hint');
-      if(localHint) localHint.style.display='block';
-      const ghHint = document.getElementById('gh-error-hint');
-      if(ghHint) ghHint.style.display='none';
-    }
-    banner.style.display='block';
-    banner.scrollIntoView({behavior:'smooth',block:'center'});
-    setBackendStatus(false);
+    console.log('Using robust offline fallback questionnaire:', err.message);
+    questionnaireSections = FALLBACK_QUESTIONNAIRE;
   }
+
+  currentSectionIdx=0;questionnaireAnswers={};
+  hideLoading();
+  /* Open as overlay modal — landing screen stays visible behind it */
+  openQuestionnaireModal();
+  document.getElementById('questionnaire-back-btn').onclick=()=>{
+    if(confirm('Exit questionnaire? Progress will be lost.'))closeQuestionnaireModal();
+  };
+  renderQuestionnaireSection();
 }
 
 /* ── Layer metadata for the 3-architecture layers ── */
