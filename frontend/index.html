@@ -347,16 +347,18 @@ nav{
 @keyframes textSheen {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
+}
 .grad-pastel{
-  color: #1e1b4b;
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 45%, #0284c7 100%);
-  background-size: 100% auto;
+  background: linear-gradient(90deg, #FFCD7F 0%, #C5FF7F 50%, #FFCD7F 100%);
+  background-size: 220% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: textSheen 10s linear infinite;
 }
 .text-glow{
-  filter:drop-shadow(0 2px 10px rgba(109,40,217,.12));
+  filter:drop-shadow(0 2px 12px rgba(109,40,217,.18))
+         drop-shadow(0 0 28px rgba(14,116,144,.14));
 }
 
 /* Hero title */
@@ -1228,9 +1230,6 @@ nav{
 
       <!-- ════ PRIMARY CTA — YOUR JOURNEY BUTTON ════ -->
       <div class="journey-btn-wrap" id="journey-btn-wrap">
-        <div id="user-greeting-banner" style="display:none; margin-bottom:14px; background:rgba(255,255,255,0.75); padding:8px 18px; border-radius:30px; font-size:0.86rem; font-weight:600; color:#4338ca; border:1px solid rgba(67,56,202,0.2); box-shadow:0 4px 15px rgba(67,56,202,0.08);">
-          👋 Welcome, <span id="user-greeting-name">Student</span>! Click below to begin your Journey.
-        </div>
         <button class="journey-btn" id="your-journey-btn" onclick="startQuestionnaire()">
           <span class="journey-btn-orb">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -1243,11 +1242,9 @@ nav{
         </button>
         <p class="journey-hint">Click to begin your personalised career assessment</p>
         <div style="margin-top:14px;display:flex;justify-content:center;gap:12px">
-          <a href="quiz.html" class="btn btn-gold" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:24px;text-decoration:none;font-size:0.84rem;font-weight:600;">
-            ⚡ Direct AI Quiz
-          </a>
-          <a href="dashboard.html" class="btn btn-glass" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:24px;text-decoration:none;font-size:0.84rem;font-weight:600;">
-            📊 Student Dashboard
+          <a href="login.html" class="btn btn-glass" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:24px;text-decoration:none;font-size:0.84rem;font-weight:600;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Student Login &amp; Portal
           </a>
         </div>
       </div>
@@ -1422,33 +1419,41 @@ function animateHeroText(){
 
   gsap.set(menu, { opacity: 1 });
 
-  // ── Word reveal ──
+  // ── Letter-by-letter word reveal ──
   ['hero-word-1','hero-word-2','hero-word-3'].forEach((id, wi) => {
     const el = document.getElementById(id);
     if(!el) return;
-    gsap.from(el, {
+    const text = el.textContent;
+    el.innerHTML = text.split('').map(c =>
+      `<span class="letter-container" style="display:inline-block;will-change:transform,opacity">${c === ' ' ? '&nbsp;' : `<span class="letter-inner" style="display:inline-block;will-change:transform">${c}</span>`}</span>`
+    ).join('');
+    gsap.from(el.querySelectorAll('.letter-container'), {
       opacity: 0,
-      y: 20,
-      duration: 0.7,
+      y: 22,
+      filter: 'blur(8px)',
+      duration: 0.65,
+      stagger: 0.045,
       ease: 'power3.out',
-      delay: 0.35 + wi * 0.22
+      delay: 0.35 + wi * 0.28
     });
   });
 
   // ── Quote float in (above image, after title) ──
-  gsap.to('#hero-quote', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 1.15 });
+  gsap.to('#hero-quote', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 1.35 });
 
   // ── Hero image reveal ──
-  gsap.to('.hero-img-container', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: 1.30 });
-  gsap.from('.hero-img-container', { y: 15, duration: 0.8, ease: 'power2.out', delay: 1.30 });
+  gsap.to('.hero-img-container', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: 1.50 });
+  gsap.from('.hero-img-container', { y: 15, filter: 'blur(4px)', duration: 0.8, ease: 'power2.out', delay: 1.50 });
 
   // ── Subtitle rise & reveal ──
-  gsap.to('#hero-sub', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out', delay: 1.50 });
-  gsap.from('#hero-sub', { y: 18, duration: 0.85, ease: 'power2.out', delay: 1.50 });
+  gsap.to('#hero-sub', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out', delay: 1.70 });
+  gsap.from('#hero-sub', { y: 18, filter: 'blur(5px)', duration: 0.85, ease: 'power2.out', delay: 1.70 });
 
   // ── Journey button burst in ──
-  gsap.from('#journey-btn-wrap', { opacity: 0, y: 20, scale: 0.94, duration: 0.75, ease: 'back.out(1.6)', delay: 1.7 });
-  gsap.from('.journey-hint', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.0 });
+  gsap.from('#journey-btn-wrap', { opacity: 0, y: 20, scale: 0.92, duration: 0.75, ease: 'back.out(1.6)', delay: 2.0 });
+  gsap.from('.journey-hint', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.4 });
+
+
 }
 
 function startIdleFloat(){
@@ -1459,16 +1464,57 @@ function startIdleFloat(){
     const el = document.getElementById(id);
     if(!el) return;
     gsap.to(el, {
-      y: gsap.utils.random(-4, 4),
-      duration: gsap.utils.random(5, 8),
+      y: gsap.utils.random(-8, 8),
+      x: gsap.utils.random(-3, 3),
+      rotation: gsap.utils.random(-0.5, 0.5),
+      duration: gsap.utils.random(7, 11),
       repeat: -1, yoyo: true, ease: 'sine.inOut',
-      delay: i * 0.5
+      delay: i * 0.9
+    });
+  });
+
+  // ── Individual letter micro-float & hover interaction ──
+  document.querySelectorAll('.intro-title .letter-container').forEach((container, i) => {
+    // 1. Parent container floats continuously
+    gsap.to(container, {
+      y: gsap.utils.random(-5, 5),
+      x: gsap.utils.random(-2, 2),
+      rotation: gsap.utils.random(-1, 1),
+      duration: gsap.utils.random(4, 6),
+      repeat: -1, yoyo: true, ease: 'sine.inOut',
+      delay: Math.random() * 2
+    });
+
+    // 2. Inner span animates scale/glow on hover (amber/peach glow: rgba(255, 205, 127, 0.85))
+    const inner = container.querySelector('.letter-inner');
+    if (!inner) return;
+
+    container.addEventListener('mouseenter', () => {
+      gsap.to(inner, {
+        y: -10,
+        scale: 1.25,
+        filter: 'drop-shadow(0 0 15px rgba(255, 205, 127, 0.85))',
+        duration: 0.3,
+        ease: 'power2.out',
+        overwrite: 'auto'
+      });
+    });
+
+    container.addEventListener('mouseleave', () => {
+      gsap.to(inner, {
+        y: 0,
+        scale: 1,
+        duration: 0.4,
+        ease: 'power2.out',
+        overwrite: 'auto',
+        clearProps: 'filter,scale,transform'
+      });
     });
   });
 
   // ── Journey button breathe float ──
   gsap.to('#your-journey-btn', {
-    y: -5, duration: 3, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 0.5
+    y: -6, duration: 3.5, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 0.5
   });
 
   // ── Eyebrow float ──
@@ -1542,25 +1588,12 @@ window.addEventListener('load', () => {
   setTimeout(startIdleFloat, 1800);
   setTimeout(pingBackend, 800);
 
-  // Greet logged in student
-  try {
-    const user = JSON.parse(localStorage.getItem('user_data') || 'null');
-    if (user && user.fullName) {
-      const greetingEl = document.getElementById('user-greeting-banner');
-      const nameEl = document.getElementById('user-greeting-name');
-      if (greetingEl && nameEl) {
-        nameEl.textContent = user.fullName.split(' ')[0] || user.fullName;
-        greetingEl.style.display = 'inline-block';
-      }
-    }
-  } catch(e) {}
-
   // Auto-launch assessment if redirected from registration or login
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('start') === '1' || urlParams.get('autostart') === 'true' || window.location.hash === '#journey') {
+  if (urlParams.get('start') === '1' || urlParams.get('autostart') === 'true') {
     setTimeout(() => {
       startQuestionnaire();
-    }, 450);
+    }, 500);
   }
 });
 
