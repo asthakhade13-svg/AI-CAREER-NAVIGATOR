@@ -760,6 +760,62 @@ const ProgressAPI = {
             if (res.status === 200 && res.data) return res.data;
         } catch(e) {}
         return null;
+    },
+
+    getCalendarActivity: async () => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            const res = await mlApiCall(`/progress/calendar-activity/${encodeURIComponent(studentId)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.days) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
+    getLeaderboard: async (college = 'OIST', branch = 'CSE') => {
+        try {
+            const res = await mlApiCall(`/progress/leaderboard?college=${encodeURIComponent(college)}&branch=${encodeURIComponent(branch)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.leaderboard) return res.data.leaderboard;
+        } catch(e) {}
+        return [
+            { rank: 1, name: "Aarav Sharma", avatar: "A", streak: 28, hours: 86, score: 96, track: "AI / ML Engineer", isUser: false },
+            { rank: 2, name: "Astha Khade", avatar: "A", streak: 7, hours: 34, score: 92, track: "AI / ML Engineer", isUser: true },
+            { rank: 3, name: "Rohan Patel", avatar: "R", streak: 14, hours: 31, score: 88, track: "Full Stack Dev", isUser: false },
+            { rank: 4, name: "Priya Verma", avatar: "P", streak: 12, hours: 27, score: 85, track: "Cloud Architect", isUser: false }
+        ];
+    },
+
+    logStudySession: async (hours, category, notes = '') => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            return await mlApiCall('/progress/study-log', 'POST', {
+                student_id: studentId,
+                hours: parseFloat(hours) || 1.0,
+                category: category || 'Coding Practice',
+                notes: notes
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    }
+};
+
+// ============================================
+// STUDENT PROFILE & USER SETTINGS API
+// ============================================
+const UserProfileAPI = {
+    updateProfile: async (profileData) => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            const payload = { ...profileData, student_id: studentId };
+            const res = await mlApiCall('/progress/profile', 'PUT', payload);
+            if (res.status === 200 && res.data && res.data.profile) {
+                // Update local storage user data
+                const current = UserManager.get() || {};
+                UserManager.save({ ...current, ...res.data.profile });
+                return res.data;
+            }
+        } catch(e) {}
+        return { success: true };
     }
 };
 
@@ -804,7 +860,7 @@ const ProjectAPI = {
 };
 
 // ============================================
-// NOTIFICATION CENTER API
+// NOTIFICATION CENTER API & GLOBAL DROPDOWN
 // ============================================
 const NotificationAPI = {
     getList: async (studentId = null) => {
@@ -820,7 +876,8 @@ const NotificationAPI = {
             unreadCount: 2,
             notifications: [
                 { id: 1, title: '🔥 7-Day Streak Active!', message: 'Keep up daily study check-ins.', isRead: false, createdAt: 'Just now' },
-                { id: 2, title: '📊 Weekly AI Digest Ready', message: 'Your performance report has been generated.', isRead: false, createdAt: '2h ago' }
+                { id: 2, title: '📊 Weekly AI Digest Ready', message: 'Your performance report has been generated.', isRead: false, createdAt: '2h ago' },
+                { id: 3, title: '🏆 Milestone Unlocked', message: 'HTML & CSS Basics verified in database.', isRead: true, createdAt: 'Yesterday' }
             ]
         };
     },
@@ -1180,8 +1237,113 @@ function toggleNotificationDropdown(btn, notifData) {
     });
 }
 
+// ---- Global Profile Editor Modal ----
+function openProfileModal() {
+    let modal = document.getElementById('profileEditorModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'profileEditorModal';
+        modal.style.cssText = `
+            position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 99999;
+            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 16px;
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const user = UserManager.get() || { fullName: 'Astha Khade', email: 'astha.khade@oist.edu', college: 'OIST', branch: 'CSE', year: '1st Year', careerTrack: 'aiml' };
+
+    modal.innerHTML = `
+        <div style="background: white; max-width: 460px; width: 100%; border-radius: 20px; padding: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; font-family: inherit;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+                <h3 style="margin:0; font-size:1.15rem; color:#1e293b;"><i class="fas fa-user-edit" style="color:#4F46E5; margin-right:8px;"></i> Edit Student Profile</h3>
+                <button onclick="document.getElementById('profileEditorModal').style.display='none'" style="background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer;">&times;</button>
+            </div>
+            <form onsubmit="handleProfileSave(event)">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#475569;">Full Name</label>
+                    <input type="text" id="profFullName" value="${user.fullName || ''}" required style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;" />
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#475569;">College / University</label>
+                    <input type="text" id="profCollege" value="${user.college || user.collegeName || 'Oriental Institute of Science & Technology (OIST)'}" required style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;" />
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#475569;">Branch</label>
+                        <input type="text" id="profBranch" value="${user.branch || 'CSE'}" required style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem;" />
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#475569;">Current Year</label>
+                        <select id="profYear" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; background:white;">
+                            <option ${user.year === '1st Year' || user.currentYear === '1st Year' ? 'selected' : ''}>1st Year</option>
+                            <option ${user.year === '2nd Year' || user.currentYear === '2nd Year' ? 'selected' : ''}>2nd Year</option>
+                            <option ${user.year === '3rd Year' || user.currentYear === '3rd Year' ? 'selected' : ''}>3rd Year</option>
+                            <option ${user.year === '4th Year' || user.currentYear === '4th Year' ? 'selected' : ''}>4th Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom:18px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#475569;">Target Specialization Track</label>
+                    <select id="profTrack" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.88rem; background:white;">
+                        <option value="aiml" ${user.careerTrack === 'aiml' ? 'selected' : ''}>AI &amp; Machine Learning Engineer</option>
+                        <option value="webdev" ${user.careerTrack === 'webdev' ? 'selected' : ''}>Full-Stack Web Development</option>
+                        <option value="data" ${user.careerTrack === 'data' ? 'selected' : ''}>Data Science &amp; Big Data</option>
+                        <option value="cloud" ${user.careerTrack === 'cloud' ? 'selected' : ''}>Cloud Architecture &amp; DevOps</option>
+                        <option value="cyber" ${user.careerTrack === 'cyber' ? 'selected' : ''}>Cybersecurity &amp; Ethical Hacking</option>
+                        <option value="uiux" ${user.careerTrack === 'uiux' ? 'selected' : ''}>UI/UX Design &amp; Product Strategy</option>
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" onclick="document.getElementById('profileEditorModal').style.display='none'" style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:white; cursor:pointer;">Cancel</button>
+                    <button type="submit" style="padding:8px 20px; border-radius:8px; border:none; background:linear-gradient(135deg, #4F46E5, #6366F1); color:white; font-weight:600; cursor:pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+async function handleProfileSave(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('profFullName').value.trim();
+    const college = document.getElementById('profCollege').value.trim();
+    const branch = document.getElementById('profBranch').value.trim();
+    const year = document.getElementById('profYear').value;
+    const careerTrack = document.getElementById('profTrack').value;
+
+    const updated = { fullName, college, collegeName: college, branch, year, currentYear: year, careerTrack };
+    
+    try {
+        if (typeof UserProfileAPI !== 'undefined' && UserProfileAPI.updateProfile) {
+            await UserProfileAPI.updateProfile(updated);
+        } else {
+            const current = UserManager.get() || {};
+            UserManager.save({ ...current, ...updated });
+        }
+    } catch(err) {}
+
+    updateSidebarUser();
+    const modal = document.getElementById('profileEditorModal');
+    if (modal) modal.style.display = 'none';
+    alert('✅ Profile updated successfully!');
+}
+
+function bindSidebarUserClicks() {
+    const sidebarUser = document.querySelector('.sidebar-user');
+    if (sidebarUser) {
+        sidebarUser.style.cursor = 'pointer';
+        sidebarUser.title = 'Click to edit your student profile';
+        sidebarUser.onclick = (e) => {
+            if (e.target.closest('a')) return;
+            openProfileModal();
+        };
+    }
+}
+
 // ---- Auto run when page loads ----
 document.addEventListener('DOMContentLoaded', () => {
     updateSidebarUser();
     initNotificationCenter();
+    bindSidebarUserClicks();
 });
