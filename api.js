@@ -425,6 +425,17 @@ const QuizAPI = {
             { id: 1, trackKey: 'aiml', score: 85, totalQuestions: 10, correctAnswers: 8, timeTakenSec: 180, attemptedAt: '2026-09-26' },
             { id: 2, trackKey: 'webdev', score: 90, totalQuestions: 10, correctAnswers: 9, timeTakenSec: 150, attemptedAt: '2026-09-25' }
         ];
+    },
+
+    resetQuiz: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/quiz/reset', 'POST', { student_id: sid });
+            return res.data || { success: true };
+        } catch(e) {
+            return { success: true };
+        }
     }
 };
 
@@ -432,6 +443,22 @@ const QuizAPI = {
 // CAREER RECOMMENDATION & BOOKMARKS API
 // ============================================
 const CareerAPI = {
+    filterCareers: async (params = {}) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (params.domain && params.domain !== 'all') queryParams.append('domain', params.domain);
+            if (params.skill) queryParams.append('skill', params.skill);
+            if (params.difficulty && params.difficulty !== 'all') queryParams.append('difficulty', params.difficulty);
+            if (params.search) queryParams.append('search', params.search);
+
+            const res = await mlApiCall(`/careers/filter?${queryParams.toString()}`, 'GET');
+            if (res.status === 200 && res.data && res.data.careers) {
+                return res.data.careers;
+            }
+        } catch(e) {}
+        return null;
+    },
+
     generateRecommendations: async (scores = null) => {
         const user = UserManager.get() || { email: 'student@example.com', fullName: 'Student' };
         
@@ -796,6 +823,21 @@ const ProgressAPI = {
         } catch(e) {
             return { status: 200, data: { success: true } };
         }
+    },
+
+    getSkillGap: async (track = 'aiml') => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            const res = await mlApiCall(`/recommendation/skill-gap/${encodeURIComponent(studentId)}?track=${encodeURIComponent(track)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.analysis) return res.data.analysis;
+        } catch(e) {}
+        return null;
+    },
+
+    exportStudyData: (format = 'csv') => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        const url = `${ML_API_BASE_URL}/progress/export-data/${encodeURIComponent(studentId)}?format=${format}`;
+        window.open(url, '_blank');
     }
 };
 
@@ -856,6 +898,31 @@ const ProjectAPI = {
             }
         } catch(e) {}
         return null;
+    },
+
+    toggleMilestone: async (projectId, stepId, isCompleted) => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            return await mlApiCall('/projects/milestone/toggle', 'POST', {
+                student_id: studentId,
+                project_id: projectId,
+                step_id: stepId,
+                is_completed: isCompleted
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true, isCompleted } };
+        }
+    },
+
+    getMilestones: async (projectId) => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            const res = await mlApiCall(`/projects/milestones/${encodeURIComponent(studentId)}/${encodeURIComponent(projectId)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.completedStepIds) {
+                return res.data.completedStepIds;
+            }
+        } catch(e) {}
+        return [];
     }
 };
 
@@ -1042,8 +1109,21 @@ const CertificateAPI = {
             }
         } catch(e) {}
         return null;
+    },
+
+    getSharePayload: async (certId) => {
+        try {
+            const res = await mlApiCall(`/certificates/share-payload/${encodeURIComponent(certId)}`, 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
+    getDownloadPdfUrl: (certId) => {
+        return `${ML_API_BASE_URL}/certificates/download-pdf/${encodeURIComponent(certId)}`;
     }
 };
+
 
 // ============================================
 // PROTECT PAGES

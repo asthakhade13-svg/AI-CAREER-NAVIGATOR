@@ -160,6 +160,16 @@
           <span id="resHash" style="font-family: monospace; color: #4F46E5; font-weight: 700;">SHA256-8F92A14D</span>
         </div>
       </div>
+
+      <!-- Action Buttons -->
+      <div style="margin-top: 22px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+        <button class="btn btn-outline sm" onclick="downloadCertificatePDF()" style="padding: 9px 18px; border-radius: 12px; font-weight: 600;">
+          <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 6px;"></i> Download PDF Certificate
+        </button>
+        <button class="btn btn-primary sm" onclick="shareOnLinkedIn()" style="padding: 9px 18px; border-radius: 12px; font-weight: 600; background: #0077b5; border: none; color: white;">
+          <i class="fab fa-linkedin" style="margin-right: 6px;"></i> Share to LinkedIn
+        </button>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -172,6 +182,8 @@
   </main>
 
   <script>
+    let currentVerifiedCertId = null;
+
     // Extract query parameter if provided
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -186,6 +198,7 @@
       const input = document.getElementById('certInput').value.trim().toUpperCase();
       if (!input) return;
 
+      currentVerifiedCertId = input;
       document.getElementById('verifyLoading').style.display = 'block';
       document.getElementById('verifyResult').style.display = 'none';
       document.getElementById('verifyError').style.display = 'none';
@@ -223,10 +236,11 @@
         document.getElementById('verifyLoading').style.display = 'none';
 
         if (certData) {
+          currentVerifiedCertId = certData.certificateId || input;
           document.getElementById('resStudentName').textContent = certData.studentName || 'Astha Khade';
           document.getElementById('resTrackTitle').textContent = certData.trackTitle || 'Professional Engineering Specialization';
           document.getElementById('resIssueDate').textContent = 'Issued on: ' + (certData.issuedAt || 'Sep 26, 2026');
-          document.getElementById('resCertId').textContent = certData.certificateId || input;
+          document.getElementById('resCertId').textContent = currentVerifiedCertId;
           document.getElementById('resHash').textContent = certData.verificationHash || 'SHA256-VALID-VERIFIED';
 
           const skillsContainer = document.getElementById('resSkillsContainer');
@@ -242,6 +256,30 @@
       } catch (err) {
         document.getElementById('verifyLoading').style.display = 'none';
         document.getElementById('verifyError').style.display = 'block';
+      }
+    }
+
+    async function shareOnLinkedIn() {
+      if (!currentVerifiedCertId) return;
+      try {
+        if (typeof CertificateAPI !== 'undefined' && CertificateAPI.getSharePayload) {
+          const payload = await CertificateAPI.getSharePayload(currentVerifiedCertId);
+          if (payload && payload.linkedinUrl) {
+            window.open(payload.linkedinUrl, '_blank');
+            return;
+          }
+        }
+      } catch(e) {}
+      window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(window.location.href), '_blank');
+    }
+
+    function downloadCertificatePDF() {
+      if (!currentVerifiedCertId) return;
+      if (typeof CertificateAPI !== 'undefined' && CertificateAPI.getDownloadPdfUrl) {
+        const url = CertificateAPI.getDownloadPdfUrl(currentVerifiedCertId);
+        window.open(url, '_blank');
+      } else {
+        window.print();
       }
     }
   </script>

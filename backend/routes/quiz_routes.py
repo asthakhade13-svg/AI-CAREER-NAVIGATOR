@@ -184,4 +184,47 @@ def get_quiz_history(student_id: str):
     }
 
 
+class QuizResetRequest(BaseModel):
+    student_id: str = "user_astha_001"
+
+@router.post("/reset")
+def reset_quiz_state(req: QuizResetRequest):
+    """
+    Clears user quiz attempts and assessment state so the student can retake fresh.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM quiz_attempts WHERE student_id = ?", (req.student_id,))
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Quiz progress reset successfully for {req.student_id}",
+        "studentId": req.student_id,
+        "clearedAttempts": deleted_count
+    }
+
+@router.delete("/reset/{student_id}")
+def delete_quiz_state(student_id: str):
+    """
+    RESTful endpoint to delete past quiz attempts for a student.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM quiz_attempts WHERE student_id = ?", (student_id,))
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Quiz progress reset successfully for {student_id}",
+        "studentId": student_id,
+        "clearedAttempts": deleted_count
+    }
+
+
+
 

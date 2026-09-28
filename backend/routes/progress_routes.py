@@ -725,3 +725,91 @@ def get_skill_resources(skill_name: str):
     }
 
 
+# ── 11. Study Data Exporter (CSV & JSON) ──────────────────────────────────────
+from fastapi.responses import Response
+import csv
+import io
+
+@router.get("/export-data/{student_id}")
+def export_student_data(student_id: str, format: str = Query("csv", pattern="^(csv|json)$")):
+    """
+    Exports the student's complete learning logs, study hours, milestones, and assessment history
+    as a downloadable CSV or structured JSON report.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fetch User
+    cursor.execute("SELECT full_name, email, college, branch, year, career_track FROM users WHERE id = ? OR email = ?", (student_id, student_id))
+    user = cursor.fetchone()
+    user_name = user["full_name"] if user else "Student"
+    user_track = user["career_track"] if user else "aiml"
+
+    # Fetch Study Logs
+    cursor.execute("SELECT day_name, hours_spent, log_date, created_at FROM study_logs WHERE student_id = ? ORDER BY created_at DESC", (student_id,))
+    study_rows = cursor.fetchall()
+
+    # Fetch Quiz Attempts
+    cursor.execute("SELECT track_key, score, total_questions, correct_answers, created_at FROM quiz_attempts WHERE student_id = ? ORDER BY created_at DESC", (student_id,))
+    quiz_rows = cursor.fetchall()
+
+    # Fetch Milestones Completed
+    cursor.execute("SELECT track_key, milestone_id, completed_at FROM milestones_progress WHERE student_id = ? AND is_completed = 1", (student_id,))
+    milestone_rows = cursor.fetchall()
+
+    conn.close()
+
+    if format == "json":
+        return {
+            "success": True,
+            "studentId": student_id,
+            "studentName": user_name,
+            "careerTrack": user_track,
+            "exportedAt": datetime.now().isoformat(),
+            "studyLogs": [dict(r) for r in study_rows],
+            "quizAttempts": [dict(r) for r in quiz_rows],
+            "completedMilestones": [dict(r) for r in milestone_rows]
+        }
+
+    # Generate CSV Output
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    writer.writerow(["=== AI CAREER NAVIGATOR LEARNING REPORT ==="])
+    writer.writerow(["Student ID", student_id])
+    writer.writerow(["Student Name", user_name])
+    writer.writerow(["Career Track", user_track.upper()])
+    writer.writerow(["Exported At", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    writer.writerow([])
+
+    writer.writerow(["--- STUDY LOGS & HOURS LEARNED ---"])
+    writer.writerow(["Date", "Day", "Hours Logged"])
+    total_hours = 0.0
+    for r in study_rows:
+        writer.writerow([r["log_date"], r["day_name"], r["hours_spent"]])
+        total_hours += float(r["hours_spent"] or 0)
+    writer.writerow(["TOTAL HOURS", "", round(total_hours, 1)])
+    writer.writerow([])
+
+    writer.writerow(["--- COMPLETED MILESTONES ---"])
+    writer.writerow(["Track", "Milestone ID", "Completed At"])
+    for m in milestone_rows:
+        writer.writerow([m["track_key"], m["milestone_id"], m["completed_at"]])
+    writer.writerow([])
+
+    writer.writerow(["--- ASSESSMENT & QUIZ ATTEMPTS ---"])
+    writer.writerow(["Track", "Score (%)", "Correct Answers", "Total Questions", "Attempt Date"])
+    for q in quiz_rows:
+        writer.writerow([q["track_key"], q["score"], q["correct_answers"], q["total_questions"], q["created_at"]])
+
+    csv_content = output.getvalue()
+    filename = f"career_nav_learning_report_{student_id}.csv"
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
+

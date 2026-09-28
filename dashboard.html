@@ -1519,13 +1519,20 @@ async function loadTrackProjects() {
     }
 }
 
-function openProjectModal(projId) {
+async function openProjectModal(projId) {
     const proj = currentTrackProjects.find(p => p.id === projId) || currentTrackProjects[0];
     if (!proj) return;
 
     const modal = document.getElementById('projectModal');
     const content = document.getElementById('projectModalContent');
     if (!modal || !content) return;
+
+    let completedSteps = [];
+    try {
+        if (typeof ProjectAPI !== 'undefined' && ProjectAPI.getMilestones) {
+            completedSteps = await ProjectAPI.getMilestones(proj.id);
+        }
+    } catch(e) {}
 
     content.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
@@ -1550,10 +1557,22 @@ function openProjectModal(projId) {
         </div>
 
         <div style="margin-bottom: 16px;">
-            <strong style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">Milestone Implementation Checklist:</strong>
-            <ul style="margin: 0; padding-left: 18px; font-size: 0.82rem; color: #475569; display: flex; flex-direction: column; gap: 4px;">
-                ${(proj.milestones || []).map(m => `<li>${m}</li>`).join('')}
-            </ul>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.82rem; text-transform: uppercase; color: #64748b;">Milestone Implementation Checklist:</strong>
+                <span style="font-size: 0.75rem; color: #10B981; font-weight: 600;"><i class="fas fa-database"></i> Auto-Saved</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${(proj.milestones || []).map((m, idx) => {
+                    const stepId = 'step_' + idx;
+                    const isDone = completedSteps.includes(stepId);
+                    return `
+                    <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.84rem; color: ${isDone ? '#64748b' : '#334155'}; text-decoration: ${isDone ? 'line-through' : 'none'}; cursor: pointer; background: #ffffff; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px;">
+                        <input type="checkbox" ${isDone ? 'checked' : ''} onchange="handleProjectStepToggle('${proj.id}', '${stepId}', this.checked, this)" style="margin-top: 2px; accent-color: #4F46E5;" />
+                        <span>${m}</span>
+                    </label>
+                    `;
+                }).join('')}
+            </div>
         </div>
 
         <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10B981; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px;">
@@ -1568,6 +1587,21 @@ function openProjectModal(projId) {
     `;
 
     modal.style.display = 'flex';
+}
+
+async function handleProjectStepToggle(projId, stepId, isCompleted, checkboxEl) {
+    if (checkboxEl && checkboxEl.parentElement) {
+        const textSpan = checkboxEl.parentElement.querySelector('span');
+        if (textSpan) {
+            textSpan.style.textDecoration = isCompleted ? 'line-through' : 'none';
+            checkboxEl.parentElement.style.color = isCompleted ? '#64748b' : '#334155';
+        }
+    }
+    try {
+        if (typeof ProjectAPI !== 'undefined' && ProjectAPI.toggleMilestone) {
+            await ProjectAPI.toggleMilestone(projId, stepId, isCompleted);
+        }
+    } catch(e) {}
 }
 
 function closeProjectModal() {

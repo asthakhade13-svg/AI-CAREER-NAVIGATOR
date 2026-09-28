@@ -228,6 +228,19 @@ def init_sqlite_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # 15. Capstone Project Milestones Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS project_milestones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            step_id TEXT NOT NULL,
+            is_completed INTEGER DEFAULT 1,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, project_id, step_id)
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")
