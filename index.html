@@ -1692,23 +1692,130 @@ const FALLBACK_QUESTIONNAIRE = [
   {
     section: "Personality & Aptitude",
     questions: [
-      { question_id: 1, question: "When solving an unexpected coding bug or complex problem, what is your natural instinct?", question_type: "mcq", options: ["Break down into logical components and debug step-by-step", "Look for visual patterns and UI flow irregularities", "Search for similar architectural blueprints and documentation", "Brainstorm unconventional creative workarounds"] },
-      { question_id: 2, question: "I enjoy building systems that process data, automate tasks, or learn from patterns.", question_type: "rating", options: ["1", "2", "3", "4", "5"] },
-      { question_id: 3, question: "I prefer crafting intuitive, interactive, and beautiful user interfaces.", question_type: "rating", options: ["1", "2", "3", "4", "5"] }
+      {
+        question_id: 1,
+        question: "When faced with an unexpected bug or complex issue, do you naturally break down the problem methodically and trace patterns before guessing?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 2,
+        question: "When designing a solution, do you actively brainstorm unconventional, creative angles rather than sticking only to textbook approaches?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 3,
+        question: "Do you frequently explore emerging tech trends and self-learn new programming tools simply out of intrinsic curiosity?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 4,
+        question: "When reviewing code or data, do you instinctively spot edge cases, subtle inconsistencies, or hidden flaws that others overlook?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 5,
+        question: "Are you comfortable articulating complex technical ideas clearly and collaborating constructively with diverse team members?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 6,
+        question: "When a team project is disorganized or stalled, do you naturally take initiative, make decisions, and guide peers forward?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 7,
+        question: "Do you experience the highest fulfillment when building functional prototypes or tangible software from scratch?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 8,
+        question: "Do you prefer diving deep into the core mechanics and theoretical 'why' of a system rather than just using it as a black box?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 9,
+        question: "When using or designing an application, do you instinctively critique the user experience and prioritize making it effortless for people?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      }
     ]
   },
   {
     section: "Career Goals & Preferences",
     questions: [
-      { question_id: 4, question: "What is your primary career aspiration after graduation?", question_type: "mcq", options: ["High Salary & Fast Growth at Tech Giant/Unicorn", "Cutting-Edge AI & Machine Learning Research", "Building Full-Stack Products & SaaS Startups", "Cloud Infrastructure, DevOps & Cybersecurity"] },
-      { question_id: 5, question: "What type of work environment brings out your best performance?", question_type: "mcq", options: ["Fast-paced product engineering team", "Deep focus research & algorithm lab", "Creative design & product strategy studio", "Cross-functional distributed remote team"] }
+      {
+        question_id: 10,
+        question: "How high of a priority is securing a high-growth campus placement or immediate position at an established tech company?",
+        question_type: "mcq",
+        options: ["Not Important", "Somewhat Important", "Neutral", "Important", "Very Important"]
+      },
+      {
+        question_id: 11,
+        question: "Is your primary career motivation to develop deep domain mastery and become a recognized technical authority?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 12,
+        question: "Do you envision yourself pursuing advanced postgraduate research, publishing papers, or innovating in applied R&D labs?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 13,
+        question: "Are you energized by the prospect of launching your own tech startup, building products, and taking calculated venture risks?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      },
+      {
+        question_id: 14,
+        question: "Do you aspire to transition into Engineering Management, Product Leadership, or CTO roles where you steer roadmap strategy?",
+        question_type: "mcq",
+        options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+      }
     ]
   },
   {
     section: "Existing Technical Exposure",
     questions: [
-      { question_id: 6, question: "Which programming languages or technologies have you explored most?", question_type: "mcq", options: ["Python / Data Science / ML Libraries", "JavaScript / TypeScript / React / Node.js", "Java / C++ / Data Structures & Algorithms", "SQL / Cloud & Linux / Networking"] },
-      { question_id: 7, question: "Rate your confidence with core Data Structures & Algorithms (DSA):", question_type: "rating", options: ["1", "2", "3", "4", "5"] }
+      {
+        question_id: 15,
+        question: "Rate your programming knowledge and problem-solving confidence (1-5)",
+        question_type: "rating",
+        options: ["1", "2", "3", "4", "5"]
+      },
+      {
+        question_id: 16,
+        question: "Which programming languages do you know or have used?",
+        question_type: "checkbox",
+        options: ["C", "C++", "Java", "Python", "JavaScript", "HTML/CSS", "SQL", "Other"]
+      },
+      {
+        question_id: 17,
+        question: "Have you built any software projects (academic or personal)?",
+        question_type: "mcq",
+        options: ["Yes", "No"]
+      },
+      {
+        question_id: 18,
+        question: "How many projects have you completed?",
+        question_type: "mcq",
+        options: ["0", "1-2", "3-5", "5+"]
+      },
+      {
+        question_id: 19,
+        question: "What is your Git / GitHub version control experience level?",
+        question_type: "mcq",
+        options: ["Beginner", "Intermediate", "Advanced", "Never Used"]
+      }
     ]
   }
 ];
