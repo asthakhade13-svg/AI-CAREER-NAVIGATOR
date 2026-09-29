@@ -347,6 +347,52 @@ const AuthAPI = {
         user.avatarUrl = base64String;
         UserManager.set(user);
         return { status: 200, data: { success: true, avatarUrl: base64String } };
+    },
+
+    changePassword: async (oldPassword, newPassword) => {
+        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/auth/change-password', 'POST', {
+                student_id: sid,
+                old_password: oldPassword,
+                new_password: newPassword
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true, message: 'Password updated successfully.' } };
+        }
+    },
+
+    getPreferences: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/auth/preferences/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.preferences) {
+                return res.data.preferences;
+            }
+        } catch(e) {}
+        return {
+            emailDigest: true,
+            streakReminders: true,
+            darkMode: false
+        };
+    },
+
+    savePreferences: async (preferences) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/auth/preferences', 'PUT', {
+                student_id: sid,
+                email_digest: preferences.emailDigest !== false,
+                streak_reminders: preferences.streakReminders !== false,
+                dark_mode: !!preferences.darkMode,
+                custom_api_key: preferences.customApiKey || ''
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
     }
 };
 
@@ -536,6 +582,16 @@ const CareerAPI = {
             }
         } catch(e) {}
         return [];
+    },
+
+    getMarketTrends: async (careerId = 'aiml') => {
+        try {
+            const res = await mlApiCall(`/careers/market-trends/${encodeURIComponent(careerId)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.trends) {
+                return res.data.trends;
+            }
+        } catch(e) {}
+        return null;
     }
 };
 

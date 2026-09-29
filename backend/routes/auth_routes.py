@@ -401,3 +401,118 @@ def upload_avatar(req: AvatarUploadRequest):
         "avatarUrl": req.avatar_base64
     }
 
+
+# ── 8. Change Password Endpoint ──────────────────────────────────────────────
+class ChangePasswordRequest(BaseModel):
+    student_id: str
+    old_password: str
+    new_password: str
+
+@router.post("/change-password")
+def change_password(req: ChangePasswordRequest):
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE id = ? OR email = ?", (req.student_id, req.student_id))
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Student account not found")
+
+    stored_hash = user["password_hash"]
+    if not verify_password(req.old_password, stored_hash):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    new_hash = hash_password(req.new_password)
+    cursor.execute("UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? OR email = ?", (new_hash, req.student_id, req.student_id))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Password changed successfully"
+    }
+
+
+# ── 9. User Preferences & Settings Endpoints ─────────────────────────────────
+class UserPreferencesPayload(BaseModel):
+    student_id: str
+    email_digest: Optional[bool] = True
+    streak_reminders: Optional[bool] = True
+    dark_mode: Optional[bool] = False
+    custom_api_key: Optional[str] = ""
+
+@router.get("/preferences/{student_id}")
+def get_user_preferences(student_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM user_preferences WHERE student_id = ?", (student_id,))
+    pref = cursor.fetchone()
+    conn.close()
+
+    if not pref:
+        return {
+            "success": True,
+            "studentId": student_id,
+            "preferences": {
+                "emailDigest": True,
+                "streakReminders": True,
+                "darkMode": False,
+                "hasCustomApiKey": False
+            }
+        }
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "preferences": {
+            "emailDigest": bool(pref["email_digest"]),
+            "streakReminders": bool(pref["streak_reminders"]),
+            "darkMode": bool(pref["dark_mode"]),
+            "hasCustomApiKey": bool(pref["custom_api_key"])
+        }
+    }
+
+@router.put("/preferences")
+def save_user_preferences(payload: UserPreferencesPayload):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO user_preferences (student_id, email_digest, streak_reminders, dark_mode, custom_api_key, updated_at)
+    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(student_id)
+    DO UPDATE SET
+        email_digest = excluded.email_digest,
+        streak_reminders = excluded.streak_reminders,
+        dark_mode = excluded.dark_mode,
+        custom_api_key = CASE WHEN excluded.custom_api_key != '' THEN excluded.custom_api_key ELSE custom_api_key END,
+        updated_at = CURRENT_TIMESTAMP
+    """, (
+        payload.student_id,
+        1 if payload.email_digest else 0,
+        1 if payload.streak_reminders else 0,
+        1 if payload.dark_mode else 0,
+        payload.custom_api_key or ""
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": "Preferences saved successfully",
+        "preferences": {
+            "emailDigest": payload.email_digest,
+            "streakReminders": payload.streak_reminders,
+            "darkMode": payload.dark_mode
+        }
+    }
+
+

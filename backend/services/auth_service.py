@@ -241,6 +241,18 @@ def init_sqlite_db():
             UNIQUE(student_id, project_id, step_id)
         )
         """)
+
+        # 16. User Preferences & Settings Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_preferences (
+            student_id TEXT PRIMARY KEY,
+            email_digest INTEGER DEFAULT 1,
+            streak_reminders INTEGER DEFAULT 1,
+            dark_mode INTEGER DEFAULT 0,
+            custom_api_key TEXT DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

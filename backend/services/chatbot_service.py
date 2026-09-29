@@ -17,9 +17,25 @@ Format your responses with clear markdown, bullet points, and actionable next st
 
 def mentor_chat(student_id: str, message: str, custom_api_key: Optional[str] = None) -> str:
     """
-    Generates an AI Mentor response using Google Gemini, Groq, or an intelligent fallback expert system.
+    Generates a personalized AI Mentor response using Google Gemini, Groq, or an intelligent fallback expert system.
     """
     api_key = custom_api_key or settings.GEMINI_API_KEY or ""
+
+    # Fetch live student context from SQLite
+    context_addon = ""
+    try:
+        from services.auth_service import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT full_name, career_track, year, college, branch FROM users WHERE id = ? OR email = ?", (student_id, student_id))
+        u = cursor.fetchone()
+        if u:
+            context_addon = f"\n\nStudent Profile: Name: {u['full_name']}, Specialization Track: {u['career_track']}, Year: {u['year']}, Branch: {u['branch']}, College: {u['college']}. Tailor your advice directly to their specialization and progress."
+        conn.close()
+    except Exception:
+        pass
+
+    full_system_instruction = SYSTEM_INSTRUCTION + context_addon
 
     # 1. Try Google Gemini REST API (v1beta gemini-1.5-flash)
     if api_key and not api_key.startswith("gsk_") and not api_key.startswith("xai-"):
@@ -28,7 +44,7 @@ def mentor_chat(student_id: str, message: str, custom_api_key: Optional[str] = N
             headers = {"Content-Type": "application/json"}
             payload = {
                 "systemInstruction": {
-                    "parts": [{"text": SYSTEM_INSTRUCTION}]
+                    "parts": [{"text": full_system_instruction}]
                 },
                 "contents": [
                     {

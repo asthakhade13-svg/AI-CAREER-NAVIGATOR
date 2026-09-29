@@ -91,6 +91,28 @@ def generate_roadmap(target_domain: str, missing_skills: Optional[List[str]] = N
             }
         ]
 
+    if custom_prompt and len(custom_prompt.strip()) > 3:
+        # Dynamically inject custom focus module based on student prompt
+        p_clean = custom_prompt.strip()
+        custom_step = {
+            "title": f"🎯 Custom Focus: {p_clean[:45]}...",
+            "week": "Accelerated Focus Sprint",
+            "desc": f"Tailored module generated for your goal: '{p_clean}'. Prioritizes fast-track practical mastery and targeted project deliverables.",
+            "topics": [
+                f"Core Deep-Dive: {p_clean[:30]}",
+                "Hands-on Implementation & Code Sandbox",
+                "Portfolio Integration & Architecture Review",
+                "Mock Technical Assessment & Deployment"
+            ],
+            "resources": [
+                {"title": f"{p_clean[:30]} Curated Deep-Dive", "type": "Interactive", "url": "https://roadmap.sh"},
+                {"title": "Open Source Project Sandbox", "type": "GitHub", "url": "https://github.com/topics"}
+            ],
+            "status": "active"
+        }
+        # Place custom focus step as high priority
+        steps.insert(1, custom_step)
+
     return {
         "domain": target_domain,
         "title": f"{dom_clean} AI Roadmap",
