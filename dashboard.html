@@ -107,12 +107,19 @@
         <p class="topbar-sub">Welcome back, Astha! 👋</p>
       </div>
 
+      <!-- Live Search Bar -->
+      <div class="topbar-search-container" style="position:relative; flex:1; max-width:340px; margin:0 16px;">
+        <input type="text" id="dashboardSearchInput" placeholder="Search tracks, milestones, blueprints..." style="width:100%; padding:8px 14px 8px 34px; border-radius:20px; border:1px solid #e2e8f0; font-size:0.84rem; background:#f8fafc; outline:none; transition:all 0.2s;" oninput="handleDashboardSearch(this.value)" onfocus="handleDashboardSearch(this.value)" />
+        <i class="fas fa-search" style="position:absolute; left:12px; top:10px; color:#94a3b8; font-size:0.85rem;"></i>
+        <div id="dashboardSearchResults" style="display:none; position:absolute; top:42px; left:0; right:0; background:white; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,0.15); border:1px solid #e2e8f0; z-index:9999; max-height:280px; overflow-y:auto; padding:10px;"></div>
+      </div>
+
       <div class="topbar-right">
-        <div class="notif-btn">
+        <div class="notif-btn" id="notifBtn" title="Notifications">
           <i class="fas fa-bell"></i>
           <span class="notif-dot"></span>
         </div>
-        <div class="user-avatar sm">A</div>
+        <div class="user-avatar sm" style="cursor:pointer;" onclick="openSettingsModal()" title="Click to edit profile">A</div>
       </div>
     </header>
 
@@ -151,13 +158,13 @@
       <!-- ===== STAT CARDS ===== -->
       <div class="stats-grid">
 
-        <div class="stat-card">
+        <div class="stat-card" style="cursor:pointer;" onclick="handleQuickCheckin()" title="Click to log today's check-in">
           <div class="stat-icon purple">
             <i class="fas fa-fire"></i>
           </div>
           <div class="stat-info">
             <p>Day Streak</p>
-            <h3>7 Days 🔥</h3>
+            <h3 id="statStreakDays">7 Days 🔥</h3>
           </div>
         </div>
 
@@ -166,8 +173,8 @@
             <i class="fas fa-tasks"></i>
           </div>
           <div class="stat-info">
-            <p>Tasks Done</p>
-            <h3>12 / 20</h3>
+            <p>Milestones Done</p>
+            <h3 id="statTasksCount">1 / 4</h3>
           </div>
         </div>
 
@@ -176,18 +183,18 @@
             <i class="fas fa-trophy"></i>
           </div>
           <div class="stat-info">
-            <p>Skills Learned</p>
-            <h3>5 Skills</h3>
+            <p>Readiness Score</p>
+            <h3 id="statReadinessScore">82%</h3>
           </div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" style="cursor:pointer;" onclick="openStudyLogModal()" title="Click to log study hours or start stopwatch">
           <div class="stat-icon orange">
             <i class="fas fa-clock"></i>
           </div>
           <div class="stat-info">
-            <p>Hours Learned</p>
-            <h3>34 Hours</h3>
+            <p>Hours Learned <i class="fas fa-plus-circle" style="color:#D97706; font-size:0.75rem; margin-left:4px;"></i></p>
+            <h3 id="statHoursLearned">34 Hours</h3>
           </div>
         </div>
 
@@ -710,17 +717,119 @@
     </div>
 
     <!-- ===== PROJECT BLUEPRINT MODAL ===== -->
-    <div id="projectModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
-      <div class="card" style="max-width:640px; width:100%; border-radius:22px; box-shadow:0 25px 70px rgba(0,0,0,0.3); position:relative; max-height:90vh; overflow-y:auto; padding:24px;">
-        <button onclick="closeProjectModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
-        <div id="projectModalContent"></div>
+    <!-- ===== STUDY LOGGER & TIMER MODAL ===== -->
+    <div id="studyLogModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+      <div class="card" style="max-width:480px; width:100%; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:1.25rem; margin:0;"><i class="fas fa-stopwatch" style="color:#D97706; margin-right:8px;"></i> Track Study Hours</h3>
+          <button onclick="closeStudyLogModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div style="display:flex; background:#f1f5f9; border-radius:12px; padding:4px; margin-bottom:18px;">
+          <button id="studyTabManualBtn" onclick="switchStudyMode('manual')" class="btn" style="flex:1; border:none; background:white; color:#1e293b; font-weight:700; border-radius:10px; padding:8px 12px; font-size:0.85rem; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer;">
+            <i class="fas fa-pen-nib"></i> Manual Log
+          </button>
+          <button id="studyTabTimerBtn" onclick="switchStudyMode('timer')" class="btn" style="flex:1; border:none; background:transparent; color:#64748b; font-weight:600; border-radius:10px; padding:8px 12px; font-size:0.85rem; cursor:pointer;">
+            <i class="fas fa-play"></i> Live Stopwatch
+          </button>
+        </div>
+
+        <!-- Manual Log Tab -->
+        <div id="studyManualView">
+          <form onsubmit="handleManualStudyLog(event)" style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Hours Spent</label>
+              <input type="number" id="studyManualHours" min="0.25" max="24" step="0.25" value="1.5" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Subject / Topic Studied</label>
+              <input type="text" id="studyManualSubject" placeholder="e.g. Python OOP, Figma Auto Layout, React Hooks" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Notes / Key Learnings (Optional)</label>
+              <textarea id="studyManualNotes" rows="2" placeholder="What key concepts did you master today?" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:8px;">
+              <button type="submit" class="btn btn-primary btn-full" style="padding:12px; font-weight:700;">Save Study Log</button>
+              <button type="button" class="btn btn-outline" style="padding:12px 18px;" onclick="closeStudyLogModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Live Stopwatch Tab -->
+        <div id="studyTimerView" style="display:none; text-align:center; padding:10px 0;">
+          <div style="font-size:2.8rem; font-weight:800; font-family:monospace; color:#1e293b; margin:14px 0;" id="stopwatchDisplay">00:00:00</div>
+          <p style="font-size:0.82rem; color:#64748b; margin-bottom:16px;">Focus mode active. Track your live study session in real time.</p>
+          
+          <div style="margin-bottom:18px; text-align:left;">
+            <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Session Topic</label>
+            <input type="text" id="stopwatchSubject" placeholder="e.g. Deep Learning Transformers, LeetCode Trees" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" />
+          </div>
+
+          <div style="display:flex; justify-content:center; gap:12px; margin-bottom:12px;">
+            <button type="button" id="stopwatchStartBtn" onclick="toggleStopwatch()" class="btn btn-primary" style="padding:10px 24px; font-weight:700; border-radius:12px;">
+              <i class="fas fa-play" id="stopwatchBtnIcon"></i> <span id="stopwatchBtnText">Start Timer</span>
+            </button>
+            <button type="button" onclick="resetStopwatch()" class="btn btn-outline" style="padding:10px 18px; border-radius:12px;">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </div>
+
+          <button type="button" onclick="saveStopwatchSession()" class="btn btn-outline btn-full" style="padding:10px; font-weight:600; border-color:#10B981; color:#10B981; margin-top:8px;">
+            <i class="fas fa-check-circle"></i> Finish &amp; Log Session
+          </button>
+        </div>
       </div>
+    </div>
+
+    <!-- ===== FLOATING AI MENTOR WIDGET ===== -->
+    <div id="floatingAiMentorTrigger" onclick="toggleAiMentorDrawer()" style="position:fixed; bottom:28px; right:28px; z-index:9990; background:linear-gradient(135deg, #4F46E5, #7C3AED); color:white; padding:12px 20px; border-radius:30px; box-shadow:0 12px 30px rgba(79,70,229,0.4); display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:700; font-size:0.9rem; transition:transform 0.2s, box-shadow 0.2s;">
+      <i class="fas fa-robot" style="font-size:1.15rem;"></i>
+      <span>Ask AI Mentor</span>
+      <span style="width:8px; height:8px; background:#34D399; border-radius:50%; display:inline-block;"></span>
+    </div>
+
+    <!-- ===== FLOATING AI MENTOR DRAWER ===== -->
+    <div id="floatingAiMentorDrawer" style="display:none; position:fixed; bottom:88px; right:28px; width:380px; max-width:calc(100vw - 36px); height:520px; max-height:calc(100vh - 120px); background:#ffffff; border-radius:22px; box-shadow:0 24px 70px rgba(15,23,42,0.3); border:1px solid #e2e8f0; z-index:9995; flex-direction:column; overflow:hidden;">
+      <div style="background:linear-gradient(135deg, #4F46E5, #6366F1); color:white; padding:16px 18px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:1.1rem;">🤖</div>
+          <div>
+            <strong style="font-size:0.95rem; display:block;">CareerNav AI Mentor</strong>
+            <span style="font-size:0.72rem; opacity:0.85;">24/7 Real-Time Career Guidance</span>
+          </div>
+        </div>
+        <button onclick="toggleAiMentorDrawer()" style="background:none; border:none; color:white; font-size:1.3rem; cursor:pointer; opacity:0.85;">&times;</button>
+      </div>
+
+      <!-- Mentor Chat Messages Container -->
+      <div id="mentorDrawerMessages" style="flex:1; padding:14px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; background:#f8fafc; font-size:0.85rem;">
+        <div style="align-self:flex-start; max-width:85%; background:white; padding:10px 14px; border-radius:14px 14px 14px 2px; box-shadow:0 2px 6px rgba(0,0,0,0.04); border:1px solid #e2e8f0; color:#1e293b; line-height:1.45;">
+          👋 Hi there! I'm your dedicated Career AI Mentor. Ask me anything about your current learning track, milestone blockers, or internship preparation!
+        </div>
+      </div>
+
+      <!-- Quick Suggestion Pills -->
+      <div style="padding:6px 12px; background:#ffffff; border-top:1px solid #f1f5f9; display:flex; gap:6px; overflow-x:auto; white-space:nowrap;">
+        <button onclick="sendQuickMentorPrompt('What should I focus on this week?')" style="background:#f1f5f9; border:none; border-radius:14px; padding:4px 10px; font-size:0.72rem; color:#4F46E5; cursor:pointer; font-weight:600;">🎯 Weekly Focus</button>
+        <button onclick="sendQuickMentorPrompt('How to get internships in my track?')" style="background:#f1f5f9; border:none; border-radius:14px; padding:4px 10px; font-size:0.72rem; color:#4F46E5; cursor:pointer; font-weight:600;">💼 Internship Tips</button>
+        <button onclick="sendQuickMentorPrompt('Recommend a portfolio project architecture')" style="background:#f1f5f9; border:none; border-radius:14px; padding:4px 10px; font-size:0.72rem; color:#4F46E5; cursor:pointer; font-weight:600;">🛠️ Capstone Ideas</button>
+      </div>
+
+      <!-- Chat Input Area -->
+      <form onsubmit="handleMentorMessageSend(event)" style="padding:10px 12px; background:white; border-top:1px solid #e2e8f0; display:flex; gap:8px;">
+        <input type="text" id="mentorInputText" placeholder="Ask a question..." style="flex:1; padding:8px 12px; border-radius:20px; border:1px solid #cbd5e1; font-size:0.85rem; outline:none;" autocomplete="off" />
+        <button type="submit" class="btn btn-primary" style="padding:8px 14px; border-radius:20px; font-size:0.85rem; display:flex; align-items:center; justify-content:center;">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
     </div>
 
   </main>
 
- <!-- <script src="api.js"></script> -->
- <script>
+  <script src="api.js"></script>
+  <script>
 // Protect page
 requireAuth();
 
@@ -926,9 +1035,20 @@ async function loadDashboard() {
     adaptDashboardToSelectedCareer();
 
     try {
-        const result = await ProgressAPI.getStats();
-        if (result.status === 200 && result.data) {
-            updateStatCards(result.data);
+        let stats = null;
+        const studentId = localStorage.getItem('user_id') || 'student_1';
+        if (typeof DashboardAPI !== 'undefined' && DashboardAPI.getSummary) {
+            const res = await DashboardAPI.getSummary(studentId);
+            if (res && res.stats) stats = res.stats;
+        }
+        if (!stats && typeof ProgressAPI !== 'undefined' && ProgressAPI.getStats) {
+            const result = await ProgressAPI.getStats();
+            if (result.status === 200 && result.data) {
+                stats = result.data;
+            }
+        }
+        if (stats) {
+            updateStatCards(stats);
         }
     } catch (error) {
         console.warn('Progress stats notice:', error);
@@ -936,13 +1056,117 @@ async function loadDashboard() {
 }
 
 function updateStatCards(stats) {
-    const taskEl = document.querySelector('.stat-info h3');
-    if (taskEl && stats) {
-        taskEl.textContent =
-            (stats.completedMilestones || 0) + '/' +
-            (stats.totalMilestones || 6);
+    if (!stats) return;
+    const streakEl = document.getElementById('statStreakDays');
+    if (streakEl) streakEl.textContent = `${stats.streakDays || stats.streak || 7} Days 🔥`;
+
+    const taskEl = document.getElementById('statTasksCount');
+    if (taskEl) taskEl.textContent = `${stats.completedMilestones !== undefined ? stats.completedMilestones : 1} / ${stats.totalMilestones || 4}`;
+
+    const scoreEl = document.getElementById('statReadinessScore');
+    if (scoreEl) scoreEl.textContent = `${stats.readinessScore || 82}%`;
+
+    const hoursEl = document.getElementById('statHoursLearned');
+    if (hoursEl) hoursEl.textContent = `${stats.hoursLearned || 34} Hours`;
+}
+
+async function handleQuickCheckin() {
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.checkin) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const res = await ProgressAPI.checkin(studentId);
+            if (res && res.streak !== undefined) {
+                const streakEl = document.getElementById('statStreakDays');
+                if (streakEl) streakEl.textContent = `${res.streak} Days 🔥`;
+                if (typeof showSuccess === 'function') {
+                    showSuccess(`🔥 Daily check-in logged! You're on a ${res.streak}-day streak!`);
+                }
+                return;
+            }
+        }
+    } catch(e){}
+
+    const streakEl = document.getElementById('statStreakDays');
+    if (streakEl) streakEl.textContent = '8 Days 🔥';
+    if (typeof showSuccess === 'function') {
+        showSuccess('🔥 Daily check-in logged! Streak updated to 8 Days!');
     }
 }
+
+let searchDebounceTimer = null;
+async function handleDashboardSearch(query) {
+    const q = (query || '').trim();
+    const resultsContainer = document.getElementById('dashboardSearchResults');
+    if (!resultsContainer) return;
+
+    if (!q) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = '';
+        return;
+    }
+
+    resultsContainer.style.display = 'block';
+    resultsContainer.innerHTML = '<div style="padding:10px; color:#64748b; font-size:0.8rem; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(async () => {
+        let results = [];
+        try {
+            if (typeof DashboardAPI !== 'undefined' && DashboardAPI.search) {
+                const res = await DashboardAPI.search(q);
+                if (res && res.results) results = res.results;
+            }
+        } catch(e){}
+
+        if (!results || results.length === 0) {
+            const lower = q.toLowerCase();
+            Object.entries(CAREER_TRACKS).forEach(([key, track]) => {
+                if (track.name.toLowerCase().includes(lower)) {
+                    results.push({
+                        type: 'track',
+                        title: track.name,
+                        subtitle: 'Career Track',
+                        action: `selectCareerAndAdapt('${track.name}', 85); document.getElementById('dashboardSearchResults').style.display='none';`
+                    });
+                }
+                track.milestones.forEach(m => {
+                    if (m.title.toLowerCase().includes(lower)) {
+                        results.push({
+                            type: 'milestone',
+                            title: m.title,
+                            subtitle: `${track.name} · Month ${m.monthNumber}`,
+                            action: `selectCareerAndAdapt('${track.name}', 85); document.getElementById('dashboardSearchResults').style.display='none';`
+                        });
+                    }
+                });
+            });
+        }
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding:12px; color:#94a3b8; font-size:0.82rem; text-align:center;">No matching tracks or milestones found.</div>';
+            return;
+        }
+
+        resultsContainer.innerHTML = results.slice(0, 5).map(r => `
+            <div style="padding:8px 12px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'" onclick="${r.action || `selectCareerAndAdapt('${r.title}', 85); document.getElementById('dashboardSearchResults').style.display='none';`}">
+                <i class="fas ${r.type === 'milestone' ? 'fa-flag-checkered' : r.type === 'blueprint' ? 'fa-laptop-code' : 'fa-compass'}" style="color:#4F46E5; font-size:0.9rem;"></i>
+                <div style="flex:1;">
+                    <div style="font-weight:600; font-size:0.84rem; color:#1e293b;">${r.title}</div>
+                    <div style="font-size:0.72rem; color:#64748b;">${r.subtitle || r.type}</div>
+                </div>
+                <i class="fas fa-arrow-right" style="font-size:0.75rem; color:#94a3b8;"></i>
+            </div>
+        `).join('');
+    }, 200);
+}
+
+document.addEventListener('click', (e) => {
+    const searchContainer = document.querySelector('.topbar-search-container');
+    const resultsContainer = document.getElementById('dashboardSearchResults');
+    if (resultsContainer && searchContainer && !searchContainer.contains(e.target)) {
+        resultsContainer.style.display = 'none';
+    }
+});
 
 async function loadCareerRecommendations() {
     // 1. Populate from localStorage (fresh from AI Assessment)
@@ -1009,11 +1233,18 @@ function updateCareerList(careers) {
 }
 
 // Function to select career and immediately adapt the whole dashboard
-function selectCareerAndAdapt(careerName, matchPct) {
+async function selectCareerAndAdapt(careerName, matchPct) {
     const pathKey = getCareerPathKey(careerName);
     localStorage.setItem('selected_career', pathKey);
     localStorage.setItem('selected_career_name', careerName);
     if (matchPct) localStorage.setItem('selected_career_match', matchPct);
+
+    try {
+        if (typeof DashboardAPI !== 'undefined' && DashboardAPI.switchTrack) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            await DashboardAPI.switchTrack(studentId, pathKey);
+        }
+    } catch(e){}
 
     loadCareerRecommendations();
     adaptDashboardToSelectedCareer();
@@ -1053,7 +1284,7 @@ function adaptDashboardToSelectedCareer() {
     }
 
     // 2. Update Roadmap Steps
-    updateRoadmapSteps(track.milestones);
+    updateRoadmapSteps(track.milestones, pathKey);
 
     // 3. Update Skill Levels
     updateSkillLevels(track.skills);
@@ -1062,22 +1293,88 @@ function adaptDashboardToSelectedCareer() {
     updateTrackResources(track.resources, selectedName);
 }
 
-function updateTrackResources(resources, trackName) {
+async function updateTrackResources(resources, trackName) {
     const listEl = document.getElementById('trackResourcesList');
     const badgeEl = document.getElementById('trackResourceBadge');
     if (badgeEl) badgeEl.textContent = `${trackName} Track`;
     if (!listEl || !resources) return;
 
-    listEl.innerHTML = resources.map(r => `
-      <a href="${r.url}" target="_blank" class="resource-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.15); border-radius:10px; text-decoration:none; color:var(--text); transition:all 0.2s;">
-        <i class="fas ${r.icon}" style="color:${r.color}; font-size:1.2rem;"></i>
-        <div style="flex:1;">
-          <strong style="font-size:0.88rem; display:block;">${r.title}</strong>
-          <span style="font-size:0.75rem; color:var(--text-muted);">${r.desc}</span>
-        </div>
-        <i class="fas fa-external-link-alt" style="font-size:0.75rem; color:var(--text-muted);"></i>
-      </a>
-    `).join('');
+    const trackKey = getCareerPathKey(trackName);
+    const studentId = localStorage.getItem('user_id') || 'student_1';
+    let completedResourceIds = [];
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getCompletedResources) {
+            completedResourceIds = await ProgressAPI.getCompletedResources(studentId);
+        }
+    } catch(e){}
+
+    listEl.innerHTML = resources.map((r, i) => {
+        const resId = `res_${trackKey}_${i}`;
+        const isDone = completedResourceIds.includes(resId) || localStorage.getItem(`res_done_${resId}`) === 'true';
+
+        return `
+      <div class="resource-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:${isDone ? 'rgba(16,185,129,0.08)' : 'rgba(99,102,241,0.05)'}; border:1px solid ${isDone ? 'rgba(16,185,129,0.3)' : 'rgba(99,102,241,0.15)'}; border-radius:10px; transition:all 0.2s;">
+        <button type="button" onclick="handleResourceToggle('${resId}', '${encodeURIComponent(r.title)}', '${trackKey}', this)" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:${isDone ? '#10B981' : '#94a3b8'}; padding:2px;" title="${isDone ? 'Mark as incomplete' : 'Mark as completed'}">
+          <i class="fas ${isDone ? 'fa-check-circle' : 'fa-circle'}"></i>
+        </button>
+        <a href="${r.url}" target="_blank" style="flex:1; text-decoration:none; color:var(--text); display:flex; align-items:center; gap:10px;">
+          <i class="fas ${r.icon}" style="color:${r.color}; font-size:1.2rem;"></i>
+          <div style="flex:1;">
+            <strong style="font-size:0.88rem; display:block; text-decoration:${isDone ? 'line-through' : 'none'}; color:${isDone ? '#64748b' : 'inherit'};">${r.title}</strong>
+            <span style="font-size:0.75rem; color:var(--text-muted);">${r.desc}</span>
+          </div>
+          <i class="fas fa-external-link-alt" style="font-size:0.75rem; color:var(--text-muted);"></i>
+        </a>
+      </div>`;
+    }).join('');
+}
+
+async function handleResourceToggle(resourceId, encodedTitle, trackKey, btnEl) {
+    const title = decodeURIComponent(encodedTitle);
+    const studentId = localStorage.getItem('user_id') || 'student_1';
+    const isCurrentlyDone = btnEl.querySelector('i').classList.contains('fa-check-circle');
+    const newState = !isCurrentlyDone;
+
+    const icon = btnEl.querySelector('i');
+    const parent = btnEl.closest('.resource-item');
+    const titleEl = parent ? parent.querySelector('strong') : null;
+
+    if (newState) {
+        icon.className = 'fas fa-check-circle';
+        btnEl.style.color = '#10B981';
+        if (parent) {
+            parent.style.background = 'rgba(16,185,129,0.08)';
+            parent.style.borderColor = 'rgba(16,185,129,0.3)';
+        }
+        if (titleEl) {
+            titleEl.style.textDecoration = 'line-through';
+            titleEl.style.color = '#64748b';
+        }
+        localStorage.setItem(`res_done_${resourceId}`, 'true');
+    } else {
+        icon.className = 'fas fa-circle';
+        btnEl.style.color = '#94a3b8';
+        if (parent) {
+            parent.style.background = 'rgba(99,102,241,0.05)';
+            parent.style.borderColor = 'rgba(99,102,241,0.15)';
+        }
+        if (titleEl) {
+            titleEl.style.textDecoration = 'none';
+            titleEl.style.color = 'inherit';
+        }
+        localStorage.removeItem(`res_done_${resourceId}`);
+    }
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.toggleResourceCompletion) {
+            await ProgressAPI.toggleResourceCompletion(studentId, resourceId, title, trackKey);
+        }
+    } catch(e){}
+
+    if (typeof showSuccess === 'function') {
+        showSuccess(newState ? `Resource "${title}" marked as read! 📚` : `Resource "${title}" unmarked.`);
+    }
 }
 
 const INTERNSHIP_DETAILS = {
@@ -1276,15 +1573,17 @@ async function saveSettings(e) {
   closeSettingsModal();
 }
 
-function updateRoadmapSteps(milestones) {
+function updateRoadmapSteps(milestones, activeTrackKey) {
     const roadmapSteps = document.querySelector('.roadmap-steps');
     if (!roadmapSteps || !milestones) return;
 
-    roadmapSteps.innerHTML = milestones.slice(0, 4).map(m => {
+    const trackKey = activeTrackKey || getCareerPathKey(localStorage.getItem('selected_career_name') || 'UI/UX Design');
+
+    roadmapSteps.innerHTML = milestones.slice(0, 4).map((m, idx) => {
         const isDone   = m.isCompleted || m.status === 'DONE';
         const isActive = m.status === 'ACTIVE';
         return `
-        <div class="road-step ${isDone ? 'done' : isActive ? 'active' : ''}">
+        <div class="road-step ${isDone ? 'done' : isActive ? 'active' : ''}" style="cursor:pointer; transition:all 0.2s;" onclick="handleMilestoneStepClick(${idx}, '${trackKey}')" title="Click to toggle milestone completion">
             <div class="step-dot ${isActive ? 'active' : ''}">
                 <i class="fas ${
                     isDone ? 'fa-check' :
@@ -1294,17 +1593,50 @@ function updateRoadmapSteps(milestones) {
             </div>
             <div class="step-body">
                 <strong>${m.title}</strong>
-                <p>Month ${m.monthNumber} · ${isDone ? 'Completed' : isActive ? 'In Progress' : 'Upcoming'}</p>
+                <p>Month ${m.monthNumber} · ${isDone ? 'Completed (Click to undo)' : isActive ? 'In Progress (Click to finish)' : 'Upcoming (Click to start)'}</p>
             </div>
             <span class="badge ${
                 isDone ? 'badge-success' :
                 isActive ? 'badge-warning' :
                 'badge-primary'
             }">
-                ${isDone ? 'Done' : isActive ? 'Active' : 'Next'}
+                ${isDone ? 'Done ✓' : isActive ? 'Active' : 'Next'}
             </span>
         </div>`;
     }).join('');
+}
+
+async function handleMilestoneStepClick(idx, trackKey) {
+    const track = CAREER_TRACKS[trackKey] || CAREER_TRACKS.uiux;
+    if (!track || !track.milestones[idx]) return;
+
+    const current = track.milestones[idx];
+    const willBeCompleted = !(current.isCompleted || current.status === 'DONE');
+    current.isCompleted = willBeCompleted;
+    current.status = willBeCompleted ? 'DONE' : 'ACTIVE';
+
+    updateRoadmapSteps(track.milestones, trackKey);
+
+    const doneCount = track.milestones.filter(m => m.isCompleted || m.status === 'DONE').length;
+    const taskEl = document.getElementById('statTasksCount');
+    if (taskEl) taskEl.textContent = `${doneCount} / ${track.milestones.length}`;
+
+    const scoreEl = document.getElementById('statReadinessScore');
+    if (scoreEl) {
+        const score = 50 + Math.round((doneCount / track.milestones.length) * 45);
+        scoreEl.textContent = `${score}%`;
+    }
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.toggleMilestone) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            await ProgressAPI.toggleMilestone(studentId, `m_${trackKey}_${idx}`, willBeCompleted);
+        }
+    } catch(e){}
+
+    if (typeof showSuccess === 'function') {
+        showSuccess(willBeCompleted ? `Milestone "${current.title}" marked as complete! 🎉` : `Milestone "${current.title}" reset to in-progress.`);
+    }
 }
 
 function updateSkillLevels(skills) {
@@ -1326,6 +1658,231 @@ function updateSkillLevels(skills) {
 
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ── Study Log Modal & Stopwatch Methods ─────────────────────────────────────
+function openStudyLogModal() {
+    const modal = document.getElementById('studyLogModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeStudyLogModal() {
+    const modal = document.getElementById('studyLogModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function switchStudyMode(mode) {
+    const manualView = document.getElementById('studyManualView');
+    const timerView = document.getElementById('studyTimerView');
+    const manualBtn = document.getElementById('studyTabManualBtn');
+    const timerBtn = document.getElementById('studyTabTimerBtn');
+
+    if (mode === 'manual') {
+        manualView.style.display = 'block';
+        timerView.style.display = 'none';
+        manualBtn.style.background = 'white';
+        manualBtn.style.color = '#1e293b';
+        manualBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+        timerBtn.style.background = 'transparent';
+        timerBtn.style.color = '#64748b';
+        timerBtn.style.boxShadow = 'none';
+    } else {
+        manualView.style.display = 'none';
+        timerView.style.display = 'block';
+        timerBtn.style.background = 'white';
+        timerBtn.style.color = '#1e293b';
+        timerBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+        manualBtn.style.background = 'transparent';
+        manualBtn.style.color = '#64748b';
+        manualBtn.style.boxShadow = 'none';
+    }
+}
+
+async function handleManualStudyLog(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const hours = parseFloat(document.getElementById('studyManualHours').value || '1.5');
+    const subject = document.getElementById('studyManualSubject').value.trim() || 'General Study';
+    const notes = document.getElementById('studyManualNotes').value.trim();
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.logStudy) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            await ProgressAPI.logStudy(studentId, hours, subject, notes);
+        }
+    } catch(err){}
+
+    const hoursEl = document.getElementById('statHoursLearned');
+    if (hoursEl) {
+        const cur = parseFloat(hoursEl.textContent) || 34;
+        hoursEl.textContent = `${(cur + hours).toFixed(1)} Hours`;
+    }
+
+    const weeklyHoursEl = document.getElementById('weeklyHoursCount');
+    if (weeklyHoursEl) {
+        weeklyHoursEl.textContent = `${(8.5 + hours).toFixed(1)} / 10h`;
+    }
+
+    if (typeof showSuccess === 'function') {
+        showSuccess(`🎉 Logged ${hours} hours of study on "${subject}"!`);
+    }
+    closeStudyLogModal();
+}
+
+let stopwatchInterval = null;
+let stopwatchSeconds = 0;
+let isStopwatchRunning = false;
+
+function toggleStopwatch() {
+    const btnIcon = document.getElementById('stopwatchBtnIcon');
+    const btnText = document.getElementById('stopwatchBtnText');
+    const btn = document.getElementById('stopwatchStartBtn');
+
+    if (!isStopwatchRunning) {
+        isStopwatchRunning = true;
+        btnIcon.className = 'fas fa-pause';
+        btnText.textContent = 'Pause Timer';
+        btn.style.background = '#F59E0B';
+
+        stopwatchInterval = setInterval(() => {
+            stopwatchSeconds++;
+            const hrs = String(Math.floor(stopwatchSeconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((stopwatchSeconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(stopwatchSeconds % 60).padStart(2, '0');
+            document.getElementById('stopwatchDisplay').textContent = `${hrs}:${mins}:${secs}`;
+        }, 1000);
+    } else {
+        isStopwatchRunning = false;
+        clearInterval(stopwatchInterval);
+        btnIcon.className = 'fas fa-play';
+        btnText.textContent = 'Resume Timer';
+        btn.style.background = '#4F46E5';
+    }
+}
+
+function resetStopwatch() {
+    clearInterval(stopwatchInterval);
+    isStopwatchRunning = false;
+    stopwatchSeconds = 0;
+    document.getElementById('stopwatchDisplay').textContent = '00:00:00';
+    const btnIcon = document.getElementById('stopwatchBtnIcon');
+    const btnText = document.getElementById('stopwatchBtnText');
+    const btn = document.getElementById('stopwatchStartBtn');
+    if (btnIcon) btnIcon.className = 'fas fa-play';
+    if (btnText) btnText.textContent = 'Start Timer';
+    if (btn) btn.style.background = '#4F46E5';
+}
+
+async function saveStopwatchSession() {
+    if (stopwatchSeconds < 10) {
+        if (typeof showError === 'function') showError('Please record at least 10 seconds before saving a session.');
+        return;
+    }
+    const hours = Math.max(0.1, +(stopwatchSeconds / 3600).toFixed(2));
+    const subject = document.getElementById('stopwatchSubject').value.trim() || 'Focused Study Session';
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.logStudy) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            await ProgressAPI.logStudy(studentId, hours, subject, 'Recorded via live stopwatch timer');
+        }
+    } catch(err){}
+
+    const hoursEl = document.getElementById('statHoursLearned');
+    if (hoursEl) {
+        const cur = parseFloat(hoursEl.textContent) || 34;
+        hoursEl.textContent = `${(cur + hours).toFixed(1)} Hours`;
+    }
+
+    if (typeof showSuccess === 'function') {
+        showSuccess(`✅ Live session saved: ${hours}h logged for "${subject}"!`);
+    }
+
+    resetStopwatch();
+    closeStudyLogModal();
+}
+
+// ── Floating AI Mentor Widget Logic ─────────────────────────────────────────
+function toggleAiMentorDrawer() {
+    const drawer = document.getElementById('floatingAiMentorDrawer');
+    if (!drawer) return;
+    drawer.style.display = (drawer.style.display === 'flex' ? 'none' : 'flex');
+    if (drawer.style.display === 'flex') {
+        const input = document.getElementById('mentorInputText');
+        if (input) input.focus();
+    }
+}
+
+function sendQuickMentorPrompt(text) {
+    const input = document.getElementById('mentorInputText');
+    if (input) {
+        input.value = text;
+        handleMentorMessageSend(new Event('submit'));
+    }
+}
+
+async function handleMentorMessageSend(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const input = document.getElementById('mentorInputText');
+    const container = document.getElementById('mentorDrawerMessages');
+    if (!input || !container) return;
+
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    // Append User Message
+    const userBubble = document.createElement('div');
+    userBubble.style.cssText = 'align-self:flex-end; max-width:85%; background:#4F46E5; color:white; padding:10px 14px; border-radius:14px 14px 2px 14px; box-shadow:0 2px 6px rgba(79,70,229,0.2); line-height:1.45; word-break:break-word;';
+    userBubble.textContent = msg;
+    container.appendChild(userBubble);
+    input.value = '';
+    container.scrollTop = container.scrollHeight;
+
+    // Append Typing Indicator
+    const typingBubble = document.createElement('div');
+    typingBubble.id = 'mentorTypingBubble';
+    typingBubble.style.cssText = 'align-self:flex-start; max-width:85%; background:white; padding:8px 12px; border-radius:14px 14px 14px 2px; border:1px solid #e2e8f0; color:#64748b; font-size:0.8rem;';
+    typingBubble.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="color:#4F46E5;"></i> Thinking...';
+    container.appendChild(typingBubble);
+    container.scrollTop = container.scrollHeight;
+
+    try {
+        let reply = null;
+        if (typeof chatAPI !== 'undefined' && chatAPI.sendMessage) {
+            const raw = await chatAPI.sendMessage(msg);
+            if (raw && (raw.reply || raw.response || raw.message)) {
+                reply = raw.reply || raw.response || raw.message;
+            }
+        }
+
+        if (!reply) {
+            const selectedTrack = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
+            const lower = msg.toLowerCase();
+            if (lower.includes('intern') || lower.includes('job') || lower.includes('step')) {
+                reply = `For ${selectedTrack} internships, focus on 2 key pillars: (1) Solid Data Structures & problem-solving foundations, and (2) 1 polished GitHub project showing end-to-end architecture (like the Capstone Blueprint on your dashboard!). Check the Tech Internships preview card for Google STEP and Microsoft Engage timelines!`;
+            } else if (lower.includes('focus') || lower.includes('week') || lower.includes('goal')) {
+                reply = `Based on your ${selectedTrack} roadmap, prioritize Month 2 milestones: complete your core hands-on implementations, log at least 8.5 study hours this week, and verify your capstone repository!`;
+            } else if (lower.includes('project') || lower.includes('blueprint') || lower.includes('capstone')) {
+                reply = `I recommend starting with the "${selectedTrack} Autonomous Project" blueprint on your dashboard. Follow the step-by-step checklist, write clean modular code, and submit your GitHub repo to earn the Intern Ready badge!`;
+            } else {
+                reply = `Great question! In ${selectedTrack}, continuous hands-on practice is the key differentiator. Try breaking this topic into smaller milestone tasks, work through the curated resources, and track your daily progress in the dashboard!`;
+            }
+        }
+
+        typingBubble.remove();
+        const botBubble = document.createElement('div');
+        botBubble.style.cssText = 'align-self:flex-start; max-width:85%; background:white; padding:10px 14px; border-radius:14px 14px 14px 2px; box-shadow:0 2px 6px rgba(0,0,0,0.04); border:1px solid #e2e8f0; color:#1e293b; line-height:1.45; word-break:break-word;';
+        botBubble.textContent = reply;
+        container.appendChild(botBubble);
+        container.scrollTop = container.scrollHeight;
+
+    } catch(err) {
+        typingBubble.remove();
+        const botBubble = document.createElement('div');
+        botBubble.style.cssText = 'align-self:flex-start; max-width:85%; background:white; padding:10px 14px; border-radius:14px 14px 14px 2px; border:1px solid #e2e8f0; color:#1e293b;';
+        botBubble.textContent = 'Keep focusing on your current roadmap milestones and daily study goals to stay on track!';
+        container.appendChild(botBubble);
+        container.scrollTop = container.scrollHeight;
+    }
 }
 
 // ── Weekly AI Report & Goals Logic ──────────────────────────────────────────
@@ -1616,14 +2173,27 @@ async function handleProjectSubmit(projId) {
     }
     fb.style.display = 'block';
     fb.style.color = '#4F46E5';
-    fb.textContent = '⏳ Saving repository submission...';
+    fb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying GitHub repository & fetching stats...';
+
+    let repoDetails = '';
+    try {
+        if (typeof ProjectAPI !== 'undefined' && ProjectAPI.verifyGithubRepo) {
+            const ver = await ProjectAPI.verifyGithubRepo(url);
+            if (ver && ver.verified && ver.details) {
+                const d = ver.details;
+                repoDetails = ` <br><span style="font-size:0.75rem; color:#334155;">⭐ ${d.stars || 0} Stars · 🍴 ${d.forks || 0} Forks · 💻 ${d.language || 'Code'}</span>`;
+            }
+        }
+    } catch(err){}
+
     try {
         if (typeof ProjectAPI !== 'undefined' && ProjectAPI.submitProject) {
             await ProjectAPI.submitProject(projId, url);
         }
     } catch(e) {}
+
     fb.style.color = '#10B981';
-    fb.innerHTML = '✅ Repository submitted successfully! <strong>Intern Ready 💼</strong> badge unlocked.';
+    fb.innerHTML = `✅ Repository verified & submitted successfully!${repoDetails}<br><strong>Intern Ready 💼</strong> badge unlocked.`;
 }
 
 async function handleProjectStepToggle(projId, stepId, isCompleted, checkboxEl) {

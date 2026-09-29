@@ -186,7 +186,12 @@ def get_user_project_submissions(student_id: str):
 
 
 class VerifyRepoRequest(BaseModel):
-    github_url: str
+    github_url: Optional[str] = None
+    repo_url: Optional[str] = None
+    url: Optional[str] = None
+
+    def get_url(self) -> str:
+        return (self.github_url or self.repo_url or self.url or "").strip()
 
 
 @router.post("/verify-repo")
@@ -199,7 +204,7 @@ def verify_github_repository(payload: VerifyRepoRequest):
     import urllib.request
     import urllib.error
 
-    url = (payload.github_url or "").strip()
+    url = payload.get_url()
     match = re.search(r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", url)
     if not match:
         return {

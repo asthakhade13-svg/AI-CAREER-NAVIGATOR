@@ -74,11 +74,11 @@ def get_progress_stats(student_id: str = "user_001"):
 
 
 @router.post("/checkin")
-def daily_checkin(payload: CheckinRequest):
+def daily_checkin(payload: Optional[CheckinRequest] = None, student_id: Optional[str] = None):
     """
     Increments student learning streak and logs checkin.
     """
-    sid = payload.student_id
+    sid = (payload.student_id if payload and payload.student_id else student_id) or "user_001"
     today_str = datetime.now().strftime("%Y-%m-%d")
     record = _STUDENT_PROGRESS_DB.setdefault(sid, {
         "student_id": sid,
@@ -823,7 +823,14 @@ class ResourceToggleRequest(BaseModel):
     resource_id: str
     resource_title: Optional[str] = ""
     track_key: Optional[str] = ""
-    is_completed: bool
+    is_completed: bool = True
+    completed: Optional[bool] = None
+
+    def get_is_completed(self) -> bool:
+        if self.completed is not None:
+            return self.completed
+        return self.is_completed
+
 
 
 @router.post("/resource/toggle")
@@ -834,7 +841,8 @@ def toggle_resource_completion(payload: ResourceToggleRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    if payload.is_completed:
+    is_comp = payload.get_is_completed()
+    if is_comp:
         cursor.execute("""
         INSERT INTO resource_completions (student_id, resource_id, resource_title, track_key, completed_at)
         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -859,8 +867,8 @@ def toggle_resource_completion(payload: ResourceToggleRequest):
         "success": True,
         "studentId": payload.student_id,
         "resourceId": payload.resource_id,
-        "isCompleted": payload.is_completed,
-        "message": f"Resource marked as {'completed' if payload.is_completed else 'incomplete'}"
+        "isCompleted": is_comp,
+        "message": f"Resource marked as {'completed' if is_comp else 'incomplete'}"
     }
 
 
