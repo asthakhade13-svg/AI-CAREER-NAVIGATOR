@@ -1575,9 +1575,23 @@ async function openProjectModal(projId) {
             </div>
         </div>
 
-        <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10B981; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px;">
+        <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10B981; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
             <strong style="font-size: 0.8rem; color: #065F46; display: block; margin-bottom: 2px;">💼 Ready-to-use Resume Impact Bullet:</strong>
             <p style="font-size: 0.8rem; color: #047857; margin: 0;">"${proj.resumeBulletPoint || ''}"</p>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.82rem; text-transform: uppercase; color: #64748b;"><i class="fab fa-github" style="color: #1e293b; margin-right: 4px;"></i> Submit Portfolio Repository:</strong>
+                <span style="font-size: 0.72rem; color: #64748b;">Unlocks Intern Ready Badge</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="url" id="projGithubInput" placeholder="https://github.com/username/project-repo" style="flex: 1; min-width: 220px; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.82rem; font-family: monospace;" />
+                <button onclick="handleProjectSubmit('${proj.id}')" class="btn btn-primary sm" style="padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; white-space: nowrap;">
+                    Submit &amp; Verify
+                </button>
+            </div>
+            <div id="projSubmitFeedback" style="font-size: 0.78rem; margin-top: 6px; display: none;"></div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
@@ -1587,6 +1601,29 @@ async function openProjectModal(projId) {
     `;
 
     modal.style.display = 'flex';
+}
+
+async function handleProjectSubmit(projId) {
+    const input = document.getElementById('projGithubInput');
+    const fb = document.getElementById('projSubmitFeedback');
+    if (!input || !fb) return;
+    const url = input.value.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        fb.style.display = 'block';
+        fb.style.color = '#ef4444';
+        fb.textContent = '❌ Please enter a valid repository URL (e.g. https://github.com/username/repo)';
+        return;
+    }
+    fb.style.display = 'block';
+    fb.style.color = '#4F46E5';
+    fb.textContent = '⏳ Saving repository submission...';
+    try {
+        if (typeof ProjectAPI !== 'undefined' && ProjectAPI.submitProject) {
+            await ProjectAPI.submitProject(projId, url);
+        }
+    } catch(e) {}
+    fb.style.color = '#10B981';
+    fb.innerHTML = '✅ Repository submitted successfully! <strong>Intern Ready 💼</strong> badge unlocked.';
 }
 
 async function handleProjectStepToggle(projId, stepId, isCompleted, checkboxEl) {

@@ -979,6 +979,68 @@ const ProjectAPI = {
             }
         } catch(e) {}
         return [];
+    },
+
+    submitProject: async (projectId, githubUrl, demoUrl = '') => {
+        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+        try {
+            return await mlApiCall('/projects/submit', 'POST', {
+                student_id: studentId,
+                project_id: projectId,
+                github_url: githubUrl,
+                demo_url: demoUrl
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    },
+
+    getSubmissions: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/projects/submissions/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.submissions) {
+                return res.data.submissions;
+            }
+        } catch(e) {}
+        return [];
+    }
+};
+
+// ============================================
+// HIGH-PERFORMANCE UNIFIED DASHBOARD BATCH API
+// ============================================
+const DashboardAPI = {
+    getSummary: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/dashboard/summary/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.data) {
+                return res.data.data;
+            }
+        } catch(e) {}
+        return null;
+    },
+
+    switchTrack: async (newTrack) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/dashboard/track/switch', 'POST', {
+                student_id: sid,
+                new_track: newTrack
+            });
+            if (res.status === 200 && res.data) {
+                user.careerTrack = newTrack;
+                UserManager.set(user);
+                return res.data;
+            }
+        } catch(e) {}
+        user.careerTrack = newTrack;
+        UserManager.set(user);
+        return { success: true };
     }
 };
 

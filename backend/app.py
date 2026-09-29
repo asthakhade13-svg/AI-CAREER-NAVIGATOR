@@ -90,7 +90,8 @@ from routes import (
     certificate_routes,
     project_routes,
     career_routes,
-    notification_routes
+    notification_routes,
+    dashboard_routes
 )
 
 # ── Health check (used by frontend ping) ─────────────────────────────────────
@@ -121,6 +122,7 @@ def serve_index_html():
     return _serve_index()
 
 # Include API routers
+app.include_router(dashboard_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(certificate_routes.router)
 app.include_router(project_routes.router)
