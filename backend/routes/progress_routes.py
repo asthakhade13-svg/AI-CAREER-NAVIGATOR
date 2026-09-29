@@ -470,15 +470,47 @@ def log_student_activity(payload: ActivityLogRequest):
 
 
 @router.get("/activity/{student_id}")
-def get_recent_activities(student_id: str):
+def get_recent_activities(
+    student_id: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    filter_type: Optional[str] = Query(None)
+):
     """
-    Returns recent activity stream logs for the student.
+    Returns paginated and filterable activity stream logs for the student.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-    SELECT * FROM activity_logs WHERE student_id = ? ORDER BY created_at DESC LIMIT 10
-    """, (student_id,))
+    
+    offset = (page - 1) * limit
+    
+    if filter_type and filter_type.strip() and filter_type.lower() != "all":
+        cursor.execute("""
+        SELECT COUNT(*) as total FROM activity_logs 
+        WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND action_type = ?
+        """, (student_id, student_id, filter_type.strip().lower()))
+        total_row = cursor.fetchone()
+        total_count = total_row["total"] if total_row else 0
+        
+        cursor.execute("""
+        SELECT * FROM activity_logs 
+        WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND action_type = ?
+        ORDER BY created_at DESC LIMIT ? OFFSET ?
+        """, (student_id, student_id, filter_type.strip().lower(), limit, offset))
+    else:
+        cursor.execute("""
+        SELECT COUNT(*) as total FROM activity_logs 
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
+        """, (student_id, student_id))
+        total_row = cursor.fetchone()
+        total_count = total_row["total"] if total_row else 0
+
+        cursor.execute("""
+        SELECT * FROM activity_logs 
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
+        ORDER BY created_at DESC LIMIT ? OFFSET ?
+        """, (student_id, student_id, limit, offset))
+
     rows = cursor.fetchall()
     conn.close()
 
@@ -496,7 +528,6 @@ def get_recent_activities(student_id: str):
             for r in rows
         ]
     else:
-        # High quality seeded stream
         acts = [
             {"id": 1, "actionType": "milestone", "title": "Completed: HTML & CSS Basics", "description": "Roadmap milestone completed", "icon": "fa-check", "color": "green", "timestamp": "Today"},
             {"id": 2, "actionType": "quiz", "title": "Took Skill Assessment Quiz", "description": "Scored 85% — AI / ML pathway match", "icon": "fa-brain", "color": "purple", "timestamp": "Yesterday"},
@@ -504,10 +535,15 @@ def get_recent_activities(student_id: str):
             {"id": 4, "actionType": "badge", "title": "Badge Earned: Quick Learner 🏅", "description": "Completed 5 topics in one week", "icon": "fa-trophy", "color": "orange", "timestamp": "3 days ago"},
             {"id": 5, "actionType": "roadmap", "title": "Started AI & Machine Learning Roadmap", "description": "Began personalized learning path", "icon": "fa-map", "color": "green", "timestamp": "1 week ago"}
         ]
+        total_count = len(acts)
 
     return {
         "success": True,
         "studentId": student_id,
+        "page": page,
+        "limit": limit,
+        "total": total_count,
+        "totalPages": max(1, (total_count + limit - 1) // limit),
         "activities": acts
     }
 
@@ -779,6 +815,73 @@ def get_skill_resources(skill_name: str):
         "skill": skill_name,
         "totalResources": len(found),
         "resources": found
+    }
+
+
+class ResourceToggleRequest(BaseModel):
+    student_id: str
+    resource_id: str
+    resource_title: Optional[str] = ""
+    track_key: Optional[str] = ""
+    is_completed: bool
+
+
+@router.post("/resource/toggle")
+def toggle_resource_completion(payload: ResourceToggleRequest):
+    """
+    Toggles completion status of a free learning resource and updates activity stream.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if payload.is_completed:
+        cursor.execute("""
+        INSERT INTO resource_completions (student_id, resource_id, resource_title, track_key, completed_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(student_id, resource_id) DO UPDATE SET
+            completed_at = CURRENT_TIMESTAMP
+        """, (payload.student_id, payload.resource_id, payload.resource_title or "", payload.track_key or ""))
+        
+        # Log to activity
+        cursor.execute("""
+        INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+        VALUES (?, 'resource', ?, ?, 'fa-book-open', 'blue')
+        """, (payload.student_id, f"Completed Resource: {payload.resource_title or payload.resource_id}", f"Finished study resource in {payload.track_key.upper() if payload.track_key else 'learning track'}"))
+    else:
+        cursor.execute("""
+        DELETE FROM resource_completions WHERE student_id = ? AND resource_id = ?
+        """, (payload.student_id, payload.resource_id))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "studentId": payload.student_id,
+        "resourceId": payload.resource_id,
+        "isCompleted": payload.is_completed,
+        "message": f"Resource marked as {'completed' if payload.is_completed else 'incomplete'}"
+    }
+
+
+@router.get("/resources/completed/{student_id}")
+def get_completed_resources(student_id: str):
+    """
+    Returns list of completed resource IDs for a student.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT resource_id, resource_title, track_key, completed_at FROM resource_completions WHERE student_id = ?", (student_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    completed_ids = [r["resource_id"] for r in rows]
+    return {
+        "success": True,
+        "studentId": student_id,
+        "completedCount": len(completed_ids),
+        "completedResourceIds": completed_ids,
+        "items": [dict(r) for r in rows]
     }
 
 

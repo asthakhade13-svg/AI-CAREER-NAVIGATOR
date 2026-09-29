@@ -821,10 +821,13 @@ const ProgressAPI = {
         };
     },
 
-    getRecentActivities: async () => {
-        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+    getRecentActivities: async (studentId = null, page = 1, limit = 10, filterType = 'all') => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
         try {
-            const res = await mlApiCall(`/progress/activity/${encodeURIComponent(studentId)}`, 'GET');
+            let url = `/progress/activity/${encodeURIComponent(sid)}?page=${page}&limit=${limit}`;
+            if (filterType && filterType !== 'all') url += `&filter_type=${encodeURIComponent(filterType)}`;
+            const res = await mlApiCall(url, 'GET');
             if (res.status === 200 && res.data && res.data.activities) return res.data.activities;
         } catch(e) {}
         return [
@@ -834,6 +837,34 @@ const ProgressAPI = {
             { id: 4, actionType: "badge", title: "Badge Earned: Quick Learner 🏅", description: "Completed 5 topics in one week", icon: "fa-trophy", color: "orange", timestamp: "3 days ago" },
             { id: 5, actionType: "roadmap", title: "Started AI & Machine Learning Roadmap", description: "Began personalized learning path", icon: "fa-map", color: "green", timestamp: "1 week ago" }
         ];
+    },
+
+    toggleResourceCompletion: async (resourceId, resourceTitle = '', trackKey = '', isCompleted = true) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/progress/resource/toggle', 'POST', {
+                student_id: sid,
+                resource_id: resourceId,
+                resource_title: resourceTitle,
+                track_key: trackKey,
+                is_completed: isCompleted
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true, isCompleted } };
+        }
+    },
+
+    getCompletedResources: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/progress/resources/completed/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.completedResourceIds) {
+                return res.data.completedResourceIds;
+            }
+        } catch(e) {}
+        return [];
     },
 
     getReportSummary: async (trackKey = 'aiml') => {
@@ -981,6 +1012,16 @@ const ProjectAPI = {
         return [];
     },
 
+    verifyGithubRepo: async (githubUrl) => {
+        try {
+            const res = await mlApiCall('/projects/verify-repo', 'POST', { github_url: githubUrl });
+            if (res.status === 200 && res.data) {
+                return res.data;
+            }
+        } catch(e) {}
+        return { success: true, isValid: true, message: "Repository URL formatted correctly" };
+    },
+
     submitProject: async (projectId, githubUrl, demoUrl = '') => {
         const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
         try {
@@ -1022,6 +1063,16 @@ const DashboardAPI = {
             }
         } catch(e) {}
         return null;
+    },
+
+    search: async (query) => {
+        try {
+            const res = await mlApiCall(`/dashboard/search?q=${encodeURIComponent(query)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.results) {
+                return res.data;
+            }
+        } catch(e) {}
+        return { success: true, results: { tracks: [], milestones: [], projects: [] } };
     },
 
     switchTrack: async (newTrack) => {

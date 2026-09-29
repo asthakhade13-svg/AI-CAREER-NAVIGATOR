@@ -266,6 +266,19 @@ def init_sqlite_db():
             UNIQUE(student_id, project_id)
         )
         """)
+
+        # 18. Resource Completions Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS resource_completions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            resource_id TEXT NOT NULL,
+            resource_title TEXT DEFAULT '',
+            track_key TEXT DEFAULT '',
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, resource_id)
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

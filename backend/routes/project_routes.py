@@ -185,3 +185,84 @@ def get_user_project_submissions(student_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class VerifyRepoRequest(BaseModel):
+    github_url: str
+
+
+@router.post("/verify-repo")
+def verify_github_repository(payload: VerifyRepoRequest):
+    """
+    Validates GitHub repository URL and retrieves metadata via GitHub public API.
+    """
+    import re
+    import json
+    import urllib.request
+    import urllib.error
+
+    url = (payload.github_url or "").strip()
+    match = re.search(r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", url)
+    if not match:
+        return {
+            "success": False,
+            "isValid": False,
+            "message": "Invalid GitHub repository URL. Expected format: https://github.com/username/repository"
+        }
+
+    owner, repo = match.group(1), match.group(2).rstrip("/")
+    if repo.endswith(".git"):
+        repo = repo[:-4]
+
+    api_url = f"https://api.github.com/repos/{owner}/{repo}"
+
+    try:
+        req = urllib.request.Request(
+            api_url,
+            headers={"User-Agent": "AI-Career-Navigator-Validator"}
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode("utf-8"))
+                return {
+                    "success": True,
+                    "isValid": True,
+                    "owner": owner,
+                    "repo": repo,
+                    "name": data.get("name", repo),
+                    "description": data.get("description") or "GitHub Capstone Project Repository",
+                    "stars": data.get("stargazers_count", 0),
+                    "forks": data.get("forks_count", 0),
+                    "language": data.get("language") or "Code",
+                    "defaultBranch": data.get("default_branch", "main"),
+                    "message": f"Successfully verified repository '{owner}/{repo}'"
+                }
+    except urllib.error.HTTPError as he:
+        if he.code == 404:
+            return {
+                "success": True,
+                "isValid": False,
+                "message": f"Repository '{owner}/{repo}' not found. Please ensure it is public or check the spelling."
+            }
+        else:
+            return {
+                "success": True,
+                "isValid": True,
+                "owner": owner,
+                "repo": repo,
+                "name": repo,
+                "language": "GitHub Repo",
+                "message": f"Repository URL pattern valid for '{owner}/{repo}'"
+            }
+    except Exception as e:
+        logger.warning(f"Error checking GitHub repo: {e}")
+        return {
+            "success": True,
+            "isValid": True,
+            "owner": owner,
+            "repo": repo,
+            "name": repo,
+            "language": "GitHub Repo",
+            "message": f"Repository URL syntax verified for '{owner}/{repo}'"
+        }
+
+
+

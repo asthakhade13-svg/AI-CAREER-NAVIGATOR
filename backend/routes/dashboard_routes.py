@@ -281,3 +281,67 @@ def switch_active_track(req: TrackSwitchRequest):
     except Exception as e:
         logger.error(f"Error switching track: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/search")
+def search_dashboard(q: str = Query(..., min_length=1)):
+    """
+    Global instant search across career tracks, roadmap milestones, and capstone blueprints.
+    """
+    try:
+        query = q.lower().strip()
+        results = {
+            "tracks": [],
+            "milestones": [],
+            "projects": []
+        }
+
+        # 1. Match Tracks
+        TRACKS_DATA = [
+            {"id": "aiml", "title": "AI & Machine Learning", "desc": "Deep Learning, PyTorch, LLMs, Computer Vision", "category": "Core Track"},
+            {"id": "webdev", "title": "Full-Stack Web Development", "desc": "React, Node.js, Next.js, Cloud APIs", "category": "Core Track"},
+            {"id": "cloud", "title": "Cloud & DevOps Engineering", "desc": "AWS, Docker, Kubernetes, CI/CD, Terraform", "category": "Core Track"},
+            {"id": "uiux", "title": "UI / UX Design & Prototyping", "desc": "Figma, Design Systems, User Research, Wireframing", "category": "Core Track"},
+            {"id": "datascience", "title": "Data Science & Analytics", "desc": "SQL, Tableau, Pandas, Predictive Modeling", "category": "Core Track"},
+            {"id": "cybersecurity", "title": "Cybersecurity & InfoSec", "desc": "Ethical Hacking, Network Defense, Cryptography", "category": "Core Track"}
+        ]
+        for t in TRACKS_DATA:
+            if query in t["title"].lower() or query in t["desc"].lower() or query in t["id"]:
+                results["tracks"].append(t)
+
+        # 2. Match Milestones
+        for track_key, milestones in DEFAULT_TRACK_MILESTONES.items():
+            for m in milestones:
+                if query in m["title"].lower() or query in track_key:
+                    results["milestones"].append({
+                        "trackKey": track_key,
+                        "milestoneId": m["id"],
+                        "title": m["title"],
+                        "monthNumber": m["monthNumber"]
+                    })
+
+        # 3. Match Projects
+        from services.project_service import PROJECT_BLUEPRINTS
+        for track_key, proj_list in PROJECT_BLUEPRINTS.items():
+            for p in proj_list:
+                if query in p.get("title", "").lower() or query in p.get("short_desc", "").lower() or any(query in tech.lower() for tech in p.get("tech_stack", [])):
+                    results["projects"].append({
+                        "trackKey": track_key,
+                        "projectId": p.get("project_id"),
+                        "title": p.get("title"),
+                        "difficulty": p.get("difficulty"),
+                        "techStack": p.get("tech_stack", [])
+                    })
+
+        total = len(results["tracks"]) + len(results["milestones"]) + len(results["projects"])
+
+        return {
+            "success": True,
+            "query": q,
+            "totalMatches": total,
+            "results": results
+        }
+    except Exception as e:
+        logger.error(f"Error in dashboard search: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
