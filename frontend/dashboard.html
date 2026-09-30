@@ -1317,7 +1317,7 @@ function selectCareerAndOpenRoadmap(careerName) {
 }
 
 // Dynamically adapt Hero Banner, Roadmap Steps, and Skill Levels to the selected track
-function adaptDashboardToSelectedCareer() {
+async function adaptDashboardToSelectedCareer() {
     const selectedName = localStorage.getItem('selected_career_name') || 'UI/UX Design';
     const pathKey = getCareerPathKey(selectedName);
     const track = CAREER_TRACKS[pathKey] || CAREER_TRACKS.uiux;
@@ -1342,10 +1342,29 @@ function adaptDashboardToSelectedCareer() {
     // 2. Update Roadmap Steps
     updateRoadmapSteps(track.milestones, pathKey);
 
-    // 3. Update Skill Levels
-    updateSkillLevels(track.skills);
+    // 3. Update Skill Levels with live dynamic computation
+    let dynamicSkills = null;
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getDynamicSkills) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            dynamicSkills = await ProgressAPI.getDynamicSkills(studentId, pathKey);
+        }
+    } catch(e){}
+    updateSkillLevels(dynamicSkills || track.skills);
 
-    // 4. Update Curated Free Resources
+    // 4. Update Readiness Score with live composite calculation
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getJobReadiness) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const rData = await ProgressAPI.getJobReadiness(studentId, pathKey);
+            if (rData && rData.readinessScore) {
+                const scoreEl = document.getElementById('statReadinessScore');
+                if (scoreEl) scoreEl.textContent = `${rData.readinessScore}%`;
+            }
+        }
+    } catch(e){}
+
+    // 5. Update Curated Free Resources
     updateTrackResources(track.resources, selectedName);
 }
 

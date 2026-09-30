@@ -980,4 +980,157 @@ def export_student_data(student_id: str, format: str = Query("csv", pattern="^(c
     )
 
 
+# ── 12. Dynamic Job Readiness Engine & Skill Proficiencies ───────────────────
+_DEFAULT_TRACK_SKILLS = {
+    "uiux": [
+        {"name": "Figma & UI Design", "basePct": 80, "color": "#9333EA"},
+        {"name": "Wireframing & Prototyping", "basePct": 75, "color": "#A855F7"},
+        {"name": "User Research & Personas", "basePct": 65, "color": "#C084FC"},
+        {"name": "Design Systems", "basePct": 60, "color": "#7E22CE"}
+    ],
+    "aiml": [
+        {"name": "Python & Data Analysis", "basePct": 85, "color": "#10B981"},
+        {"name": "Machine Learning (Scikit-Learn)", "basePct": 75, "color": "#059669"},
+        {"name": "Deep Learning & Neural Networks", "basePct": 65, "color": "#34D399"},
+        {"name": "Feature Engineering", "basePct": 70, "color": "#047857"}
+    ],
+    "cyber": [
+        {"name": "Network Security & OSI", "basePct": 80, "color": "#F59E0B"},
+        {"name": "Linux System Administration", "basePct": 75, "color": "#D97706"},
+        {"name": "Ethical Hacking & Pentesting", "basePct": 70, "color": "#FBBF24"},
+        {"name": "SOC & Threat Analysis", "basePct": 60, "color": "#B45309"}
+    ],
+    "webdev": [
+        {"name": "HTML5 & CSS3 Responsive UI", "basePct": 88, "color": "#4F46E5"},
+        {"name": "JavaScript (ES6+) & DOM", "basePct": 75, "color": "#6366F1"},
+        {"name": "React.js & Frontend State", "basePct": 65, "color": "#818CF8"},
+        {"name": "REST APIs & Node.js Backend", "basePct": 60, "color": "#4338CA"}
+    ],
+    "data": [
+        {"name": "SQL & Relational Databases", "basePct": 85, "color": "#0284C7"},
+        {"name": "Python (Pandas / Seaborn)", "basePct": 80, "color": "#0EA5E9"},
+        {"name": "Exploratory Data Analysis (EDA)", "basePct": 75, "color": "#38BDF8"},
+        {"name": "Statistical & Predictive Modeling", "basePct": 65, "color": "#0369A1"}
+    ],
+    "cloud": [
+        {"name": "Linux Shell & Git Workflows", "basePct": 85, "color": "#0D9488"},
+        {"name": "Docker & Containerization", "basePct": 75, "color": "#14B8A6"},
+        {"name": "AWS / Cloud Architecture", "basePct": 70, "color": "#2DD4BF"},
+        {"name": "CI/CD Pipelines & Automation", "basePct": 65, "color": "#0F766E"}
+    ]
+}
+
+@router.get("/readiness/{student_id}")
+def get_job_readiness_score(student_id: str, track: Optional[str] = None):
+    """
+    Computes an ML-weighted composite Job Readiness Score based on:
+    - 35% Milestones Completion
+    - 25% Portfolio Project Submissions
+    - 20% Quiz/Assessment Retention
+    - 20% Study Hours & Streak Consistency
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # User track
+    cursor.execute("SELECT career_track FROM users WHERE id = ? OR email = ?", (student_id, student_id))
+    user_row = cursor.fetchone()
+    active_track = track or (user_row["career_track"] if user_row else "aiml")
+
+    # 1. Milestones count
+    cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE student_id = ? AND is_completed = 1", (student_id,))
+    milestones_done = cursor.fetchone()["cnt"]
+    milestone_pct = min(100.0, (milestones_done / 4.0) * 100.0)
+
+    # 2. Project submissions
+    cursor.execute("SELECT COUNT(*) as cnt FROM project_submissions WHERE student_id = ?", (student_id,))
+    proj_done = cursor.fetchone()["cnt"]
+    proj_pct = min(100.0, proj_done * 50.0)
+
+    # 3. Quiz attempts
+    cursor.execute("SELECT AVG(score) as avg_score FROM quiz_attempts WHERE student_id = ?", (student_id,))
+    quiz_avg = cursor.fetchone()["avg_score"] or 75.0
+
+    # 4. Study logs & streak
+    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ?", (student_id,))
+    total_hours = cursor.fetchone()["total_hrs"] or 0.0
+    consistency_pct = min(100.0, 50.0 + (total_hours * 1.5))
+
+    conn.close()
+
+    # Weighted calculation
+    composite = round(
+        (0.35 * milestone_pct) +
+        (0.25 * proj_pct) +
+        (0.20 * quiz_avg) +
+        (0.20 * consistency_pct)
+    )
+    final_score = min(98, max(50, composite))
+
+    if final_score >= 88:
+        grade = "Elite Job Ready 🔥"
+    elif final_score >= 75:
+        grade = "Industry Ready 💼"
+    elif final_score >= 60:
+        grade = "Intermediate Developer 🚀"
+    else:
+        grade = "Foundation Stage 📚"
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "trackKey": active_track,
+        "readinessScore": final_score,
+        "readinessGrade": grade,
+        "breakdown": {
+            "milestoneWeight": round(0.35 * milestone_pct, 1),
+            "projectWeight": round(0.25 * proj_pct, 1),
+            "quizWeight": round(0.20 * quiz_avg, 1),
+            "consistencyWeight": round(0.20 * consistency_pct, 1),
+            "completedMilestones": milestones_done,
+            "submittedProjects": proj_done,
+            "studyHours": round(total_hours, 1)
+        }
+    }
+
+
+@router.get("/skills/{student_id}")
+def get_dynamic_skills(student_id: str, track: Optional[str] = "aiml"):
+    """
+    Returns dynamically computed skill proficiency levels boosted by milestones, study hours, and quizzes.
+    """
+    track_key = (track or "aiml").lower()
+    base_skills = _DEFAULT_TRACK_SKILLS.get(track_key, _DEFAULT_TRACK_SKILLS["webdev"])
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE student_id = ? AND is_completed = 1", (student_id,))
+    milestones_done = cursor.fetchone()["cnt"]
+
+    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ?", (student_id,))
+    total_hours = cursor.fetchone()["total_hrs"] or 0.0
+
+    conn.close()
+
+    boost = min(20, (milestones_done * 4) + int(total_hours * 0.4))
+
+    dynamic_skills = []
+    for s in base_skills:
+        final_pct = min(98, max(45, s["basePct"] + boost))
+        dynamic_skills.append({
+            "name": s["name"],
+            "pct": final_pct,
+            "color": s["color"]
+        })
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "trackKey": track_key,
+        "skills": dynamic_skills
+    }
+
+
+
 
