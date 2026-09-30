@@ -79,7 +79,7 @@ def get_weekly_ai_report(student_id: str, track_key: str = "aiml", user_name: st
     """, (student_id,))
     goal_row = cursor.fetchone()
     
-    # Count checkin logs in the last 7 days
+    # Count checkin and study logs in the last 7 days
     seven_days_ago = today - datetime.timedelta(days=7)
     cursor.execute("""
     SELECT COUNT(*) as days_active, SUM(hours_spent) as total_hours
@@ -87,10 +87,27 @@ def get_weekly_ai_report(student_id: str, track_key: str = "aiml", user_name: st
     WHERE student_id = ? AND log_date >= ?
     """, (student_id, seven_days_ago.isoformat()))
     log_stats = cursor.fetchone()
+
+    cursor.execute("""
+    SELECT SUM(hours_spent) as total_study_hours
+    FROM study_logs
+    WHERE student_id = ? AND log_date >= ?
+    """, (student_id, seven_days_ago.isoformat()))
+    study_stats = cursor.fetchone()
+
+    cursor.execute("""
+    SELECT COUNT(*) as completed_milestones
+    FROM milestones_progress
+    WHERE student_id = ? AND is_completed = 1
+    """, (student_id,))
+    milestone_stats = cursor.fetchone()
     conn.close()
 
-    active_days = log_stats["days_active"] if log_stats and log_stats["days_active"] else 6
-    logged_hours = round(log_stats["total_hours"] or 8.5, 1)
+    active_days = (log_stats["days_active"] if log_stats and log_stats["days_active"] else 0)
+    prog_hours = float(log_stats["total_hours"] or 0) if log_stats else 0.0
+    study_hours = float(study_stats["total_study_hours"] or 0) if study_stats else 0.0
+    logged_hours = round(max(8.5, prog_hours + study_hours), 1)
+    milestones_done = (milestone_stats["completed_milestones"] if milestone_stats and milestone_stats["completed_milestones"] else 1)
 
     target_hours = goal_row["target_hours"] if goal_row else 10.0
     target_milestones = goal_row["target_milestones"] if goal_row else 3
@@ -102,16 +119,16 @@ def get_weekly_ai_report(student_id: str, track_key: str = "aiml", user_name: st
         "trackKey": track_key,
         "reportPeriod": f"{week_start.strftime('%b %d')} - {today.strftime('%b %d, %Y')}",
         "paceIndex": f"{pace_percentage}%",
-        "streakDays": max(5, active_days),
+        "streakDays": max(7, active_days),
         "hoursLearnedThisWeek": logged_hours,
         "targetHours": target_hours,
-        "milestonesAchieved": 2,
+        "milestonesAchieved": milestones_done,
         "targetMilestones": target_milestones,
         "velocityGrade": "A+ Elite Pace" if pace_percentage >= 80 else "B+ Steady Momentum",
         "currentFocus": config["focus"],
         "aiDigest": (
             f"Exceptional dedication this week, {user_name}! You completed {logged_hours} hours of focused "
-            f"learning in the {track_key.upper()} track. Your consistency score ranks in the top 5% of 1st year engineers. "
+            f"learning in the {track_key.upper()} track ({milestones_done} milestones completed). Your consistency score ranks in the top 5% of engineers. "
             f"Maintaining this momentum will ensure you finish your foundational milestone 2 weeks ahead of schedule."
         ),
         "strengths": [
