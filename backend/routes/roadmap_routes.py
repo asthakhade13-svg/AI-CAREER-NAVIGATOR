@@ -98,3 +98,102 @@ END:VCALENDAR"""
         }
     )
 
+
+# ── Granular Roadmap Sub-Milestone Checklist Sync ───────────────────────────
+class SubtaskToggleRequest(BaseModel):
+    student_id: str = "user_001"
+    track_key: str
+    subtask_id: str
+    subtask_text: Optional[str] = ""
+    is_completed: bool = True
+
+
+@router.post("/subtask/toggle")
+def toggle_roadmap_subtask(payload: SubtaskToggleRequest):
+    """
+    Persists granular subtask / checklist item completion to SQLite roadmap_subtasks.
+    """
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    is_comp = 1 if payload.is_completed else 0
+    cursor.execute("""
+    INSERT INTO roadmap_subtasks (student_id, track_key, subtask_id, subtask_text, is_completed, completed_at)
+    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(student_id, track_key, subtask_id) DO UPDATE SET
+        is_completed = excluded.is_completed,
+        subtask_text = excluded.subtask_text,
+        completed_at = CURRENT_TIMESTAMP
+    """, (payload.student_id, payload.track_key, payload.subtask_id, payload.subtask_text, is_comp))
+
+    if payload.is_completed and payload.subtask_text:
+        try:
+            cursor.execute("""
+            INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+            VALUES (?, 'roadmap_subtask', ?, ?, 'fa-check-circle', 'teal')
+            """, (
+                payload.student_id, 
+                f"Roadmap Item: {payload.subtask_text[:40]}", 
+                f"Completed study item in {payload.track_key.upper()} roadmap."
+            ))
+        except Exception:
+            pass
+
+    conn.commit()
+
+    cursor.execute("""
+    SELECT subtask_id FROM roadmap_subtasks 
+    WHERE student_id = ? AND track_key = ? AND is_completed = 1
+    """, (payload.student_id, payload.track_key))
+    completed_rows = cursor.fetchall()
+    completed_ids = [r["subtask_id"] for r in completed_rows]
+    conn.close()
+
+    return {
+        "status": 200,
+        "success": True,
+        "subtaskId": payload.subtask_id,
+        "isCompleted": payload.is_completed,
+        "completedCount": len(completed_ids),
+        "completedIds": completed_ids
+    }
+
+
+@router.get("/subtasks/{student_id}")
+def get_roadmap_subtasks(student_id: str, track_key: Optional[str] = None):
+    """
+    Retrieves all persisted subtask completion states for a student.
+    """
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if track_key:
+        cursor.execute("""
+        SELECT subtask_id, is_completed, subtask_text, completed_at FROM roadmap_subtasks 
+        WHERE student_id = ? AND track_key = ?
+        """, (student_id, track_key))
+    else:
+        cursor.execute("""
+        SELECT subtask_id, is_completed, subtask_text, completed_at FROM roadmap_subtasks 
+        WHERE student_id = ?
+        """, (student_id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    completed_ids = [r["subtask_id"] for r in rows if r["is_completed"]]
+    states = {r["subtask_id"]: bool(r["is_completed"]) for r in rows}
+
+    return {
+        "status": 200,
+        "success": True,
+        "studentId": student_id,
+        "trackKey": track_key,
+        "completedIds": completed_ids,
+        "states": states,
+        "totalCompleted": len(completed_ids)
+    }
+
+

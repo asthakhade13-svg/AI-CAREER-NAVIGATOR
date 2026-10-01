@@ -279,6 +279,20 @@ def init_sqlite_db():
             UNIQUE(student_id, resource_id)
         )
         """)
+
+        # 19. Roadmap Granular Subtasks Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS roadmap_subtasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            track_key TEXT NOT NULL,
+            subtask_id TEXT NOT NULL,
+            subtask_text TEXT DEFAULT '',
+            is_completed INTEGER DEFAULT 1,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, track_key, subtask_id)
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

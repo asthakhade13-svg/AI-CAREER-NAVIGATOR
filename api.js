@@ -628,6 +628,34 @@ const RoadmapAPI = {
         return await ProgressAPI.toggleMilestone(trackKey, milestoneId, isCompleted);
     },
 
+    toggleSubtask: async (trackKey, subtaskId, subtaskText = '', isCompleted = true) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/roadmap/subtask/toggle', 'POST', {
+                student_id: sid,
+                track_key: trackKey,
+                subtask_id: subtaskId,
+                subtask_text: subtaskText,
+                is_completed: isCompleted
+            });
+            return res.data;
+        } catch(e) {
+            return { success: false };
+        }
+    },
+
+    getSubtasks: async (trackKey = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        const url = trackKey ? `/roadmap/subtasks/${encodeURIComponent(sid)}?track_key=${encodeURIComponent(trackKey)}` : `/roadmap/subtasks/${encodeURIComponent(sid)}`;
+        try {
+            const res = await mlApiCall(url, 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return { completedIds: [], states: {} };
+    },
+
     getMyRoadmap: async () => {
         const springRes = await apiCall('/roadmap/my-roadmap', 'GET');
         if (springRes.status === 200) {

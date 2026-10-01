@@ -1068,17 +1068,74 @@ requireAuth();
   ];
 
   // ========================================
-  // STATE
+  // STATE & SUBTASK PERSISTENCE
   // ========================================
-  let currentPath    = 'webdev';
-  let currentTipIdx  = 0;
+  let currentPath       = 'webdev';
+  let currentTipIdx     = 0;
+  let persistedSubtasks = {};
+
+  async function loadPersistedSubtasks(pathKey) {
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.getSubtasks) {
+        const res = await RoadmapAPI.getSubtasks(pathKey);
+        if (res && res.states) {
+          persistedSubtasks = Object.assign(persistedSubtasks, res.states);
+        }
+      }
+    } catch(e) {}
+  }
+
+  async function toggleTopicSubtask(pathKey, subtaskId, topicText, element) {
+    const isCompleted = !persistedSubtasks[subtaskId];
+    persistedSubtasks[subtaskId] = isCompleted;
+    
+    const icon = element.querySelector('i');
+    if (icon) {
+      icon.className = isCompleted ? 'fas fa-check-circle' : 'far fa-circle';
+      icon.style.color = isCompleted ? '#10B981' : '#94a3b8';
+    }
+    element.style.opacity = isCompleted ? '1' : '0.75';
+    
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.toggleSubtask) {
+        await RoadmapAPI.toggleSubtask(pathKey, subtaskId, topicText, isCompleted);
+      }
+    } catch(e) {}
+    
+    if (isCompleted && typeof showSuccess === 'function') {
+      showSuccess(`Completed: ${topicText}`);
+    }
+  }
+
+  async function toggleWeeklySubtask(pathKey, subtaskId, taskText, element) {
+    const isCompleted = !persistedSubtasks[subtaskId];
+    persistedSubtasks[subtaskId] = isCompleted;
+    
+    element.classList.toggle('done', isCompleted);
+    const icon = element.querySelector('.weekly-check i');
+    if (icon) {
+      icon.className = isCompleted ? 'fas fa-check-circle' : 'fas fa-circle';
+    }
+    
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.toggleSubtask) {
+        await RoadmapAPI.toggleSubtask(pathKey, subtaskId, taskText, isCompleted);
+      }
+    } catch(e) {}
+    
+    if (isCompleted && typeof showSuccess === 'function') {
+      showSuccess(`Completed: ${taskText}`);
+    }
+  }
 
   // ========================================
   // RENDER ROADMAP
   // ========================================
-  function renderRoadmap(pathKey) {
+  async function renderRoadmap(pathKey) {
     const path = roadmaps[pathKey];
     if (!path) return;
+
+    await loadPersistedSubtasks(pathKey);
 
     // Update header
     document.getElementById('pathTitle').textContent =
@@ -1172,15 +1229,19 @@ requireAuth();
     document.getElementById('activeDesc').textContent =
       step.desc;
 
-    // Topics
+    // Topics with interactive persistent checklists
     const topicsList =
       document.getElementById('topicsList');
-    topicsList.innerHTML = step.topics.map(t => `
-      <div class="topic-item">
-        <i class="fas fa-check-circle"></i>
-        <span>${t}</span>
+    topicsList.innerHTML = step.topics.map((t, tIdx) => {
+      const subId = `${pathKey}_s${idx}_t${tIdx}`;
+      const isDone = Boolean(persistedSubtasks[subId] || step.status === 'done');
+      return `
+      <div class="topic-item" style="cursor:pointer; user-select:none; transition:all 0.2s; opacity:${isDone ? '1' : '0.85'};" onclick="toggleTopicSubtask('${pathKey}', '${subId}', '${t.replace(/'/g, "\\'")}', this)">
+        <i class="${isDone ? 'fas fa-check-circle' : 'far fa-circle'}" style="color:${isDone ? '#10B981' : '#94a3b8'};"></i>
+        <span style="${isDone ? 'font-weight:600;' : ''}">${t}</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Resources
     const resDiv =
@@ -1230,11 +1291,14 @@ requireAuth();
   function renderWeekly(weekly) {
     const plan =
       document.getElementById('weeklyPlan');
-    plan.innerHTML = weekly.map(w => `
-      <div class="weekly-item ${w.done ? 'done' : ''}">
+    plan.innerHTML = weekly.map((w, wIdx) => {
+      const subId = `${currentPath}_weekly_${wIdx}`;
+      const isDone = Boolean(persistedSubtasks[subId] || w.done);
+      return `
+      <div class="weekly-item ${isDone ? 'done' : ''}" style="cursor:pointer; user-select:none;" onclick="toggleWeeklySubtask('${currentPath}', '${subId}', '${w.task.replace(/'/g, "\\'")}', this)">
         <div class="weekly-check">
           <i class="fas ${
-            w.done ? 'fa-check-circle' : 'fa-circle'
+            isDone ? 'fa-check-circle' : 'fa-circle'
           }"></i>
         </div>
         <div class="weekly-info">
@@ -1242,7 +1306,8 @@ requireAuth();
           <span>${w.task}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // ========================================
