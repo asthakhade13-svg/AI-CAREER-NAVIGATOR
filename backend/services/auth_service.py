@@ -293,6 +293,37 @@ def init_sqlite_db():
             UNIQUE(student_id, track_key, subtask_id)
         )
         """)
+
+        # 20. Assessment Multi-Attempt History Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS assessment_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            attempt_id TEXT NOT NULL,
+            assessment_type TEXT DEFAULT 'stellar_assessment',
+            technical_score REAL DEFAULT 0,
+            starting_quiz TEXT DEFAULT 'intermediate',
+            recommended_tracks TEXT DEFAULT '[]',
+            dominant_interests TEXT DEFAULT '[]',
+            full_name TEXT DEFAULT '',
+            date_taken TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # 21. Resume Scans & ATS Reports Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS resume_scans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            track_key TEXT NOT NULL,
+            ats_score INTEGER DEFAULT 75,
+            matched_skills TEXT DEFAULT '[]',
+            missing_skills TEXT DEFAULT '[]',
+            suggested_improvements TEXT DEFAULT '[]',
+            file_name TEXT DEFAULT '',
+            scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

@@ -134,6 +134,7 @@ ALL_INTERNSHIPS: List[dict] = [
 ]
 
 @router.get("/list")
+@router.get("/listings")
 def get_internships(
     track: Optional[str] = Query(None, description="Filter by track: uiux, aiml, cyber, webdev, cloud, data, all"),
     search: Optional[str] = Query(None, description="Keyword search")

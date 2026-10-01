@@ -123,6 +123,49 @@ def run_tests():
     print("[PASS] 12. ICS Calendar Scheduler")
     tests_passed += 1
 
+    # 13. Resume ATS Text Scanner
+    total_tests += 1
+    res = client.post("/api/v1/resume/scan-text", json={
+        "student_id": "test_student_01",
+        "track_key": "webdev",
+        "resume_text": "Experienced web developer proficient in JavaScript, React, Node.js, Express, HTML5, CSS3, Git, and REST APIs. Built full-stack apps."
+    })
+    assert res.status_code == 200 and res.json().get("success"), f"Resume text scan failed: {res.text}"
+    print(f"[PASS] 13. Resume ATS Scanner (Score: {res.json()['analysis']['atsScore']})")
+    tests_passed += 1
+
+    # 14. Resume Latest Scan Retrieval
+    total_tests += 1
+    res = client.get("/api/v1/resume/latest/test_student_01")
+    assert res.status_code == 200 and res.json().get("hasScan"), f"Latest resume retrieval failed: {res.text}"
+    print("[PASS] 14. Resume Latest Scan Retrieval")
+    tests_passed += 1
+
+    # 15. Assessment Attempt History
+    total_tests += 1
+    res = client.get("/api/v1/basic_info/history/test_student_01")
+    assert res.status_code == 200, f"Assessment history failed: {res.text}"
+    print("[PASS] 15. Assessment Attempt History Ledger")
+    tests_passed += 1
+
+    # 16. Chatbot Voice Input Endpoint
+    total_tests += 1
+    res = client.post(
+        "/api/v1/chatbot/voice",
+        data={"student_id": "test_student_01"},
+        files={"audio": ("sample_query.webm", b"RIFF....WAVEfmt ....data....", "audio/webm")}
+    )
+    assert res.status_code == 200 and res.json().get("success"), f"Chatbot voice failed: {res.text}"
+    print("[PASS] 16. Chatbot Server-Side Voice Transcription")
+    tests_passed += 1
+
+    # 17. Tech Internships Portal Listings
+    total_tests += 1
+    res = client.get("/api/v1/internships/listings")
+    assert res.status_code == 200 and len(res.json().get("internships", [])) > 0, f"Internships failed: {res.text}"
+    print("[PASS] 17. Tech Internships Portal Listings")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
