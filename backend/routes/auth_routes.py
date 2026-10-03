@@ -4,6 +4,8 @@ from typing import Optional, Dict, Any
 import uuid
 import datetime
 import logging
+import re
+import os
 from services.auth_service import (
     get_db_connection,
     hash_password,
@@ -418,13 +420,23 @@ def google_auth_callback(req: GoogleLoginRequest):
     }
 
 
-# ── 7. Profile Avatar Photo Upload Endpoint ──────────────────────────────────
+# ── 7. Profile Avatar Photo Upload & Hosting Endpoints ──────────────────────
+import os
+from fastapi import UploadFile, File, Form
+from fastapi.responses import FileResponse
+
+AVATARS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "avatars"))
+os.makedirs(AVATARS_DIR, exist_ok=True)
+
 class AvatarUploadRequest(BaseModel):
     student_id: str
     avatar_base64: str
 
 @router.post("/avatar")
-def upload_avatar(req: AvatarUploadRequest):
+def upload_avatar_base64(req: AvatarUploadRequest):
+    """
+    Saves avatar base64 data to SQLite user profile.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -437,6 +449,63 @@ def upload_avatar(req: AvatarUploadRequest):
         "message": "Profile avatar updated successfully",
         "avatarUrl": req.avatar_base64
     }
+
+
+@router.post("/avatar/upload")
+async def upload_avatar_file(
+    student_id: str = Form("user_001"),
+    file: UploadFile = File(...)
+):
+    """
+    Receives binary image upload (PNG, JPG, WebP), stores on disk, and updates user profile.
+    """
+    try:
+        ext = os.path.splitext(file.filename or "avatar.png")[1].lower()
+        if ext not in [".png", ".jpg", ".jpeg", ".webp", ".gif"]:
+            ext = ".png"
+
+        clean_id = re.sub(r'[^a-zA-Z0-9_-]', '_', student_id)
+        saved_filename = f"{clean_id}{ext}"
+        file_path = os.path.join(AVATARS_DIR, saved_filename)
+
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        relative_url = f"/api/v1/auth/avatar/{clean_id}"
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET avatar_url = ? WHERE id = ? OR email = ?", (relative_url, student_id, student_id))
+        conn.commit()
+        conn.close()
+
+        return {
+            "success": True,
+            "message": "Avatar uploaded and saved successfully",
+            "studentId": student_id,
+            "filename": saved_filename,
+            "avatarUrl": relative_url
+        }
+    except Exception as e:
+        logger.error(f"Error saving avatar image: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload avatar: {str(e)}")
+
+
+@router.get("/avatar/{student_id}")
+def get_user_avatar(student_id: str):
+    """
+    Serves the persisted avatar image file directly from server disk.
+    """
+    clean_id = re.sub(r'[^a-zA-Z0-9_-]', '_', student_id)
+    for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"]:
+        candidate = os.path.join(AVATARS_DIR, f"{clean_id}{ext}")
+        if os.path.exists(candidate):
+            return FileResponse(candidate)
+    
+    # Return 404 if no custom avatar file exists
+    raise HTTPException(status_code=404, detail="Avatar not found")
+
 
 
 # ── 8. Change Password Endpoint ──────────────────────────────────────────────

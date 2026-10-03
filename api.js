@@ -333,20 +333,44 @@ const AuthAPI = {
         return { status: 200, data: { success: true, token: 'mock', user: mockUser } };
     },
 
-    uploadAvatar: async (base64String) => {
+    uploadAvatar: async (fileOrBase64) => {
         const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
         const sid = user.email || user.id || 'user_001';
+
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendBase = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+
+        if (fileOrBase64 instanceof File || fileOrBase64 instanceof Blob) {
+            try {
+                const formData = new FormData();
+                formData.append('student_id', sid);
+                formData.append('file', fileOrBase64);
+
+                const res = await fetch(`${backendBase}/api/v1/auth/avatar/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data && data.avatarUrl) {
+                    const fullUrl = data.avatarUrl.startsWith('http') ? data.avatarUrl : `${backendBase}${data.avatarUrl}`;
+                    user.avatarUrl = fullUrl;
+                    UserManager.set(user);
+                    return { status: 200, data: { success: true, avatarUrl: fullUrl } };
+                }
+            } catch(e) {}
+        }
+
         try {
-            const res = await mlApiCall('/auth/avatar', 'POST', { student_id: sid, avatar_base64: base64String });
+            const res = await mlApiCall('/auth/avatar', 'POST', { student_id: sid, avatar_base64: fileOrBase64 });
             if (res.status === 200 && res.data && res.data.avatarUrl) {
                 user.avatarUrl = res.data.avatarUrl;
                 UserManager.set(user);
                 return res;
             }
         } catch(e) {}
-        user.avatarUrl = base64String;
+        user.avatarUrl = typeof fileOrBase64 === 'string' ? fileOrBase64 : '';
         UserManager.set(user);
-        return { status: 200, data: { success: true, avatarUrl: base64String } };
+        return { status: 200, data: { success: true, avatarUrl: user.avatarUrl } };
     },
 
     changePassword: async (oldPassword, newPassword) => {

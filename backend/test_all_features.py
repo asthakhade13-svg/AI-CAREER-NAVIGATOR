@@ -224,6 +224,21 @@ def run_tests():
         print(f"[PASS] 23. Real-Time WebSockets Router Mounted (ws endpoint verified)")
         tests_passed += 1
 
+    # 24. Profile Avatar Binary Image Upload & Static Serving
+    total_tests += 1
+    fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+    res_av = client.post(
+        "/api/v1/auth/avatar/upload",
+        data={"student_id": "test_avatar_user"},
+        files={"file": ("profile.png", fake_png, "image/png")}
+    )
+    assert res_av.status_code == 200 and res_av.json().get("success"), f"Avatar upload failed: {res_av.text}"
+    
+    res_get_av = client.get("/api/v1/auth/avatar/test_avatar_user")
+    assert res_get_av.status_code == 200, f"Avatar get failed: {res_get_av.text}"
+    print("[PASS] 24. Profile Avatar Image File Upload & Static Disk Hosting")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
