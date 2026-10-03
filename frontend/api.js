@@ -1032,7 +1032,9 @@ const ProgressAPI = {
 
     exportStudyData: (format = 'csv') => {
         const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
-        const url = `${ML_API_BASE_URL}/progress/export-data/${encodeURIComponent(studentId)}?format=${format}`;
+        const url = format === 'csv' 
+            ? `${ML_API_BASE_URL}/progress/export-csv/${encodeURIComponent(studentId)}`
+            : `${ML_API_BASE_URL}/progress/export-data/${encodeURIComponent(studentId)}?format=${format}`;
         window.open(url, '_blank');
     }
 };

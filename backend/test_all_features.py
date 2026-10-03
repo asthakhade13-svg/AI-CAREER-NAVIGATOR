@@ -254,6 +254,16 @@ def run_tests():
     print("[PASS] 25. User Preferences & Dark Mode Multi-Device Sync")
     tests_passed += 1
 
+    # 26. Server-Side CSV Data & Progress Export
+    total_tests += 1
+    res_csv = client.get("/api/v1/progress/export-csv/test_student_01")
+    assert res_csv.status_code == 200, f"CSV export failed with status: {res_csv.status_code}"
+    assert "text/csv" in res_csv.headers.get("content-type", ""), "Content type is not text/csv"
+    assert "CareerNavigator_Progress_test_student_01.csv" in res_csv.headers.get("content-disposition", ""), "Invalid Content-Disposition filename header"
+    assert "AI CAREER NAVIGATOR - OFFICIAL STUDENT PROGRESS TRANSCRIPT" in res_csv.text, "CSV content missing header banner"
+    print("[PASS] 26. Server-Side CSV Data & Progress Export (GET /api/v1/progress/export-csv/{student_id})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

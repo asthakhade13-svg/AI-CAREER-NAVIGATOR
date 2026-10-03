@@ -937,11 +937,12 @@ from fastapi.responses import Response
 import csv
 import io
 
+@router.get("/export-csv/{student_id}")
 @router.get("/export-data/{student_id}")
 def export_student_data(student_id: str, format: str = Query("csv", pattern="^(csv|json)$")):
     """
     Exports the student's complete learning logs, study hours, milestones, and assessment history
-    as a downloadable CSV or structured JSON report.
+    as an official downloadable CSV or structured JSON report transcript.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -951,6 +952,9 @@ def export_student_data(student_id: str, format: str = Query("csv", pattern="^(c
     user = cursor.fetchone()
     user_name = user["full_name"] if user else "Student"
     user_track = user["career_track"] if user else "aiml"
+    college = user["college"] if user else "Oriental Institute of Science & Technology"
+    branch = user["branch"] if user else "CSE"
+    year = user["year"] if user else "1st Year"
 
     # Fetch Study Logs
     cursor.execute("SELECT day_name, hours_spent, log_date, created_at FROM study_logs WHERE student_id = ? ORDER BY created_at DESC", (student_id,))
@@ -961,8 +965,12 @@ def export_student_data(student_id: str, format: str = Query("csv", pattern="^(c
     quiz_rows = cursor.fetchall()
 
     # Fetch Milestones Completed
-    cursor.execute("SELECT track_key, milestone_id, completed_at FROM milestones_progress WHERE student_id = ? AND is_completed = 1", (student_id,))
+    cursor.execute("SELECT track_key, milestone_id, completed_at FROM milestones_progress WHERE student_id = ? AND is_completed = 1 ORDER BY completed_at DESC", (student_id,))
     milestone_rows = cursor.fetchall()
+
+    # Fetch Badges
+    cursor.execute("SELECT badge_name, unlocked_at FROM student_badges WHERE student_id = ? AND is_unlocked = 1", (student_id,))
+    badge_rows = cursor.fetchall()
 
     conn.close()
 
@@ -972,50 +980,76 @@ def export_student_data(student_id: str, format: str = Query("csv", pattern="^(c
             "studentId": student_id,
             "studentName": user_name,
             "careerTrack": user_track,
+            "college": college,
+            "branch": branch,
+            "year": year,
             "exportedAt": datetime.now().isoformat(),
             "studyLogs": [dict(r) for r in study_rows],
             "quizAttempts": [dict(r) for r in quiz_rows],
-            "completedMilestones": [dict(r) for r in milestone_rows]
+            "completedMilestones": [dict(r) for r in milestone_rows],
+            "unlockedBadges": [dict(r) for r in badge_rows]
         }
 
     # Generate CSV Output
     output = io.StringIO()
     writer = csv.writer(output)
     
-    writer.writerow(["=== AI CAREER NAVIGATOR LEARNING REPORT ==="])
+    writer.writerow(["=========================================================="])
+    writer.writerow(["AI CAREER NAVIGATOR - OFFICIAL STUDENT PROGRESS TRANSCRIPT"])
+    writer.writerow(["=========================================================="])
     writer.writerow(["Student ID", student_id])
     writer.writerow(["Student Name", user_name])
+    writer.writerow(["Institution", college])
+    writer.writerow(["Branch / Year", f"{branch} - {year}"])
     writer.writerow(["Career Track", user_track.upper()])
-    writer.writerow(["Exported At", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    writer.writerow(["Exported Timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
     writer.writerow([])
 
-    writer.writerow(["--- STUDY LOGS & HOURS LEARNED ---"])
-    writer.writerow(["Date", "Day", "Hours Logged"])
+    writer.writerow(["[1] STUDY LOGS & HOURS LEARNED"])
+    writer.writerow(["Date", "Day of Week", "Hours Logged", "Log Timestamp"])
     total_hours = 0.0
     for r in study_rows:
-        writer.writerow([r["log_date"], r["day_name"], r["hours_spent"]])
+        writer.writerow([r["log_date"], r["day_name"], r["hours_spent"], r["created_at"]])
         total_hours += float(r["hours_spent"] or 0)
-    writer.writerow(["TOTAL HOURS", "", round(total_hours, 1)])
+    if not study_rows:
+        writer.writerow(["No study logs recorded yet", "-", "0", "-"])
+    writer.writerow(["TOTAL STUDY HOURS", "", round(total_hours, 1), ""])
     writer.writerow([])
 
-    writer.writerow(["--- COMPLETED MILESTONES ---"])
-    writer.writerow(["Track", "Milestone ID", "Completed At"])
+    writer.writerow(["[2] COMPLETED ROADMAP MILESTONES"])
+    writer.writerow(["Career Track", "Milestone Key / ID", "Completion Timestamp"])
     for m in milestone_rows:
-        writer.writerow([m["track_key"], m["milestone_id"], m["completed_at"]])
+        writer.writerow([m["track_key"].upper(), m["milestone_id"], m["completed_at"]])
+    if not milestone_rows:
+        writer.writerow(["No completed milestones yet", "-", "-"])
     writer.writerow([])
 
-    writer.writerow(["--- ASSESSMENT & QUIZ ATTEMPTS ---"])
-    writer.writerow(["Track", "Score (%)", "Correct Answers", "Total Questions", "Attempt Date"])
+    writer.writerow(["[3] QUIZ & ASSESSMENT HISTORY"])
+    writer.writerow(["Career Track", "Score Percentage (%)", "Correct Answers", "Total Questions", "Attempt Timestamp"])
     for q in quiz_rows:
-        writer.writerow([q["track_key"], q["score"], q["correct_answers"], q["total_questions"], q["created_at"]])
+        writer.writerow([q["track_key"].upper(), f"{q['score']}%", q["correct_answers"], q["total_questions"], q["created_at"]])
+    if not quiz_rows:
+        writer.writerow(["No quiz attempts recorded yet", "-", "-", "-", "-"])
+    writer.writerow([])
+
+    writer.writerow(["[4] UNLOCKED BADGES & ACHIEVEMENTS"])
+    writer.writerow(["Badge Title", "Unlocked Timestamp"])
+    for b in badge_rows:
+        writer.writerow([b["badge_name"], b["unlocked_at"]])
+    if not badge_rows:
+        writer.writerow(["No badges unlocked yet", "-"])
 
     csv_content = output.getvalue()
-    filename = f"career_nav_learning_report_{student_id}.csv"
+    safe_sid = "".join(c for c in student_id if c.isalnum() or c in ('_', '-'))
+    filename = f"CareerNavigator_Progress_{safe_sid}.csv"
 
     return Response(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
     )
 
 
