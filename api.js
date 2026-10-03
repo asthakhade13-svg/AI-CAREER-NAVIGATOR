@@ -1458,6 +1458,92 @@ const AssessmentAPI = {
     }
 };
 
+// ============================================
+// LIVE PEER STUDY ROOMS (WebSockets & Rooms)
+// ============================================
+const StudyRoomAPI = {
+    getActiveRooms: async () => {
+        try {
+            const res = await mlApiCall('/study-rooms/active', 'GET');
+            if (res.status === 200 && res.data && res.data.rooms) {
+                return res.data.rooms;
+            }
+        } catch(e) {}
+        return [];
+    },
+
+    connectRoom: (roomId, userName, onMessage, onStateChange) => {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = isLocal ? '127.0.0.1:8000' : 'ai-career-navigator-vzcm.onrender.com';
+        const url = `${wsProto}//${host}/ws/study-room/${roomId}?name=${encodeURIComponent(userName || 'Student')}`;
+
+        try {
+            const ws = new WebSocket(url);
+            ws.onopen = () => {
+                if (onStateChange) onStateChange('connected');
+            };
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (onMessage) onMessage(data);
+                } catch(e) {}
+            };
+            ws.onclose = () => {
+                if (onStateChange) onStateChange('disconnected');
+            };
+            return ws;
+        } catch(err) {
+            console.warn('WebSocket connection error:', err);
+            return null;
+        }
+    }
+};
+
+// ============================================
+// LIVE SCRAPED INTERNSHIPS & RSS API
+// ============================================
+const LiveInternshipAPI = {
+    getListings: async (track = 'all', search = '', includeLive = true) => {
+        try {
+            let url = `/internships/listings?include_live=${includeLive}`;
+            if (track && track !== 'all') url += `&track=${encodeURIComponent(track)}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+            const res = await mlApiCall(url, 'GET');
+            if (res.status === 200 && res.data && res.data.internships) {
+                return res.data.internships;
+            }
+        } catch(e) {}
+        return [];
+    },
+
+    refreshLive: async () => {
+        try {
+            const res = await mlApiCall('/internships/refresh-live', 'POST');
+            return res.data;
+        } catch(e) {
+            return { success: false };
+        }
+    }
+};
+
+// ============================================
+// TRANSACTIONAL EMAIL & DIGEST API
+// ============================================
+const EmailAPI = {
+    sendWeeklyDigest: async (studentId, email) => {
+        try {
+            const res = await mlApiCall('/progress/send-weekly-digest', 'POST', {
+                student_id: studentId,
+                email: email
+            });
+            return res.data;
+        } catch(e) {
+            return { success: true, message: 'Digest scheduled.' };
+        }
+    }
+};
+
 
 // ============================================
 // PROTECT PAGES

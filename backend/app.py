@@ -92,7 +92,8 @@ from routes import (
     career_routes,
     notification_routes,
     dashboard_routes,
-    resume_routes
+    resume_routes,
+    websocket_routes
 )
 
 # ── Health check (used by frontend ping) ─────────────────────────────────────
@@ -130,6 +131,7 @@ app.include_router(project_routes.router)
 app.include_router(career_routes.router)
 app.include_router(notification_routes.router)
 app.include_router(resume_routes.router)
+app.include_router(websocket_routes.router)
 app.include_router(basic_info_routes.router,        prefix="/api/v1/basic_info",         tags=["Basic Info"])
 app.include_router(adaptive_quiz_routes.router,     prefix="/api/v1/quiz/adaptive",      tags=["Adaptive Quiz"])
 app.include_router(quiz_routes.router,              prefix="/api/v1/quiz",               tags=["Quiz"])

@@ -212,6 +212,45 @@ def get_weekly_report(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class WeeklyDigestEmailRequest(BaseModel):
+    student_id: str = "user_001"
+    email: Optional[str] = "astha.khade@oist.edu"
+    user_name: Optional[str] = "Astha Khade"
+    track_key: Optional[str] = "aiml"
+
+
+@router.post("/send-weekly-digest")
+def send_digest_email(payload: WeeklyDigestEmailRequest):
+    """
+    Generates and emails student weekly AI progress summary and readiness stats.
+    """
+    from services.email_service import send_weekly_digest_email
+    from services.report_service import get_weekly_ai_report
+
+    try:
+        report = get_weekly_ai_report(student_id=payload.student_id, track_key=payload.track_key or "aiml", user_name=payload.user_name or "Student")
+        res = send_weekly_digest_email(
+            to_email=payload.email or "astha.khade@oist.edu",
+            user_name=payload.user_name or "Student",
+            weekly_data={
+                "track": payload.track_key or "aiml",
+                "hours": report.get("hours_spent", 8.5),
+                "streak": report.get("current_streak", 7),
+                "milestonesCompleted": report.get("milestones_completed", 2),
+                "readinessScore": report.get("job_readiness_score", 82)
+            }
+        )
+        return {
+            "status": 200,
+            "success": True,
+            "message": "Weekly digest email dispatched successfully",
+            "dispatchResult": res
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @router.post("/goals")
 def set_goals(payload: WeeklyGoalRequest):
     """

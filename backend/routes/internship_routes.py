@@ -133,16 +133,28 @@ ALL_INTERNSHIPS: List[dict] = [
     }
 ]
 
+from services.internship_scraper import scrape_live_rss_internships
+
+_LIVE_CACHE: List[dict] = []
+
 @router.get("/list")
 @router.get("/listings")
 def get_internships(
     track: Optional[str] = Query(None, description="Filter by track: uiux, aiml, cyber, webdev, cloud, data, all"),
-    search: Optional[str] = Query(None, description="Keyword search")
+    search: Optional[str] = Query(None, description="Keyword search"),
+    include_live: bool = Query(True, description="Include live scraped RSS feed openings")
 ):
     """
-    Returns list of curated internship openings with filtering.
+    Returns list of curated and live-scraped internship openings with filtering.
     """
-    results = ALL_INTERNSHIPS
+    global _LIVE_CACHE
+    if include_live and not _LIVE_CACHE:
+        try:
+            _LIVE_CACHE = scrape_live_rss_internships()
+        except Exception:
+            _LIVE_CACHE = []
+
+    results = list(ALL_INTERNSHIPS) + list(_LIVE_CACHE)
 
     if track and track != "all":
         results = [i for i in results if i["track"] == track or track in i["role_type"].lower()]
@@ -151,21 +163,58 @@ def get_internships(
         s = search.lower()
         results = [
             i for i in results
-            if s in i["title"].lower() or s in i["company"].lower() or s in i["skills"] or s in i["description"].lower()
+            if s in i["title"].lower() or s in i["company"].lower() or any(s in sk.lower() for sk in i.get("skills", [])) or s in i.get("description", "").lower()
         ]
 
     return {
         "status": 200,
         "total": len(results),
+        "curatedCount": len(ALL_INTERNSHIPS),
+        "liveScrapedCount": len(_LIVE_CACHE),
         "internships": results
     }
+
+
+@router.post("/refresh-live")
+def refresh_live_internships():
+    """
+    Forces a background re-scrape of live tech RSS feeds and updates in-memory cache.
+    """
+    global _LIVE_CACHE
+    _LIVE_CACHE = scrape_live_rss_internships()
+    return {
+        "status": 200,
+        "success": True,
+        "message": f"Successfully scraped {len(_LIVE_CACHE)} live tech internship openings",
+        "liveCount": len(_LIVE_CACHE),
+        "scrapedItems": _LIVE_CACHE
+    }
+
+
+@router.get("/live-feed")
+def get_live_feed():
+    """
+    Returns exclusively the real-time live scraped tech openings.
+    """
+    global _LIVE_CACHE
+    if not _LIVE_CACHE:
+        _LIVE_CACHE = scrape_live_rss_internships()
+    return {
+        "status": 200,
+        "success": True,
+        "total": len(_LIVE_CACHE),
+        "openings": _LIVE_CACHE
+    }
+
 
 @router.get("/{internship_id}")
 def get_internship_detail(internship_id: str):
     """
-    Returns full details for a single internship.
+    Returns full details for a single internship (checks both curated and live cache).
     """
-    for item in ALL_INTERNSHIPS:
+    all_combined = list(ALL_INTERNSHIPS) + list(_LIVE_CACHE)
+    for item in all_combined:
         if item["id"] == internship_id:
             return {"status": 200, "internship": item}
     return {"status": 404, "message": "Internship not found"}
+
