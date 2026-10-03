@@ -239,6 +239,21 @@ def run_tests():
     print("[PASS] 24. Profile Avatar Image File Upload & Static Disk Hosting")
     tests_passed += 1
 
+    # 25. User Preferences & Dark Mode Cloud Sync
+    total_tests += 1
+    res_pref_put = client.put("/api/v1/auth/preferences", json={
+        "student_id": "test_pref_user",
+        "dark_mode": True,
+        "email_digest": True,
+        "streak_reminders": True
+    })
+    assert res_pref_put.status_code == 200 and res_pref_put.json().get("success"), f"Preferences PUT failed: {res_pref_put.text}"
+
+    res_pref_get = client.get("/api/v1/auth/preferences/test_pref_user")
+    assert res_pref_get.status_code == 200 and res_pref_get.json()["preferences"]["darkMode"] is True, f"Preferences GET failed: {res_pref_get.text}"
+    print("[PASS] 25. User Preferences & Dark Mode Multi-Device Sync")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

@@ -1865,9 +1865,58 @@ function bindSidebarUserClicks() {
     }
 }
 
+// ============================================
+// USER PREFERENCES & THEME SYNC API
+// ============================================
+const UserPreferencesAPI = {
+    getPreferences: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/auth/preferences/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.preferences) {
+                return res.data.preferences;
+            }
+        } catch(e) {}
+        return { darkMode: false, emailDigest: true, streakReminders: true };
+    },
+
+    savePreferences: async (prefs) => {
+        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            const payload = {
+                student_id: sid,
+                dark_mode: Boolean(prefs.darkMode),
+                email_digest: Boolean(prefs.emailDigest !== false),
+                streak_reminders: Boolean(prefs.streakReminders !== false),
+                custom_api_key: prefs.customApiKey || ''
+            };
+            const res = await mlApiCall('/auth/preferences', 'PUT', payload);
+            if (res.status === 200) {
+                localStorage.setItem('theme', prefs.darkMode ? 'dark' : 'light');
+                return res.data;
+            }
+        } catch(e) {}
+        localStorage.setItem('theme', prefs.darkMode ? 'dark' : 'light');
+        return { success: true, preferences: prefs };
+    },
+
+    applyThemeOnLoad: async () => {
+        try {
+            const prefs = await UserPreferencesAPI.getPreferences();
+            if (prefs && prefs.darkMode) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch(e) {}
+    }
+};
+
 // ---- Auto run when page loads ----
 document.addEventListener('DOMContentLoaded', () => {
     updateSidebarUser();
     initNotificationCenter();
     bindSidebarUserClicks();
+    UserPreferencesAPI.applyThemeOnLoad();
 });
