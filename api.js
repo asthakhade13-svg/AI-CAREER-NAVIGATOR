@@ -1243,9 +1243,26 @@ const NotificationAPI = {
         };
     },
 
+    markAllRead: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/notifications/mark-all-read/${encodeURIComponent(sid)}`, 'POST');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        try {
+            return await mlApiCall('/notifications/mark-read', 'POST', { student_id: sid });
+        } catch(err) {
+            return { success: true };
+        }
+    },
+
     markRead: async (notificationId = null) => {
         const user = UserManager.get() || { email: 'user_001' };
         const sid = user.email || user.id || 'user_001';
+        if (!notificationId) {
+            return await NotificationAPI.markAllRead(sid);
+        }
         try {
             return await mlApiCall('/notifications/mark-read', 'POST', { student_id: sid, notification_id: notificationId });
         } catch(e) {
@@ -1747,7 +1764,9 @@ function toggleNotificationDropdown(btn, notifData) {
     dropdown.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
             <strong style="font-size:0.95rem; color:#1e293b;"><i class="fas fa-bell" style="color:#4F46E5; margin-right:6px;"></i> Notifications</strong>
-            <button id="markReadBtn" style="background:none; border:none; color:#4F46E5; font-size:0.75rem; cursor:pointer; font-weight:600;">Mark all read</button>
+            <button id="markReadBtn" style="background:none; border:none; color:#4F46E5; font-size:0.76rem; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:5px; padding:3px 6px; border-radius:6px; transition:background 0.2s;" title="Mark all as read">
+                <i class="fas fa-check-double" style="font-size:0.72rem;"></i> Mark All as Read
+            </button>
         </div>
         <div style="max-height: 260px; overflow-y: auto;">
             ${itemsHtml}
@@ -1761,7 +1780,11 @@ function toggleNotificationDropdown(btn, notifData) {
         markBtn.onclick = async (e) => {
             e.stopPropagation();
             try {
-                if (typeof NotificationAPI !== 'undefined') await NotificationAPI.markRead();
+                if (typeof NotificationAPI !== 'undefined' && NotificationAPI.markAllRead) {
+                    await NotificationAPI.markAllRead();
+                } else if (typeof NotificationAPI !== 'undefined') {
+                    await NotificationAPI.markRead();
+                }
             } catch(err) {}
             const dot = btn.querySelector('.notif-dot');
             if (dot) dot.style.display = 'none';

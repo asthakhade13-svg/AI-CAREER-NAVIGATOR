@@ -275,6 +275,26 @@ def run_tests():
     print(f"[PASS] 27. Dynamic AI Daily Study Tips Generator (Tip: {tip_data['tip'][:40]}...)")
     tests_passed += 1
 
+    # 28. Batch Mark All Read for Notification Center
+    total_tests += 1
+    # First dispatch a test notification
+    client.post("/api/v1/notifications/send", json={
+        "student_id": "test_notif_student",
+        "title": "🎉 Project Verified!",
+        "message": "Your capstone repository was successfully validated.",
+        "type": "project"
+    })
+    # Mark all as read
+    res_notif_read = client.post("/api/v1/notifications/mark-all-read/test_notif_student")
+    assert res_notif_read.status_code == 200 and res_notif_read.json().get("success"), f"Mark all read failed: {res_notif_read.text}"
+    
+    # Query to confirm unreadCount is 0
+    res_notifs = client.get("/api/v1/notifications/test_notif_student")
+    assert res_notifs.status_code == 200, f"Get notifs failed: {res_notifs.text}"
+    assert res_notifs.json().get("unreadCount") == 0, "Unread count should be 0 after mark-all-read"
+    print("[PASS] 28. Batch Mark All Read for Notification Center (POST /api/v1/notifications/mark-all-read/{student_id})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

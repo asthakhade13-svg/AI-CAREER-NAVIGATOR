@@ -78,6 +78,28 @@ def get_notifications(student_id: str):
     }
 
 
+@router.post("/mark-all-read/{student_id}")
+def mark_all_notifications_read_path(student_id: str):
+    """
+    Marks all unread notifications as read for the specified student.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    UPDATE notifications SET is_read = 1 WHERE student_id = ? AND is_read = 0
+    """, (student_id,))
+    updated_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "markedCount": max(0, updated_count),
+        "message": "All notifications marked as read"
+    }
+
+
 @router.post("/mark-read")
 def mark_notifications_read(payload: MarkReadRequest):
     conn = get_db_connection()
@@ -89,7 +111,7 @@ def mark_notifications_read(payload: MarkReadRequest):
         """, (payload.notification_id, payload.student_id))
     else:
         cursor.execute("""
-        UPDATE notifications SET is_read = 1 WHERE student_id = ?
+        UPDATE notifications SET is_read = 1 WHERE student_id = ? AND is_read = 0
         """, (payload.student_id,))
 
     conn.commit()
