@@ -343,13 +343,24 @@
 requireAuth();
 
 // ========================================
-// QUIZ STATE
+// QUIZ STATE & QUESTION TIMINGS
 // ========================================
 let current  = 0;
 let answers  = [];
 let questions = [];
 let timerInterval;
 let timeLeft = 600;
+let questionTimings = {};
+let questionStartTime = Date.now();
+
+function recordCurrentQuestionTime() {
+    if (!questions || !questions[current]) return;
+    const now = Date.now();
+    const elapsed = Math.max(1, Math.round((now - (questionStartTime || now)) / 1000));
+    const qKey = questions[current].id ? `q${questions[current].id}` : `q_${current + 1}`;
+    questionTimings[qKey] = (questionTimings[qKey] || 0) + elapsed;
+    questionStartTime = Date.now();
+}
 
 // ========================================
 // LOAD QUESTIONS FROM BACKEND API
@@ -393,6 +404,8 @@ async function startQuiz() {
     const loaded = await loadQuestions();
 
     if (loaded && questions.length > 0) {
+        questionTimings = {};
+        questionStartTime = Date.now();
         buildDots();
         renderQuestion();
         startTimer();
@@ -541,6 +554,7 @@ function selectOption(optionId, index) {
 // NAVIGATION
 // ========================================
 function nextQuestion() {
+    recordCurrentQuestionTime();
     if (current === questions.length - 1) {
         clearInterval(timerInterval);
         submitQuiz();
@@ -552,6 +566,7 @@ function nextQuestion() {
 
 function prevQuestion() {
     if (current > 0) {
+        recordCurrentQuestionTime();
         current--;
         renderQuestion();
     }
@@ -561,6 +576,8 @@ function prevQuestion() {
 // SUBMIT QUIZ TO BACKEND
 // ========================================
 async function submitQuiz() {
+    recordCurrentQuestionTime();
+
     // Hide quiz screen
     document.getElementById('quizScreen')
         .style.display = 'none';
@@ -609,14 +626,14 @@ async function submitQuiz() {
             // Show results
             showResults(result.data);
 
-            // Log attempt to ledger
+            // Log attempt to ledger with granular per-question timings
             try {
                 const timeTaken = 600 - timeLeft;
                 const totalScore = result.data.totalScore || 85;
                 const correctAnswers = result.data.correctAnswers || 8;
                 const totalQuestions = result.data.totalQuestions || 10;
                 const topMatch = ((result.data.topCareerMatch || 'aiml') + '').toLowerCase().includes('web') ? 'webdev' : 'aiml';
-                await QuizAPI.logAttempt(topMatch, totalScore, totalQuestions, correctAnswers, timeTaken);
+                await QuizAPI.logAttempt(topMatch, totalScore, totalQuestions, correctAnswers, timeTaken, questionTimings);
             } catch (e) {
                 console.log('Quiz log error:', e);
             }

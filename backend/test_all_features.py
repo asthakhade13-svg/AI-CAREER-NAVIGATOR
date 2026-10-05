@@ -295,6 +295,29 @@ def run_tests():
     print("[PASS] 28. Batch Mark All Read for Notification Center (POST /api/v1/notifications/mark-all-read/{student_id})")
     tests_passed += 1
 
+    # 29. Granular Per-Question Assessment Timing Analytics
+    total_tests += 1
+    sample_timings = {"q1": 18, "q2": 42, "q3": 12, "q4": 35}
+    res_log = client.post("/api/v1/quiz/log-attempt", json={
+        "student_id": "test_timing_student",
+        "track_key": "webdev",
+        "score": 90,
+        "total_questions": 4,
+        "correct_answers": 4,
+        "time_taken_sec": 107,
+        "question_timings": sample_timings
+    })
+    assert res_log.status_code == 200 and res_log.json().get("success"), f"Log attempt with timings failed: {res_log.text}"
+
+    res_history = client.get("/api/v1/quiz/history/test_timing_student")
+    assert res_history.status_code == 200, f"Get quiz history failed: {res_history.text}"
+    history_items = res_history.json().get("history", [])
+    assert len(history_items) > 0, "No history items returned"
+    latest_attempt = history_items[0]
+    assert latest_attempt.get("questionTimings") == sample_timings, f"Timing analytics mismatch: {latest_attempt.get('questionTimings')}"
+    print("[PASS] 29. Granular Per-Question Assessment Timing Analytics (POST /api/v1/quiz/log-attempt + GET /api/v1/quiz/history/{student_id})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

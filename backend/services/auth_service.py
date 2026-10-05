@@ -160,9 +160,14 @@ def init_sqlite_db():
             total_questions INTEGER DEFAULT 10,
             correct_answers INTEGER DEFAULT 8,
             time_taken_sec INTEGER DEFAULT 120,
+            question_timings TEXT DEFAULT '{}',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+        try:
+            cursor.execute("ALTER TABLE quiz_attempts ADD COLUMN question_timings TEXT DEFAULT '{}'")
+        except Exception:
+            pass
 
         # 10. Milestones Progress Table
         cursor.execute("""

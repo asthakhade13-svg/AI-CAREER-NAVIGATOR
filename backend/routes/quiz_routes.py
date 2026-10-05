@@ -119,6 +119,7 @@ async def api_evaluate_cs_quiz(request: CSQuizEvaluationRequest):
 
 # ── 6. Quiz Attempt History Ledger Endpoints ─────────────────────────────────
 from services.auth_service import get_db_connection
+import json
 
 class LogQuizAttemptRequest(BaseModel):
     student_id: str
@@ -127,26 +128,30 @@ class LogQuizAttemptRequest(BaseModel):
     total_questions: Optional[int] = 10
     correct_answers: Optional[int] = 8
     time_taken_sec: Optional[int] = 120
+    question_timings: Optional[Dict[str, Any]] = None
 
 @router.post("/log-attempt")
 def log_quiz_attempt(req: LogQuizAttemptRequest):
     """
-    Records a completed quiz attempt in the persistent SQLite history ledger.
+    Records a completed quiz attempt in the persistent SQLite history ledger including per-question timing analytics.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    timings_json = json.dumps(req.question_timings or {})
+
     cursor.execute("""
-    INSERT INTO quiz_attempts (student_id, track_key, score, total_questions, correct_answers, time_taken_sec)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """, (req.student_id, req.track_key, req.score, req.total_questions or 10, req.correct_answers or 8, req.time_taken_sec or 120))
+    INSERT INTO quiz_attempts (student_id, track_key, score, total_questions, correct_answers, time_taken_sec, question_timings)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (req.student_id, req.track_key, req.score, req.total_questions or 10, req.correct_answers or 8, req.time_taken_sec or 120, timings_json))
     conn.commit()
     conn.close()
 
     return {
         "success": True,
         "message": "Quiz attempt logged successfully",
-        "score": req.score
+        "score": req.score,
+        "questionTimings": req.question_timings or {}
     }
 
 @router.get("/history/{student_id}")
@@ -163,18 +168,24 @@ def get_quiz_history(student_id: str):
     rows = cursor.fetchall()
     conn.close()
 
-    attempts = [
-        {
+    attempts = []
+    for r in rows:
+        raw_timings = r["question_timings"] if "question_timings" in r.keys() and r["question_timings"] else "{}"
+        try:
+            parsed_timings = json.loads(raw_timings)
+        except Exception:
+            parsed_timings = {}
+
+        attempts.append({
             "id": r["id"],
             "trackKey": r["track_key"],
             "score": r["score"],
             "totalQuestions": r["total_questions"],
             "correctAnswers": r["correct_answers"],
             "timeTakenSec": r["time_taken_sec"],
+            "questionTimings": parsed_timings,
             "createdAt": r["created_at"]
-        }
-        for r in rows
-    ]
+        })
 
     return {
         "success": True,

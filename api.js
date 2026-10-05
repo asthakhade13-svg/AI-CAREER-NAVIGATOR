@@ -461,7 +461,7 @@ const QuizAPI = {
         };
     },
 
-    logAttempt: async (trackKey, score, totalQuestions = 10, correctAnswers = 8, timeTakenSec = 120) => {
+    logAttempt: async (trackKey, score, totalQuestions = 10, correctAnswers = 8, timeTakenSec = 120, questionTimings = {}) => {
         const user = UserManager.get() || { email: 'user_001' };
         const sid = user.email || user.id || 'user_001';
         try {
@@ -471,7 +471,8 @@ const QuizAPI = {
                 score: score,
                 total_questions: totalQuestions,
                 correct_answers: correctAnswers,
-                time_taken_sec: timeTakenSec
+                time_taken_sec: timeTakenSec,
+                question_timings: questionTimings || {}
             });
         } catch(e) {
             return { status: 200, data: { success: true } };
