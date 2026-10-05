@@ -797,6 +797,20 @@ const ChatAPI = {
                 }
             };
         }
+    },
+
+    getDailyTip: async (trackKey = 'webdev', milestone = '', apiKey = null) => {
+        const user = UserManager.get() || { email: 'student@example.com' };
+        const studentId = user.email || user.id || 'user_001';
+        const savedKey = apiKey || localStorage.getItem('GEMINI_API_KEY') || '';
+        try {
+            const endpoint = `/chatbot/daily-tip?track_key=${encodeURIComponent(trackKey)}&milestone=${encodeURIComponent(milestone || '')}&student_id=${encodeURIComponent(studentId)}&api_key=${encodeURIComponent(savedKey)}`;
+            const res = await mlApiCall(endpoint, 'GET');
+            if (res.status === 200 && res.data && res.data.tip) {
+                return res.data.tip;
+            }
+        } catch(e) {}
+        return null;
     }
 };
 const ChatbotAPI = ChatAPI;

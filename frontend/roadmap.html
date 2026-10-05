@@ -1399,13 +1399,34 @@ requireAuth();
   }
 
   // ========================================
-  // NEW AI TIP
+  // NEW AI TIP (Real-time Gemini / Domain Cache)
   // ========================================
-  function newTip() {
-    currentTipIdx =
-      (currentTipIdx + 1) % aiTips.length;
-    document.getElementById('aiTip').textContent =
-      `"${aiTips[currentTipIdx]}"`;
+  async function newTip() {
+    const tipEl = document.getElementById('aiTip');
+    if (!tipEl) return;
+
+    tipEl.style.transition = 'opacity 0.2s ease';
+    tipEl.style.opacity = '0.4';
+
+    try {
+      if (typeof ChatbotAPI !== 'undefined' && ChatbotAPI.getDailyTip) {
+        const activeMilestone = (typeof roadmaps !== 'undefined' && roadmaps[currentPath] && roadmaps[currentPath].steps && roadmaps[currentPath].steps[currentStep])
+          ? roadmaps[currentPath].steps[currentStep].title
+          : '';
+        const aiTipText = await ChatbotAPI.getDailyTip(currentPath, activeMilestone);
+        if (aiTipText) {
+          tipEl.textContent = `"${aiTipText}"`;
+          tipEl.style.opacity = '1';
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('AI Daily Tip notice:', e);
+    }
+
+    currentTipIdx = (currentTipIdx + 1) % aiTips.length;
+    tipEl.textContent = `"${aiTips[currentTipIdx]}"`;
+    tipEl.style.opacity = '1';
   }
 
   // ========================================

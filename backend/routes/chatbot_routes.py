@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from utils.validators import ChatMessage
-from services.chatbot_service import mentor_chat
+from services.chatbot_service import mentor_chat, generate_daily_study_tip
 from services.auth_service import get_db_connection
+from fastapi import UploadFile, File, Form
+from typing import Optional
 
 router = APIRouter()
 
@@ -88,9 +90,6 @@ def clear_chat_history(student_id: str):
 
 
 # ── Server-Side Voice Transcription Fallback ────────────────────────────────
-from fastapi import UploadFile, File, Form
-from typing import Optional
-
 @router.post("/voice")
 async def api_voice_transcribe(
     student_id: str = Form("user_001"),
@@ -148,5 +147,37 @@ async def api_voice_transcribe(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Voice processing error: {str(e)}")
+
+
+# ── Dynamic AI Daily Study Tips Generator ───────────────────────────────────
+@router.get("/daily-tip")
+def get_daily_study_tip(
+    track_key: str = Query("webdev", description="Career Track key (e.g. webdev, aiml, cybersecurity, etc.)"),
+    milestone: Optional[str] = Query(None, description="Active milestone topic"),
+    student_id: Optional[str] = Query("user_001", description="Student identifier"),
+    api_key: Optional[str] = Query(None, description="Custom Gemini API Key")
+):
+    """
+    Returns a personalized, actionable 1-sentence study tip tailored to the student's current learning topic.
+    Utilizes Google Gemini with seamless fallback to curated intelligent domain caches.
+    """
+    try:
+        tip, source = generate_daily_study_tip(
+            track_key=track_key,
+            milestone=milestone,
+            student_id=student_id or "user_001",
+            custom_api_key=api_key
+        )
+        return {
+            "success": True,
+            "trackKey": track_key,
+            "milestone": milestone,
+            "studentId": student_id,
+            "tip": tip,
+            "source": source
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Study tip generation failed: {str(e)}")
+
 
 

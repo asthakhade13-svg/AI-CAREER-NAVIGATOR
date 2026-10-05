@@ -264,6 +264,17 @@ def run_tests():
     print("[PASS] 26. Server-Side CSV Data & Progress Export (GET /api/v1/progress/export-csv/{student_id})")
     tests_passed += 1
 
+    # 27. Dynamic AI Daily Study Tips Generator
+    total_tests += 1
+    res_tip = client.get("/api/v1/chatbot/daily-tip?track_key=webdev&milestone=React%20State%20Management")
+    assert res_tip.status_code == 200, f"Daily tip failed with status: {res_tip.status_code}"
+    tip_data = res_tip.json()
+    assert tip_data.get("success") is True, "Daily tip response missing success flag"
+    assert "tip" in tip_data and len(tip_data["tip"]) > 10, "Daily tip response missing or invalid tip content"
+    assert tip_data.get("trackKey") == "webdev", "Daily tip trackKey mismatch"
+    print(f"[PASS] 27. Dynamic AI Daily Study Tips Generator (Tip: {tip_data['tip'][:40]}...)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
