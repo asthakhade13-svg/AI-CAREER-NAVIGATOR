@@ -329,6 +329,20 @@ def init_sqlite_db():
             scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # 22. Analytics Events Table (Shares & Referrals)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS analytics_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            target_id TEXT DEFAULT '',
+            platform TEXT DEFAULT 'generic',
+            referral_code TEXT DEFAULT '',
+            metadata TEXT DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

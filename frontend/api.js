@@ -617,6 +617,22 @@ const CareerAPI = {
             }
         } catch(e) {}
         return null;
+    },
+
+    trackShare: async (careerId, platform = 'generic', metadata = {}) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/careers/share', 'POST', {
+                student_id: sid,
+                career_id: careerId,
+                platform: platform,
+                referral_code: `REF-${(sid || 'USER').slice(0, 6).toUpperCase()}`,
+                metadata: metadata
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
     }
 };
 

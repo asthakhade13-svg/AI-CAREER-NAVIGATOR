@@ -318,6 +318,20 @@ def run_tests():
     print("[PASS] 29. Granular Per-Question Assessment Timing Analytics (POST /api/v1/quiz/log-attempt + GET /api/v1/quiz/history/{student_id})")
     tests_passed += 1
 
+    # 30. Career Card Share & Referral Analytics
+    total_tests += 1
+    res_share = client.post("/api/v1/careers/share", json={
+        "student_id": "test_referral_user",
+        "career_id": "aiml",
+        "platform": "whatsapp",
+        "referral_code": "REF-ASTHA1",
+        "metadata": {"source": "card_modal"}
+    })
+    assert res_share.status_code == 200 and res_share.json().get("success"), f"Share tracking failed: {res_share.text}"
+    assert res_share.json().get("referralCode") == "REF-ASTHA1", "Referral code mismatch"
+    print("[PASS] 30. Career Card Share & Referral Analytics (POST /api/v1/careers/share)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

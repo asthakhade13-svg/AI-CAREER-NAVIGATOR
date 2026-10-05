@@ -275,3 +275,42 @@ def get_career_market_trends(career_id: str):
     }
 
 
+# ── 5. Career Card Share & Referral Analytics ────────────────────────────────
+import json
+
+class ShareEventRequest(BaseModel):
+    student_id: str = "user_001"
+    career_id: str
+    platform: Optional[str] = "generic"
+    referral_code: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+@router.post("/share")
+def log_career_share_event(payload: ShareEventRequest):
+    """
+    Logs student career card share and referral events into SQLite analytics_events table.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    meta_json = json.dumps(payload.metadata or {})
+    ref_code = payload.referral_code or f"REF-{(payload.student_id or 'USER')[:6].upper()}"
+
+    cursor.execute("""
+    INSERT INTO analytics_events (student_id, event_type, target_id, platform, referral_code, metadata)
+    VALUES (?, 'career_share', ?, ?, ?, ?)
+    """, (payload.student_id, payload.career_id, payload.platform or "generic", ref_code, meta_json))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Tracked share event for {payload.career_id} on {payload.platform}",
+        "referralCode": ref_code,
+        "careerId": payload.career_id,
+        "platform": payload.platform
+    }
+
+
+

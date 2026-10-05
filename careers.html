@@ -890,13 +890,21 @@ updateSidebarUser();
 
         </div>
 
-        <div class="modal-actions">
+        <div class="modal-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
           <a href="roadmap.html"
              class="btn btn-primary"
              style="flex:1">
             <i class="fas fa-map"></i>
             Start This Path
           </a>
+          <button
+            class="btn btn-outline"
+            onclick="shareCareer('${key}')"
+            title="Share track and referral link"
+            style="display:flex; align-items:center; gap:6px;">
+            <i class="fas fa-share-alt"></i>
+            Share
+          </button>
           <button
             class="btn btn-outline"
             onclick="closeModal()">
@@ -923,6 +931,47 @@ updateSidebarUser();
     document.getElementById('modalOverlay')
             .classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  // ========================================
+  // TRACKED SHARE & REFERRAL ANALYTICS
+  // ========================================
+  async function shareCareer(key, platform = 'generic') {
+    const d = careerData[key] || { title: key.toUpperCase() };
+    const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+    const studentId = user?.email || user?.id || 'user_001';
+    const refCode = `REF-${(studentId || 'USER').slice(0, 6).toUpperCase()}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?track=${key}&ref=${refCode}`;
+    const shareText = `Explore the ${d.title} Career Roadmap & Milestones on AI Career Navigator! 🚀 ${shareUrl}`;
+
+    // 1. Log share event to backend SQLite analytics_events
+    try {
+      if (typeof CareerAPI !== 'undefined' && CareerAPI.trackShare) {
+        await CareerAPI.trackShare(key, platform, { careerTitle: d.title, url: shareUrl });
+      }
+    } catch(e) {
+      console.warn('Share event analytics notice:', e);
+    }
+
+    // 2. Open native Web Share API dialog if available
+    if (navigator.share && platform === 'generic') {
+      try {
+        await navigator.share({
+          title: `Career Roadmap: ${d.title}`,
+          text: `Explore ${d.title} roadmap, salary curves, and milestones on AI Career Navigator!`,
+          url: shareUrl
+        });
+        return;
+      } catch(err) {}
+    }
+
+    // 3. Fallback to clipboard copy
+    try {
+      await navigator.clipboard.writeText(shareText);
+      alert(`🔗 Track link copied to clipboard with your referral ID (${refCode})! Share it on WhatsApp, LinkedIn, or Twitter.`);
+    } catch(e) {
+      prompt('Copy your tracked referral link below:', shareUrl);
+    }
   }
 
   // ========================================
