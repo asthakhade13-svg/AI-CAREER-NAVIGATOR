@@ -2258,6 +2258,17 @@ async function openProjectModal(projId) {
             <div id="projSubmitFeedback" style="font-size: 0.78rem; margin-top: 6px; display: none;"></div>
         </div>
 
+        <!-- Mentor & Peer Code Reviews Section -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="font-size: 0.82rem; text-transform: uppercase; color: #4F46E5;"><i class="fas fa-user-check" style="margin-right: 4px;"></i> Mentor &amp; Peer Code Reviews:</strong>
+                <span class="badge badge-success sm" style="font-size: 0.72rem;"><i class="fas fa-shield-alt"></i> Verified Feedback</span>
+            </div>
+            <div id="projectReviewsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size:0.78rem; color:#64748b; text-align:center; padding:6px;"><i class="fas fa-spinner fa-spin"></i> Loading reviews...</div>
+            </div>
+        </div>
+
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
             <button class="btn btn-outline sm" onclick="closeProjectModal()" style="padding: 8px 16px;">Close</button>
             <a href="roadmap.html" class="btn btn-primary sm" style="padding: 8px 16px; text-decoration: none;">Build in Roadmap →</a>
@@ -2265,6 +2276,37 @@ async function openProjectModal(projId) {
     `;
 
     modal.style.display = 'flex';
+
+    // Fetch and render past mentor reviews
+    try {
+        let reviews = [];
+        if (typeof ProjectAPI !== 'undefined' && ProjectAPI.getReviews) {
+            const studentId = localStorage.getItem('user_id') || 'student_1';
+            reviews = await ProjectAPI.getReviews(proj.id, studentId);
+        }
+        const reviewsContainer = document.getElementById('projectReviewsContainer');
+        if (reviewsContainer) {
+            if (reviews && reviews.length > 0) {
+                reviewsContainer.innerHTML = reviews.map(r => `
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div>
+                                <strong style="font-size: 0.84rem; color: #1e293b;">${r.reviewerName || 'AI Mentor'}</strong>
+                                <span style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">${r.reviewerRole || 'Technical Reviewer'}</span>
+                            </div>
+                            <span style="font-size: 0.72rem; font-weight: 700; background: rgba(16,185,129,0.1); color: #059669; padding: 2px 8px; border-radius: 10px;">${r.codeQualityGrade || 'A - Production Ready'}</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #334155; margin: 4px 0; line-height: 1.45;">${r.feedbackNotes || ''}</p>
+                        ${r.suggestions ? `<div style="font-size: 0.74rem; color: #4F46E5; background: #EEF2FF; padding: 4px 8px; border-radius: 6px; margin-top: 4px;"><strong>💡 Next Steps:</strong> ${r.suggestions}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                reviewsContainer.innerHTML = '<div style="font-size:0.78rem; color:#94a3b8; text-align:center; padding:6px;">No reviews yet. Submit your repository to request automated mentor feedback.</div>';
+            }
+        }
+    } catch(err) {
+        console.warn('Reviews load notice:', err);
+    }
 }
 
 async function handleProjectSubmit(projId) {

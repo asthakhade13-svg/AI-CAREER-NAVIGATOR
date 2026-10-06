@@ -386,6 +386,22 @@ def init_sqlite_db():
             UNIQUE(student_id, internship_id)
         )
         """)
+
+        # 25. Capstone Project Mentor & Peer Reviews Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS project_reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            reviewer_name TEXT NOT NULL,
+            reviewer_role TEXT DEFAULT 'AI Mentor / Senior Engineer',
+            code_quality_grade TEXT DEFAULT 'A - Production Ready',
+            feedback_notes TEXT NOT NULL,
+            suggestions TEXT DEFAULT '',
+            review_date TEXT DEFAULT (DATE('now')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

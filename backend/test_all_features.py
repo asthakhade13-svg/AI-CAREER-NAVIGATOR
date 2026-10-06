@@ -432,12 +432,38 @@ def run_tests():
     print("[PASS] 33. Study Session Notes & Category Breakdown (POST /api/v1/progress/study-log + GET /api/v1/progress/study-logs/breakdown/{student_id})")
     tests_passed += 1
 
+    # 34. Capstone Project Mentor & Peer Review Notes
+    total_tests += 1
+    test_proj_sid = f"test_review_student_{int(time.time())}"
+    res_review_sub = client.post("/api/v1/projects/review-feedback", json={
+        "student_id": test_proj_sid,
+        "project_id": "proj_aiml_rag",
+        "reviewer_name": "Siddharth Sen",
+        "reviewer_role": "Staff AI Engineer @ Google",
+        "code_quality_grade": "A+ - Industry Ready",
+        "feedback_notes": "Exceptional RAG retrieval chunking with high precision embeddings.",
+        "suggestions": "Add Docker Compose and a rate limiter middleware for production scale."
+    })
+    assert res_review_sub.status_code == 200 and res_review_sub.json().get("success"), f"Review submit failed: {res_review_sub.text}"
+
+    res_reviews = client.get(f"/api/v1/projects/reviews/{test_proj_sid}/proj_aiml_rag")
+    assert res_reviews.status_code == 200, f"Get reviews failed: {res_reviews.text}"
+    review_data = res_reviews.json()
+    assert review_data.get("success") is True, "Reviews success flag is false"
+    rev_list = review_data.get("reviews", [])
+    assert len(rev_list) > 0, "No reviews returned"
+    assert any(r.get("reviewerName") == "Siddharth Sen" and r.get("codeQualityGrade") == "A+ - Industry Ready" for r in rev_list), "Review data mismatch"
+
+    print("[PASS] 34. Capstone Project Mentor & Peer Review Notes (POST /api/v1/projects/review-feedback + GET /api/v1/projects/reviews/{student_id}/{project_id})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
 
 if __name__ == "__main__":
     run_tests()
+
 
 
 

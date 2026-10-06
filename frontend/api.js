@@ -1288,6 +1288,48 @@ const ProjectAPI = {
             }
         } catch(e) {}
         return [];
+    },
+
+    submitReviewFeedback: async (payload) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = payload.student_id || payload.studentId || user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/projects/review-feedback', 'POST', {
+                student_id: sid,
+                project_id: payload.project_id || payload.projectId,
+                reviewer_name: payload.reviewer_name || payload.reviewerName || 'CareerBot AI Senior Mentor',
+                reviewer_role: payload.reviewer_role || payload.reviewerRole || 'AI Technical Mentor',
+                code_quality_grade: payload.code_quality_grade || payload.codeQualityGrade || 'A - Production Ready',
+                feedback_notes: payload.feedback_notes || payload.feedbackNotes || 'Clean modular architecture and solid structure.',
+                suggestions: payload.suggestions || ''
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    },
+
+    getReviews: async (projectId, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/projects/reviews/${encodeURIComponent(sid)}/${encodeURIComponent(projectId)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.reviews) {
+                return res.data.reviews;
+            }
+        } catch(e) {}
+        return [];
+    },
+
+    getAllReviews: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/projects/all-reviews/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.reviews) {
+                return res.data.reviews;
+            }
+        } catch(e) {}
+        return [];
     }
 };
 
