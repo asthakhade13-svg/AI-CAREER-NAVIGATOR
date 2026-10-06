@@ -334,9 +334,11 @@ def run_tests():
 
     # 31. Internship Application Tracker & Saved Opportunities
     total_tests += 1
+    import time
+    test_intern_sid = f"test_intern_student_{int(time.time())}"
     # Test Bookmark Toggle (Save)
     res_bm_add = client.post("/api/v1/internships/bookmark", json={
-        "student_id": "test_intern_student",
+        "student_id": test_intern_sid,
         "internship_id": "google-step-2027",
         "title": "Google STEP Intern (Summer 2027)",
         "company": "Google",
@@ -348,14 +350,14 @@ def run_tests():
     assert res_bm_add.status_code == 200 and res_bm_add.json().get("isSaved") is True, f"Bookmark add failed: {res_bm_add.text}"
 
     # Test Saved List
-    res_saved = client.get("/api/v1/internships/saved/test_intern_student")
+    res_saved = client.get(f"/api/v1/internships/saved/{test_intern_sid}")
     assert res_saved.status_code == 200, f"Get saved internships failed: {res_saved.text}"
     saved_items = res_saved.json().get("savedInternships", [])
     assert any(item["internshipId"] == "google-step-2027" for item in saved_items), "Saved internship not found in list"
 
     # Test Apply Status Update
     res_apply = client.post("/api/v1/internships/apply-status", json={
-        "student_id": "test_intern_student",
+        "student_id": test_intern_sid,
         "internship_id": "google-step-2027",
         "company": "Google",
         "role_title": "Google STEP Intern",
@@ -365,12 +367,35 @@ def run_tests():
     assert res_apply.status_code == 200 and res_apply.json().get("success") is True, f"Apply status failed: {res_apply.text}"
 
     # Test Applications List
-    res_apps = client.get("/api/v1/internships/my-applications/test_intern_student")
+    res_apps = client.get(f"/api/v1/internships/my-applications/{test_intern_sid}")
     assert res_apps.status_code == 200, f"Get applications failed: {res_apps.text}"
     app_items = res_apps.json().get("applications", [])
     assert any(a["internshipId"] == "google-step-2027" and a["status"] == "Interviewing" for a in app_items), "Application status mismatch"
 
     print("[PASS] 31. Internship Application Tracker & Saved Opportunities (POST bookmark + GET saved + POST apply-status + GET my-applications)")
+    tests_passed += 1
+
+    # 32. Unified Server-Side Omnisearch Index
+    total_tests += 1
+    res_search = client.get(f"/api/v1/dashboard/search?q=react&student_id={test_intern_sid}")
+    assert res_search.status_code == 200, f"Omnisearch failed: {res_search.text}"
+    search_data = res_search.json()
+    assert search_data.get("success") is True, "Search response success flag false"
+    assert search_data.get("totalMatches", 0) > 0, "No search matches returned for 'react'"
+    
+    results_grp = search_data.get("results", {})
+    assert "tracks" in results_grp, "Missing 'tracks' in grouped results"
+    assert "milestones" in results_grp, "Missing 'milestones' in grouped results"
+    assert "projects" in results_grp, "Missing 'projects' in grouped results"
+    assert "internships" in results_grp, "Missing 'internships' in grouped results"
+    
+    ranked_results = search_data.get("ranked", [])
+    assert len(ranked_results) > 0, "Ranked search list is empty"
+    # Verify ranked order (highest score first)
+    scores = [item.get("score", 0) for item in ranked_results]
+    assert scores == sorted(scores, reverse=True), "Ranked items not sorted by relevance score"
+
+    print("[PASS] 32. Unified Server-Side Omnisearch Index (GET /api/v1/dashboard/search?q={query})")
     tests_passed += 1
 
     print("==================================================")
@@ -379,4 +404,6 @@ def run_tests():
 
 if __name__ == "__main__":
     run_tests()
+
+
 

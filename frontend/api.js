@@ -1267,14 +1267,16 @@ const DashboardAPI = {
         return null;
     },
 
-    search: async (query) => {
+    search: async (query, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
         try {
-            const res = await mlApiCall(`/dashboard/search?q=${encodeURIComponent(query)}`, 'GET');
-            if (res.status === 200 && res.data && res.data.results) {
+            const res = await mlApiCall(`/dashboard/search?q=${encodeURIComponent(query)}&student_id=${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data) {
                 return res.data;
             }
         } catch(e) {}
-        return { success: true, results: { tracks: [], milestones: [], projects: [] } };
+        return { success: true, results: { tracks: [], milestones: [], projects: [], internships: [] }, ranked: [] };
     },
 
     switchTrack: async (newTrack) => {

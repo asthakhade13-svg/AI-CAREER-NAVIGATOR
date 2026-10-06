@@ -1162,15 +1162,31 @@ async function handleDashboardSearch(query) {
     }
 
     resultsContainer.style.display = 'block';
-    resultsContainer.innerHTML = '<div style="padding:10px; color:#64748b; font-size:0.8rem; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+    resultsContainer.innerHTML = '<div style="padding:10px; color:#64748b; font-size:0.8rem; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Searching across tracks, milestones & opportunities...</div>';
 
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(async () => {
         let results = [];
         try {
             if (typeof DashboardAPI !== 'undefined' && DashboardAPI.search) {
-                const res = await DashboardAPI.search(q);
-                if (res && res.results) results = res.results;
+                const studentId = localStorage.getItem('user_id') || 'student_1';
+                const res = await DashboardAPI.search(q, studentId);
+                if (res) {
+                    if (Array.isArray(res.ranked) && res.ranked.length > 0) {
+                        results = res.ranked;
+                    } else if (Array.isArray(res.flatResults) && res.flatResults.length > 0) {
+                        results = res.flatResults;
+                    } else if (Array.isArray(res.results)) {
+                        results = res.results;
+                    } else if (res.results && typeof res.results === 'object') {
+                        results = [
+                            ...(res.results.tracks || []),
+                            ...(res.results.milestones || []),
+                            ...(res.results.projects || []),
+                            ...(res.results.internships || [])
+                        ];
+                    }
+                }
             }
         } catch(e){}
 
@@ -1182,6 +1198,8 @@ async function handleDashboardSearch(query) {
                         type: 'track',
                         title: track.name,
                         subtitle: 'Career Track',
+                        icon: 'fa-compass',
+                        badge: 'Career Track',
                         action: `selectCareerAndAdapt('${track.name}', 85); document.getElementById('dashboardSearchResults').style.display='none';`
                     });
                 }
@@ -1191,7 +1209,9 @@ async function handleDashboardSearch(query) {
                             type: 'milestone',
                             title: m.title,
                             subtitle: `${track.name} · Month ${m.monthNumber}`,
-                            action: `selectCareerAndAdapt('${track.name}', 85); document.getElementById('dashboardSearchResults').style.display='none';`
+                            icon: 'fa-flag-checkered',
+                            badge: 'Milestone',
+                            action: `selectCareerAndAdapt('${track.name}', 85); window.location.href='roadmap.html?career=${key}';`
                         });
                     }
                 });
@@ -1199,20 +1219,32 @@ async function handleDashboardSearch(query) {
         }
 
         if (results.length === 0) {
-            resultsContainer.innerHTML = '<div style="padding:12px; color:#94a3b8; font-size:0.82rem; text-align:center;">No matching tracks or milestones found.</div>';
+            resultsContainer.innerHTML = '<div style="padding:12px; color:#94a3b8; font-size:0.82rem; text-align:center;">No matching tracks, milestones, or opportunities found.</div>';
             return;
         }
 
-        resultsContainer.innerHTML = results.slice(0, 5).map(r => `
-            <div style="padding:8px 12px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'" onclick="${r.action || `selectCareerAndAdapt('${r.title}', 85); document.getElementById('dashboardSearchResults').style.display='none';`}">
-                <i class="fas ${r.type === 'milestone' ? 'fa-flag-checkered' : r.type === 'blueprint' ? 'fa-laptop-code' : 'fa-compass'}" style="color:#4F46E5; font-size:0.9rem;"></i>
-                <div style="flex:1;">
-                    <div style="font-weight:600; font-size:0.84rem; color:#1e293b;">${r.title}</div>
-                    <div style="font-size:0.72rem; color:#64748b;">${r.subtitle || r.type}</div>
+        resultsContainer.innerHTML = results.slice(0, 6).map(r => {
+            const iconClass = r.icon ? (r.icon.startsWith('fa-') ? r.icon : 'fa-' + r.icon) : (r.type === 'milestone' ? 'fa-flag-checkered' : r.type === 'blueprint' || r.type === 'project' ? 'fa-laptop-code' : r.type === 'internship' ? 'fa-building' : 'fa-compass');
+            const iconColor = r.type === 'milestone' ? '#10B981' : r.type === 'blueprint' || r.type === 'project' ? '#0284C7' : r.type === 'internship' ? '#F59E0B' : '#4F46E5';
+            const badgeBg = r.type === 'milestone' ? 'rgba(16,185,129,0.1)' : r.type === 'blueprint' || r.type === 'project' ? 'rgba(2,132,199,0.1)' : r.type === 'internship' ? 'rgba(245,158,11,0.1)' : 'rgba(79,70,229,0.1)';
+            const badgeText = r.badge || (r.type ? r.type.charAt(0).toUpperCase() + r.type.slice(1) : 'Result');
+            const clickAction = r.action || `selectCareerAndAdapt('${r.title}', 85); document.getElementById('dashboardSearchResults').style.display='none';`;
+
+            return `
+            <div style="padding:8px 12px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'" onclick="${clickAction}">
+                <div style="width:30px; height:30px; border-radius:6px; background:${badgeBg}; display:flex; align-items:center; justify-content:center; color:${iconColor}; flex-shrink:0;">
+                    <i class="fas ${iconClass}" style="font-size:0.85rem;"></i>
                 </div>
-                <i class="fas fa-arrow-right" style="font-size:0.75rem; color:#94a3b8;"></i>
-            </div>
-        `).join('');
+                <div style="flex:1; min-width:0; overflow:hidden;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:600; font-size:0.84rem; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.title}</span>
+                        <span style="font-size:0.65rem; padding:1px 6px; border-radius:10px; background:${badgeBg}; color:${iconColor}; font-weight:700; white-space:nowrap;">${badgeText}</span>
+                    </div>
+                    <div style="font-size:0.72rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.subtitle || r.category || r.company || r.type}</div>
+                </div>
+                <i class="fas fa-arrow-right" style="font-size:0.75rem; color:#94a3b8; flex-shrink:0;"></i>
+            </div>`;
+        }).join('');
     }, 200);
 }
 
