@@ -1070,16 +1070,23 @@ requireAuth();
   // ========================================
   // STATE & SUBTASK PERSISTENCE
   // ========================================
-  let currentPath       = 'webdev';
-  let currentTipIdx     = 0;
-  let persistedSubtasks = {};
+  let currentPath        = 'webdev';
+  let currentTipIdx      = 0;
+  let currentStepIdx     = 0;
+  let persistedSubtasks  = {};
+  let customSubtasksList = [];
 
   async function loadPersistedSubtasks(pathKey) {
     try {
       if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.getSubtasks) {
         const res = await RoadmapAPI.getSubtasks(pathKey);
-        if (res && res.states) {
-          persistedSubtasks = Object.assign(persistedSubtasks, res.states);
+        if (res) {
+          if (res.states) {
+            persistedSubtasks = Object.assign(persistedSubtasks, res.states);
+          }
+          if (res.customTasks) {
+            customSubtasksList = res.customTasks;
+          }
         }
       }
     } catch(e) {}
@@ -1105,6 +1112,52 @@ requireAuth();
     if (isCompleted && typeof showSuccess === 'function') {
       showSuccess(`Completed: ${topicText}`);
     }
+  }
+
+  async function addCustomGoal() {
+    const input = document.getElementById('newCustomGoalInput');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.addCustomTask) {
+        const res = await RoadmapAPI.addCustomTask(currentPath, text, currentStepIdx);
+        if (res && res.success) {
+          await loadPersistedSubtasks(currentPath);
+          showStepDetail(currentPath, currentStepIdx);
+          if (typeof showSuccess === 'function') showSuccess(`Added goal: ${text}`);
+          return;
+        }
+      }
+    } catch(e) {}
+
+    // In-memory fallback
+    const tempId = `custom_${currentPath}_${Date.now()}`;
+    customSubtasksList.push({
+      id: tempId,
+      subtaskId: tempId,
+      text: text,
+      isCompleted: false,
+      milestoneIndex: currentStepIdx
+    });
+    showStepDetail(currentPath, currentStepIdx);
+    if (typeof showSuccess === 'function') showSuccess(`Added goal: ${text}`);
+  }
+
+  async function deleteCustomGoal(taskId, event) {
+    if (event && event.stopPropagation) event.stopPropagation();
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.deleteCustomTask) {
+        await RoadmapAPI.deleteCustomTask(taskId);
+      }
+    } catch(e) {}
+
+    customSubtasksList = customSubtasksList.filter(c => (c.id !== taskId && c.subtaskId !== taskId));
+    delete persistedSubtasks[taskId];
+    showStepDetail(currentPath, currentStepIdx);
+    if (typeof showSuccess === 'function') showSuccess('Goal removed.');
   }
 
   async function toggleWeeklySubtask(pathKey, subtaskId, taskText, element) {
@@ -1217,6 +1270,7 @@ requireAuth();
   // SHOW STEP DETAIL
   // ========================================
   function showStepDetail(pathKey, idx) {
+    currentStepIdx = idx;
     const step = roadmaps[pathKey].steps[idx];
     if (!step) return;
 
@@ -1232,7 +1286,7 @@ requireAuth();
     // Topics with interactive persistent checklists
     const topicsList =
       document.getElementById('topicsList');
-    topicsList.innerHTML = step.topics.map((t, tIdx) => {
+    const topicsHtml = step.topics.map((t, tIdx) => {
       const subId = `${pathKey}_s${idx}_t${tIdx}`;
       const isDone = Boolean(persistedSubtasks[subId] || step.status === 'done');
       return `
@@ -1242,6 +1296,38 @@ requireAuth();
       </div>
     `;
     }).join('');
+
+    // Custom milestone goals
+    const currentCustoms = (customSubtasksList || []).filter(c => c.milestoneIndex === idx || c.milestoneIndex == null);
+    const customGoalsHtml = currentCustoms.map(c => {
+      const taskId = c.id || c.subtaskId;
+      const isDone = Boolean(persistedSubtasks[taskId] || c.isCompleted);
+      return `
+      <div class="topic-item" style="cursor:pointer; user-select:none; transition:all 0.2s; opacity:${isDone ? '1' : '0.85'}; display:flex; justify-content:space-between; align-items:center;" onclick="toggleTopicSubtask('${pathKey}', '${taskId}', '${(c.text || '').replace(/'/g, "\\'")}', this)">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i class="${isDone ? 'fas fa-check-circle' : 'far fa-circle'}" style="color:${isDone ? '#10B981' : '#94a3b8'};"></i>
+          <span style="${isDone ? 'font-weight:600; text-decoration:line-through; color:#94a3b8;' : ''}">${c.text}</span>
+        </div>
+        <button type="button" onclick="deleteCustomGoal('${taskId}', event)" style="background:none; border:none; color:#ef4444; opacity:0.7; cursor:pointer; font-size:0.8rem; padding:2px 6px;" title="Delete goal">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+      `;
+    }).join('');
+
+    topicsList.innerHTML = `
+      ${topicsHtml}
+      <div class="custom-goals-container" style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+        <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
+          <i class="fas fa-star" style="color:#f59e0b; margin-right:4px;"></i> Personal Milestone Goals
+        </div>
+        ${customGoalsHtml || '<p style="font-size:0.8rem; color:#94a3b8; font-style:italic; margin:4px 0 8px;">No custom personal goals added yet.</p>'}
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <input type="text" id="newCustomGoalInput" placeholder="Add custom goal (e.g. Build auth module)..." style="flex:1; padding:6px 10px; font-size:0.82rem; border-radius:6px; border:1px solid #cbd5e1; outline:none;" onkeydown="if(event.key==='Enter'){event.preventDefault(); addCustomGoal();}"/>
+          <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:0.78rem; white-space:nowrap;" onclick="addCustomGoal()"><i class="fas fa-plus"></i> Add Goal</button>
+        </div>
+      </div>
+    `;
 
     // Resources
     const resDiv =

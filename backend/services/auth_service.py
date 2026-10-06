@@ -304,10 +304,20 @@ def init_sqlite_db():
             subtask_id TEXT NOT NULL,
             subtask_text TEXT DEFAULT '',
             is_completed INTEGER DEFAULT 1,
+            is_custom INTEGER DEFAULT 0,
+            milestone_index INTEGER DEFAULT 0,
             completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(student_id, track_key, subtask_id)
         )
         """)
+        try:
+            cursor.execute("ALTER TABLE roadmap_subtasks ADD COLUMN is_custom INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE roadmap_subtasks ADD COLUMN milestone_index INTEGER DEFAULT 0")
+        except Exception:
+            pass
 
         # 20. Assessment Multi-Attempt History Table
         cursor.execute("""

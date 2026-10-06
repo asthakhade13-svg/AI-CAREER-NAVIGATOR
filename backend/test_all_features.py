@@ -457,6 +457,51 @@ def run_tests():
     print("[PASS] 34. Capstone Project Mentor & Peer Review Notes (POST /api/v1/projects/review-feedback + GET /api/v1/projects/reviews/{student_id}/{project_id})")
     tests_passed += 1
 
+    # 35. Custom Personal Roadmap Subtasks / Goals
+    total_tests += 1
+    test_roadmap_sid = f"test_roadmap_student_{int(time.time())}"
+    res_custom_task = client.post("/api/v1/roadmap/custom-task", json={
+        "student_id": test_roadmap_sid,
+        "track_key": "webdev",
+        "subtask_text": "Implement OAuth2 Social Login and Redis Rate Limiter",
+        "milestone_index": 3
+    })
+    assert res_custom_task.status_code == 200 and res_custom_task.json().get("success"), f"Custom task add failed: {res_custom_task.text}"
+    created_task_id = res_custom_task.json().get("taskId")
+    assert created_task_id is not None, "Missing created taskId"
+
+    # Verify querying subtasks returns custom tasks
+    res_get_subtasks = client.get(f"/api/v1/roadmap/subtasks/{test_roadmap_sid}?track_key=webdev")
+    assert res_get_subtasks.status_code == 200, f"Get subtasks failed: {res_get_subtasks.text}"
+    subtasks_data = res_get_subtasks.json()
+    assert subtasks_data.get("success") is True, "Get subtasks success is false"
+    custom_list = subtasks_data.get("customTasks", [])
+    assert any(c.get("id") == created_task_id and "OAuth2" in c.get("text", "") for c in custom_list), "Created custom task not found in subtasks response"
+
+    # Verify toggle completion on custom task
+    res_toggle_custom = client.post("/api/v1/roadmap/subtask/toggle", json={
+        "student_id": test_roadmap_sid,
+        "track_key": "webdev",
+        "subtask_id": created_task_id,
+        "subtask_text": "Implement OAuth2 Social Login and Redis Rate Limiter",
+        "is_completed": True
+    })
+    assert res_toggle_custom.status_code == 200 and res_toggle_custom.json().get("isCompleted") is True, "Custom task toggle failed"
+
+    # Verify deleting custom task
+    res_del_custom = client.delete(f"/api/v1/roadmap/custom-task/{created_task_id}?student_id={test_roadmap_sid}")
+    assert res_del_custom.status_code == 200 and res_del_custom.json().get("success") is True, f"Delete custom task failed: {res_del_custom.text}"
+    assert res_del_custom.json().get("deletedCount") >= 1, "Expected deletedCount >= 1"
+
+    # Verify task is deleted
+    res_get_after_del = client.get(f"/api/v1/roadmap/subtasks/{test_roadmap_sid}?track_key=webdev")
+    assert res_get_after_del.status_code == 200
+    after_del_customs = res_get_after_del.json().get("customTasks", [])
+    assert not any(c.get("id") == created_task_id for c in after_del_customs), "Custom task still present after deletion"
+
+    print("[PASS] 35. Custom Personal Roadmap Subtasks / Goals (POST custom-task + GET subtasks + DELETE custom-task)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

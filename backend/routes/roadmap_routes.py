@@ -160,10 +160,94 @@ def toggle_roadmap_subtask(payload: SubtaskToggleRequest):
     }
 
 
+class CustomTaskRequest(BaseModel):
+    student_id: str = "user_001"
+    track_key: str
+    subtask_text: str
+    milestone_index: Optional[int] = 0
+    subtask_id: Optional[str] = None
+
+
+@router.post("/custom-task")
+def add_custom_roadmap_task(payload: CustomTaskRequest):
+    """
+    Appends a custom personal study goal / subtask to the active career track.
+    """
+    import time
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    subtask_id = payload.subtask_id or f"custom_{payload.track_key}_{int(time.time() * 1000)}"
+    milestone_idx = payload.milestone_index if payload.milestone_index is not None else 0
+
+    cursor.execute("""
+    INSERT INTO roadmap_subtasks (student_id, track_key, subtask_id, subtask_text, is_completed, is_custom, milestone_index, completed_at)
+    VALUES (?, ?, ?, ?, 0, 1, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(student_id, track_key, subtask_id) DO UPDATE SET
+        subtask_text = excluded.subtask_text,
+        is_custom = 1,
+        milestone_index = excluded.milestone_index
+    """, (payload.student_id, payload.track_key, subtask_id, payload.subtask_text, milestone_idx))
+
+    try:
+        cursor.execute("""
+        INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+        VALUES (?, 'roadmap_custom_task', ?, ?, 'fa-plus-circle', 'purple')
+        """, (
+            payload.student_id,
+            f"Added Custom Goal: {payload.subtask_text[:35]}",
+            f"Added personal study goal in {payload.track_key.upper()} roadmap."
+        ))
+    except Exception:
+        pass
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": 200,
+        "success": True,
+        "taskId": subtask_id,
+        "subtaskId": subtask_id,
+        "taskText": payload.subtask_text,
+        "milestoneIndex": milestone_idx,
+        "trackKey": payload.track_key,
+        "message": "Custom task added successfully."
+    }
+
+
+@router.delete("/custom-task/{task_id}")
+def delete_custom_roadmap_task(task_id: str, student_id: Optional[str] = None):
+    """
+    Deletes a custom personal roadmap subtask from SQLite.
+    """
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if student_id:
+        cursor.execute("DELETE FROM roadmap_subtasks WHERE subtask_id = ? AND student_id = ?", (task_id, student_id))
+    else:
+        cursor.execute("DELETE FROM roadmap_subtasks WHERE subtask_id = ?", (task_id,))
+
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": 200,
+        "success": True,
+        "deletedId": task_id,
+        "deletedCount": deleted_count,
+        "message": "Custom task deleted successfully."
+    }
+
+
 @router.get("/subtasks/{student_id}")
 def get_roadmap_subtasks(student_id: str, track_key: Optional[str] = None):
     """
-    Retrieves all persisted subtask completion states for a student.
+    Retrieves all persisted subtask completion states and custom tasks for a student.
     """
     from services.auth_service import get_db_connection
     conn = get_db_connection()
@@ -171,12 +255,12 @@ def get_roadmap_subtasks(student_id: str, track_key: Optional[str] = None):
 
     if track_key:
         cursor.execute("""
-        SELECT subtask_id, is_completed, subtask_text, completed_at FROM roadmap_subtasks 
+        SELECT subtask_id, is_completed, subtask_text, is_custom, milestone_index, completed_at FROM roadmap_subtasks 
         WHERE student_id = ? AND track_key = ?
         """, (student_id, track_key))
     else:
         cursor.execute("""
-        SELECT subtask_id, is_completed, subtask_text, completed_at FROM roadmap_subtasks 
+        SELECT subtask_id, is_completed, subtask_text, is_custom, milestone_index, completed_at FROM roadmap_subtasks 
         WHERE student_id = ?
         """, (student_id,))
 
@@ -185,6 +269,17 @@ def get_roadmap_subtasks(student_id: str, track_key: Optional[str] = None):
 
     completed_ids = [r["subtask_id"] for r in rows if r["is_completed"]]
     states = {r["subtask_id"]: bool(r["is_completed"]) for r in rows}
+    custom_tasks = [
+        {
+            "id": r["subtask_id"],
+            "subtaskId": r["subtask_id"],
+            "text": r["subtask_text"],
+            "isCompleted": bool(r["is_completed"]),
+            "milestoneIndex": r["milestone_index"] if "milestone_index" in r.keys() and r["milestone_index"] is not None else 0,
+            "completedAt": r["completed_at"]
+        }
+        for r in rows if ("is_custom" in r.keys() and r["is_custom"] == 1)
+    ]
 
     return {
         "status": 200,
@@ -193,7 +288,9 @@ def get_roadmap_subtasks(student_id: str, track_key: Optional[str] = None):
         "trackKey": track_key,
         "completedIds": completed_ids,
         "states": states,
+        "customTasks": custom_tasks,
         "totalCompleted": len(completed_ids)
     }
+
 
 

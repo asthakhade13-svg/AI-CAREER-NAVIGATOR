@@ -709,6 +709,33 @@ const RoadmapAPI = {
         return springRes;
     },
 
+    addCustomTask: async (trackKey, subtaskText, milestoneIndex = 0, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/roadmap/custom-task', 'POST', {
+                student_id: sid,
+                track_key: trackKey,
+                subtask_text: subtaskText,
+                milestone_index: milestoneIndex
+            });
+            return res.data;
+        } catch(e) {
+            return { success: false };
+        }
+    },
+
+    deleteCustomTask: async (taskId, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/roadmap/custom-task/${encodeURIComponent(taskId)}?student_id=${encodeURIComponent(sid)}`, 'DELETE');
+            return res.data;
+        } catch(e) {
+            return { success: false };
+        }
+    },
+
     completeMilestone: (milestoneId) =>
         apiCall('/roadmap/complete/' + milestoneId, 'PUT')
 };
