@@ -238,6 +238,17 @@
               </div>
             </div>
 
+            <!-- Study Focus Category Breakdown -->
+            <div id="studyCategoryBreakdownSection" style="margin-top:16px; border-top:1px solid #f1f5f9; padding-top:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <strong style="font-size:0.8rem; text-transform:uppercase; color:#64748b; letter-spacing:0.04em;"><i class="fas fa-chart-pie" style="color:#4F46E5; margin-right:4px;"></i> Category Analytics</strong>
+                <span id="studyBreakdownTotal" style="font-size:0.75rem; color:#4F46E5; font-weight:700;">Categorized Focus</span>
+              </div>
+              <div id="studyCategoryBars" style="display:flex; flex-direction:column; gap:8px;">
+                <!-- Populated dynamically via ProgressAPI.getStudyBreakdown -->
+              </div>
+            </div>
+
           </div>
 
           <!-- Peer Community Leaderboard -->
@@ -688,6 +699,7 @@ async function loadProgress() {
 
     // 2. Load weekly study hours activity
     await loadWeeklyActivity();
+    await loadStudyBreakdown();
 
     // 3. Load skills breakdown
     await loadSkillsProgress(currentTrackKey);
@@ -882,6 +894,47 @@ function closeStudyModal() {
     if (modal) modal.style.display = 'none';
 }
 
+async function loadStudyBreakdown() {
+    try {
+        const studentId = localStorage.getItem('user_id') || 'user_001';
+        const res = await ProgressAPI.getStudyBreakdown(studentId);
+        const container = document.getElementById('studyCategoryBars');
+        const totalEl = document.getElementById('studyBreakdownTotal');
+        if (!container || !res) return;
+
+        if (totalEl && res.totalHours !== undefined) {
+            totalEl.textContent = `${res.totalHours} Total Hours`;
+        }
+
+        const colorMap = {
+            'DSA & Problem Solving': '#10B981',
+            'Coding Practice': '#4F46E5',
+            'Project Work': '#0284C7',
+            'System Design': '#9333EA',
+            'Python & Machine Learning': '#06B6D4',
+            'Full-Stack Web Development': '#6366F1'
+        };
+
+        if (res.categories && res.categories.length > 0) {
+            container.innerHTML = res.categories.map(c => {
+                const color = colorMap[c.category] || '#4F46E5';
+                return `
+                <div style="margin-bottom:6px;">
+                  <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:600; margin-bottom:3px;">
+                    <span style="color:#334155;">${c.category} <span style="font-size:0.7rem; color:#94a3b8; font-weight:500;">(${c.sessionCount} sessions)</span></span>
+                    <span style="color:${color}; font-weight:700;">${c.hours} hrs (${c.percentage}%)</span>
+                  </div>
+                  <div style="height:6px; background:#f1f5f9; border-radius:10px; overflow:hidden;">
+                    <div style="width:${c.percentage}%; background:${color}; height:100%; border-radius:10px; transition:width 0.4s ease;"></div>
+                  </div>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) {
+        console.warn('Study breakdown load notice:', e);
+    }
+}
+
 async function handleStudySubmit(e) {
     e.preventDefault();
     const hours = document.getElementById('studyHoursInput').value;
@@ -895,8 +948,13 @@ async function handleStudySubmit(e) {
     } catch(err) {}
 
     closeStudyModal();
-    alert(`🎉 Awesome! Logged ${hours} hours in ${category}.`);
+    if (typeof showSuccess === 'function') {
+        showSuccess(`🎉 Logged ${hours} hours in ${category}!`);
+    } else {
+        alert(`🎉 Awesome! Logged ${hours} hours in ${category}.`);
+    }
     await loadProgress();
+    await loadStudyBreakdown();
 }
 
 // Weekly goals

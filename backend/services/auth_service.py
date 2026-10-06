@@ -218,10 +218,20 @@ def init_sqlite_db():
             student_id TEXT NOT NULL,
             day_name TEXT NOT NULL,
             hours_spent REAL DEFAULT 2.0,
+            category TEXT DEFAULT 'Coding Practice',
+            session_notes TEXT DEFAULT '',
             log_date DATE DEFAULT (DATE('now')),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+        try:
+            cursor.execute("ALTER TABLE study_logs ADD COLUMN category TEXT DEFAULT 'Coding Practice'")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE study_logs ADD COLUMN session_notes TEXT DEFAULT ''")
+        except Exception:
+            pass
 
         # 14. Chat Messages History Table
         cursor.execute("""

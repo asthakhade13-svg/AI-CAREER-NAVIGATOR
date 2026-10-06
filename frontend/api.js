@@ -1020,18 +1020,58 @@ const ProgressAPI = {
         ];
     },
 
-    logStudySession: async (hours, category, notes = '') => {
+    logStudySession: async (hours, category = 'Coding Practice', notes = '') => {
         const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
         try {
             return await mlApiCall('/progress/study-log', 'POST', {
                 student_id: studentId,
                 hours: parseFloat(hours) || 1.0,
                 category: category || 'Coding Practice',
+                session_notes: notes,
                 notes: notes
             });
         } catch(e) {
             return { status: 200, data: { success: true } };
         }
+    },
+
+    logStudy: async (studentIdOrHours, hoursOrCategory = 1.0, categoryOrNotes = 'Coding Practice', optionalNotes = '') => {
+        let sid, h, cat, n;
+        if (typeof studentIdOrHours === 'string' && isNaN(parseFloat(studentIdOrHours))) {
+            sid = studentIdOrHours;
+            h = parseFloat(hoursOrCategory) || 1.0;
+            cat = typeof categoryOrNotes === 'string' ? categoryOrNotes : 'Coding Practice';
+            n = optionalNotes || '';
+        } else {
+            const user = UserManager.get() || { email: 'user_001' };
+            sid = user.email || user.id || 'user_001';
+            h = parseFloat(studentIdOrHours) || 1.0;
+            cat = typeof hoursOrCategory === 'string' ? hoursOrCategory : 'Coding Practice';
+            n = typeof categoryOrNotes === 'string' ? categoryOrNotes : '';
+        }
+        try {
+            return await mlApiCall('/progress/study-log', 'POST', {
+                student_id: sid,
+                hours: h,
+                category: cat,
+                session_notes: n,
+                notes: n
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    },
+
+    getStudyBreakdown: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/progress/study-logs/breakdown/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data) {
+                return res.data;
+            }
+        } catch(e) {}
+        return null;
     },
 
     getSkillGap: async (track = 'aiml') => {

@@ -398,12 +398,47 @@ def run_tests():
     print("[PASS] 32. Unified Server-Side Omnisearch Index (GET /api/v1/dashboard/search?q={query})")
     tests_passed += 1
 
+    # 33. Study Session Notes & Category Breakdown
+    total_tests += 1
+    test_study_sid = f"test_study_student_{int(time.time())}"
+    res_log1 = client.post("/api/v1/progress/study-log", json={
+        "student_id": test_study_sid,
+        "hours": 3.5,
+        "category": "DSA & Problem Solving",
+        "session_notes": "Solved 4 Binary Tree & Graph BFS questions"
+    })
+    assert res_log1.status_code == 200 and res_log1.json().get("success"), f"Study log 1 failed: {res_log1.text}"
+
+    res_log2 = client.post("/api/v1/progress/study-log", json={
+        "student_id": test_study_sid,
+        "hours": 2.5,
+        "category": "Project Work",
+        "session_notes": "Implemented JWT auth middleware in FastAPI"
+    })
+    assert res_log2.status_code == 200 and res_log2.json().get("success"), f"Study log 2 failed: {res_log2.text}"
+
+    res_breakdown = client.get(f"/api/v1/progress/study-logs/breakdown/{test_study_sid}")
+    assert res_breakdown.status_code == 200, f"Get study breakdown failed: {res_breakdown.text}"
+    bd_data = res_breakdown.json()
+    assert bd_data.get("success") is True, "Breakdown success is false"
+    assert bd_data.get("totalHours") == 6.0, f"Expected 6.0 total hours, got {bd_data.get('totalHours')}"
+    assert "DSA & Problem Solving" in bd_data.get("breakdown", {}), "Missing DSA & Problem Solving in breakdown"
+    assert "Project Work" in bd_data.get("breakdown", {}), "Missing Project Work in breakdown"
+    
+    recent_sessions = bd_data.get("recentSessions", [])
+    assert len(recent_sessions) >= 2, "Expected at least 2 recent sessions"
+    assert any("Binary Tree" in s.get("notes", "") for s in recent_sessions), "Session notes not preserved"
+
+    print("[PASS] 33. Study Session Notes & Category Breakdown (POST /api/v1/progress/study-log + GET /api/v1/progress/study-logs/breakdown/{student_id})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
 
 if __name__ == "__main__":
     run_tests()
+
 
 
 
