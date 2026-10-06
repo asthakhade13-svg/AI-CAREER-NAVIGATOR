@@ -343,6 +343,39 @@ def init_sqlite_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # 23. Saved Internships Bookmarks Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS saved_internships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            internship_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            company TEXT DEFAULT '',
+            track TEXT DEFAULT '',
+            location TEXT DEFAULT '',
+            stipend TEXT DEFAULT '',
+            apply_url TEXT DEFAULT '',
+            saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, internship_id)
+        )
+        """)
+
+        # 24. Internship Application Pipeline Tracker Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS internship_applications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            internship_id TEXT NOT NULL,
+            company TEXT NOT NULL,
+            role_title TEXT NOT NULL,
+            status TEXT DEFAULT 'Applied',
+            notes TEXT DEFAULT '',
+            applied_date DATE DEFAULT (DATE('now')),
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, internship_id)
+        )
+        """)
         
         # Insert a default demo user if not present
         cursor.execute("SELECT id FROM users WHERE email = 'astha@example.com' OR email = 'astha.khade@oist.edu'")

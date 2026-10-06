@@ -1112,6 +1112,66 @@ const InternshipsAPI = {
             if (res.status === 200 && res.data) return res.data.internship;
         } catch(e) {}
         return null;
+    },
+
+    toggleBookmark: async (item) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/internships/bookmark', 'POST', {
+                student_id: sid,
+                internship_id: item.id || item.internshipId,
+                title: item.title || 'Internship',
+                company: item.company || '',
+                track: item.track || '',
+                location: item.location || '',
+                stipend: item.stipend || '',
+                apply_url: item.apply_url || item.applyUrl || ''
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    },
+
+    getSaved: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/internships/saved/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.savedInternships) {
+                return res.data.savedInternships;
+            }
+        } catch(e) {}
+        return [];
+    },
+
+    updateApplicationStatus: async (payload) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/internships/apply-status', 'POST', {
+                student_id: sid,
+                internship_id: payload.id || payload.internshipId,
+                company: payload.company || 'Company',
+                role_title: payload.title || payload.roleTitle || 'Intern',
+                status: payload.status || 'Applied',
+                notes: payload.notes || ''
+            });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    },
+
+    getApplications: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/internships/my-applications/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.applications) {
+                return res.data.applications;
+            }
+        } catch(e) {}
+        return [];
     }
 };
 

@@ -218,3 +218,160 @@ def get_internship_detail(internship_id: str):
             return {"status": 200, "internship": item}
     return {"status": 404, "message": "Internship not found"}
 
+
+# ── 3. Internship Bookmarks & Application Pipeline Tracker ──────────────────
+from services.auth_service import get_db_connection
+
+class InternshipBookmarkRequest(BaseModel):
+    student_id: str = "user_001"
+    internship_id: str
+    title: str
+    company: Optional[str] = ""
+    track: Optional[str] = ""
+    location: Optional[str] = ""
+    stipend: Optional[str] = ""
+    apply_url: Optional[str] = ""
+
+class InternshipApplyStatusRequest(BaseModel):
+    student_id: str = "user_001"
+    internship_id: str
+    company: str
+    role_title: str
+    status: Optional[str] = "Applied"
+    notes: Optional[str] = ""
+
+
+@router.post("/bookmark")
+def toggle_internship_bookmark(payload: InternshipBookmarkRequest):
+    """
+    Toggles bookmark/saved state for an internship opportunity in SQLite.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM saved_internships WHERE student_id = ? AND internship_id = ?", (payload.student_id, payload.internship_id))
+    existing = cursor.fetchone()
+
+    is_saved = False
+    if existing:
+        cursor.execute("DELETE FROM saved_internships WHERE student_id = ? AND internship_id = ?", (payload.student_id, payload.internship_id))
+        is_saved = False
+        message = f"Removed '{payload.title}' from saved internships"
+    else:
+        cursor.execute("""
+        INSERT INTO saved_internships (student_id, internship_id, title, company, track, location, stipend, apply_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (payload.student_id, payload.internship_id, payload.title, payload.company or "", payload.track or "", payload.location or "", payload.stipend or "", payload.apply_url or ""))
+        is_saved = True
+        message = f"Saved '{payload.title}' to your bookmarks"
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "isSaved": is_saved,
+        "internshipId": payload.internship_id,
+        "message": message
+    }
+
+
+@router.get("/saved/{student_id}")
+def get_saved_internships(student_id: str):
+    """
+    Retrieves all bookmarked internships for a student.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM saved_internships WHERE student_id = ? ORDER BY saved_at DESC", (student_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    saved_list = [
+        {
+            "id": r["id"],
+            "internshipId": r["internship_id"],
+            "title": r["title"],
+            "company": r["company"],
+            "track": r["track"],
+            "location": r["location"],
+            "stipend": r["stipend"],
+            "applyUrl": r["apply_url"],
+            "savedAt": r["saved_at"]
+        }
+        for r in rows
+    ]
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "total": len(saved_list),
+        "savedInternships": saved_list
+    }
+
+
+@router.post("/apply-status")
+def update_internship_apply_status(payload: InternshipApplyStatusRequest):
+    """
+    Updates or inserts student internship application pipeline tracking status (Applied, Interviewing, Offered, Rejected).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO internship_applications (student_id, internship_id, company, role_title, status, notes, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(student_id, internship_id) DO UPDATE SET
+        company = excluded.company,
+        role_title = excluded.role_title,
+        status = excluded.status,
+        notes = excluded.notes,
+        updated_at = CURRENT_TIMESTAMP
+    """, (payload.student_id, payload.internship_id, payload.company, payload.role_title, payload.status or "Applied", payload.notes or ""))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "studentId": payload.student_id,
+        "internshipId": payload.internship_id,
+        "status": payload.status,
+        "message": f"Application status updated to '{payload.status}' for {payload.company}"
+    }
+
+
+@router.get("/my-applications/{student_id}")
+@router.get("/applications/{student_id}")
+def get_student_applications(student_id: str):
+    """
+    Retrieves all tracked internship applications for a student.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM internship_applications WHERE student_id = ? ORDER BY updated_at DESC", (student_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    apps = [
+        {
+            "id": r["id"],
+            "internshipId": r["internship_id"],
+            "company": r["company"],
+            "roleTitle": r["role_title"],
+            "status": r["status"],
+            "notes": r["notes"],
+            "appliedDate": r["applied_date"],
+            "updatedAt": r["updated_at"]
+        }
+        for r in rows
+    ]
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "total": len(apps),
+        "applications": apps
+    }
+
+

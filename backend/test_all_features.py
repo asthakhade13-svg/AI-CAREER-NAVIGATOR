@@ -332,9 +332,51 @@ def run_tests():
     print("[PASS] 30. Career Card Share & Referral Analytics (POST /api/v1/careers/share)")
     tests_passed += 1
 
+    # 31. Internship Application Tracker & Saved Opportunities
+    total_tests += 1
+    # Test Bookmark Toggle (Save)
+    res_bm_add = client.post("/api/v1/internships/bookmark", json={
+        "student_id": "test_intern_student",
+        "internship_id": "google-step-2027",
+        "title": "Google STEP Intern (Summer 2027)",
+        "company": "Google",
+        "track": "webdev",
+        "location": "Bangalore / Hyderabad",
+        "stipend": "₹1,10,000 / month",
+        "apply_url": "https://careers.google.com/students/"
+    })
+    assert res_bm_add.status_code == 200 and res_bm_add.json().get("isSaved") is True, f"Bookmark add failed: {res_bm_add.text}"
+
+    # Test Saved List
+    res_saved = client.get("/api/v1/internships/saved/test_intern_student")
+    assert res_saved.status_code == 200, f"Get saved internships failed: {res_saved.text}"
+    saved_items = res_saved.json().get("savedInternships", [])
+    assert any(item["internshipId"] == "google-step-2027" for item in saved_items), "Saved internship not found in list"
+
+    # Test Apply Status Update
+    res_apply = client.post("/api/v1/internships/apply-status", json={
+        "student_id": "test_intern_student",
+        "internship_id": "google-step-2027",
+        "company": "Google",
+        "role_title": "Google STEP Intern",
+        "status": "Interviewing",
+        "notes": "Completed Round 1 Coding Challenge on Google Meet"
+    })
+    assert res_apply.status_code == 200 and res_apply.json().get("success") is True, f"Apply status failed: {res_apply.text}"
+
+    # Test Applications List
+    res_apps = client.get("/api/v1/internships/my-applications/test_intern_student")
+    assert res_apps.status_code == 200, f"Get applications failed: {res_apps.text}"
+    app_items = res_apps.json().get("applications", [])
+    assert any(a["internshipId"] == "google-step-2027" and a["status"] == "Interviewing" for a in app_items), "Application status mismatch"
+
+    print("[PASS] 31. Internship Application Tracker & Saved Opportunities (POST bookmark + GET saved + POST apply-status + GET my-applications)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
 
 if __name__ == "__main__":
     run_tests()
+
