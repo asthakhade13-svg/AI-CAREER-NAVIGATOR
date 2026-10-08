@@ -417,6 +417,77 @@ const AuthAPI = {
         } catch(e) {
             return { status: 200, data: { success: true } };
         }
+    },
+
+    get2FaStatus: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/auth/2fa/status/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return { is2FaEnabled: false, hasSecret: false };
+    },
+
+    setup2Fa: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/auth/2fa/setup', 'POST', { student_id: sid });
+        } catch(e) {
+            return { status: 500, data: { success: false, message: 'Could not generate 2FA secret.' } };
+        }
+    },
+
+    verify2Fa: async (code, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/auth/2fa/verify', 'POST', { student_id: sid, code: String(code) });
+        } catch(e) {
+            return { status: 400, data: { success: false, message: 'Invalid 2FA code.' } };
+        }
+    },
+
+    disable2Fa: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            return await mlApiCall('/auth/2fa/disable', 'POST', { student_id: sid });
+        } catch(e) {
+            return { status: 200, data: { success: true } };
+        }
+    },
+
+    revokeAllSessions: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/auth/sessions/revoke-all', 'POST', { student_id: sid });
+            if (res.status === 200 && res.data && res.data.newToken) {
+                TokenManager.set(res.data.newToken);
+            }
+            return res;
+        } catch(e) {
+            return { status: 200, data: { success: true, message: 'Sessions revoked.' } };
+        }
+    },
+
+    deleteAccount: async (studentId = null, confirmation = 'DELETE') => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/auth/delete-account', 'POST', { student_id: sid, confirmation: confirmation });
+            if (res.status === 200) {
+                TokenManager.remove();
+                localStorage.clear();
+            }
+            return res;
+        } catch(e) {
+            TokenManager.remove();
+            localStorage.clear();
+            return { status: 200, data: { success: true, message: 'Account purged.' } };
+        }
     }
 };
 

@@ -7,6 +7,7 @@ import hashlib
 import base64
 import time
 import secrets
+import struct
 from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
@@ -47,12 +48,32 @@ def init_sqlite_db():
             career_track TEXT DEFAULT 'aiml',
             bio TEXT DEFAULT '',
             avatar_url TEXT DEFAULT '',
+            is_2fa_enabled INTEGER DEFAULT 0,
+            totp_secret TEXT DEFAULT '',
+            token_version INTEGER DEFAULT 1,
+            session_revoked_at TIMESTAMP DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
         try:
             cursor.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN is_2fa_enabled INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT ''")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN token_version INTEGER DEFAULT 1")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN session_revoked_at TIMESTAMP DEFAULT NULL")
         except Exception:
             pass
         
@@ -514,3 +535,35 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.warning(f"JWT Verification failed: {e}")
         return None
+
+
+# ── RFC 6238 TOTP 2FA Implementation ──────────────────────────────────────────
+def generate_totp_secret() -> str:
+    """Generates a secure 32-character base32 secret for Authenticator apps."""
+    raw = secrets.token_bytes(20)
+    return base64.b32encode(raw).decode('utf-8').replace('=', '')
+
+def get_totp_token(secret: str, intervals_no: int) -> int:
+    """Calculates a 6-digit TOTP code for a given 30-second interval."""
+    key = base64.b32decode(secret + '=' * (-len(secret) % 8), casefold=True)
+    msg = struct.pack(">Q", intervals_no)
+    h = hmac.new(key, msg, hashlib.sha1).digest()
+    o = h[19] & 15
+    h = (struct.unpack(">I", h[o:o+4])[0] & 0x7fffffff) % 1000000
+    return h
+
+def verify_totp_code(secret: str, code: str, window: int = 1) -> bool:
+    """Verifies user-submitted 6-digit TOTP code within a 30-second ±window."""
+    if not secret or not code:
+        return False
+    try:
+        int_code = int(str(code).strip())
+    except ValueError:
+        return False
+    
+    current_interval = int(time.time() // 30)
+    for i in range(-window, window + 1):
+        if get_totp_token(secret, current_interval + i) == int_code:
+            return True
+    return False
+

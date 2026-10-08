@@ -11,7 +11,9 @@ from services.auth_service import (
     hash_password,
     verify_password,
     create_jwt_token,
-    verify_jwt_token
+    verify_jwt_token,
+    generate_totp_secret,
+    verify_totp_code
 )
 
 logger = logging.getLogger(__name__)
@@ -620,5 +622,241 @@ def save_user_preferences(payload: UserPreferencesPayload):
             "darkMode": payload.dark_mode
         }
     }
+
+
+# ── Two-Factor Authentication (2FA) & Security Management ───────────────────
+class TwoFactorSetupRequest(BaseModel):
+    student_id: str
+
+class TwoFactorVerifyRequest(BaseModel):
+    student_id: str
+    code: str
+
+class TwoFactorDisableRequest(BaseModel):
+    student_id: str
+    code: Optional[str] = None
+    password: Optional[str] = None
+
+class RevokeSessionsRequest(BaseModel):
+    student_id: str
+
+class DeleteAccountRequest(BaseModel):
+    student_id: str
+    confirmation: Optional[str] = "DELETE"
+    password: Optional[str] = None
+
+
+@router.get("/2fa/status/{student_id}")
+def get_2fa_status(student_id: str):
+    """Retrieves 2FA activation status for the student."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_2fa_enabled, totp_secret, email FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (student_id, student_id))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return {
+            "success": True,
+            "studentId": student_id,
+            "is2FaEnabled": False,
+            "hasSecret": False
+        }
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "is2FaEnabled": bool(user["is_2fa_enabled"]),
+        "hasSecret": bool(user["totp_secret"])
+    }
+
+
+@router.post("/2fa/setup")
+def setup_2fa(payload: TwoFactorSetupRequest):
+    """Generates a new RFC 6238 TOTP base32 secret and QR code URI."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, email, full_name FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (payload.student_id, payload.student_id))
+    user = cursor.fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Student user not found")
+
+    secret = generate_totp_secret()
+    email_clean = user["email"].strip()
+    otpauth_url = f"otpauth://totp/CareerNav:{email_clean}?secret={secret}&issuer=CareerNav&algorithm=SHA1&digits=6&period=30"
+
+    # Save secret in pending state
+    cursor.execute("UPDATE users SET totp_secret = ? WHERE id = ?", (secret, user["id"]))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "secret": secret,
+        "otpauthUrl": otpauth_url,
+        "account": email_clean,
+        "issuer": "CareerNav",
+        "message": "Enter this secret in Google Authenticator or Authy to complete 2FA setup."
+    }
+
+
+@router.post("/2fa/verify")
+def verify_and_enable_2fa(payload: TwoFactorVerifyRequest):
+    """Verifies the submitted 6-digit TOTP code and activates 2FA."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, totp_secret FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (payload.student_id, payload.student_id))
+    user = cursor.fetchone()
+
+    if not user or not user["totp_secret"]:
+        conn.close()
+        raise HTTPException(status_code=400, detail="2FA setup not initiated. Please initiate setup first.")
+
+    is_valid = verify_totp_code(user["totp_secret"], payload.code)
+    if not is_valid:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Invalid 6-digit verification code. Please check your Authenticator app.")
+
+    cursor.execute("UPDATE users SET is_2fa_enabled = 1 WHERE id = ?", (user["id"],))
+    try:
+        cursor.execute("""
+        INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+        VALUES (?, 'security_2fa', 'Two-Factor Authentication Enabled', 'Enabled TOTP multi-factor security for your account.', 'fa-shield-alt', 'green')
+        """, (payload.student_id,))
+    except Exception:
+        pass
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "is2FaEnabled": True,
+        "message": "Two-Factor Authentication successfully enabled!"
+    }
+
+
+@router.post("/2fa/disable")
+def disable_2fa(payload: TwoFactorDisableRequest):
+    """Disables Two-Factor Authentication."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (payload.student_id, payload.student_id))
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Student user not found")
+
+    cursor.execute("UPDATE users SET is_2fa_enabled = 0, totp_secret = '' WHERE id = ?", (user["id"],))
+    try:
+        cursor.execute("""
+        INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+        VALUES (?, 'security_2fa', 'Two-Factor Authentication Disabled', 'Turned off TOTP 2FA security.', 'fa-shield-alt', 'orange')
+        """, (payload.student_id,))
+    except Exception:
+        pass
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "is2FaEnabled": False,
+        "message": "Two-Factor Authentication has been disabled."
+    }
+
+
+@router.post("/sessions/revoke-all")
+def revoke_all_sessions(payload: RevokeSessionsRequest):
+    """Invalidates all previous multi-device sessions and generates a fresh token."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, email, full_name, token_version FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (payload.student_id, payload.student_id))
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Student user not found")
+
+    new_version = (user["token_version"] or 1) + 1
+    cursor.execute("""
+    UPDATE users SET token_version = ?, session_revoked_at = CURRENT_TIMESTAMP WHERE id = ?
+    """, (new_version, user["id"]))
+
+    try:
+        cursor.execute("""
+        INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+        VALUES (?, 'security_session', 'Multi-Device Sessions Terminated', 'Logged out from all other active browser sessions.', 'fa-sign-out-alt', 'indigo')
+        """, (payload.student_id,))
+    except Exception:
+        pass
+
+    conn.commit()
+    conn.close()
+
+    fresh_token = create_jwt_token({
+        "sub": user["id"],
+        "email": user["email"],
+        "name": user["full_name"],
+        "ver": new_version
+    })
+
+    return {
+        "success": True,
+        "newToken": fresh_token,
+        "message": "All other active device sessions have been terminated."
+    }
+
+
+@router.delete("/account/{student_id}")
+@router.post("/delete-account")
+def delete_student_account(student_id: Optional[str] = None, payload: Optional[DeleteAccountRequest] = None):
+    """
+    Cascading hard-delete of the student account and all linked learning records.
+    """
+    target_id = (payload.student_id if payload else None) or student_id
+    if not target_id:
+        raise HTTPException(status_code=400, detail="Student ID is required for account deletion.")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Find internal user ID and email
+    cursor.execute("SELECT id, email FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (target_id, target_id))
+    user = cursor.fetchone()
+    uid = user["id"] if user else target_id
+    uemail = user["email"] if user else target_id
+
+    # Cascading deletes across all SQLite tables
+    target_ids = list(set([uid, uemail, target_id]))
+    tables = [
+        "users", "user_preferences", "quiz_attempts", "assessment_history",
+        "roadmap_subtasks", "milestones_progress", "saved_careers", "saved_internships",
+        "internship_applications", "study_logs", "activity_logs", "chat_messages",
+        "project_milestones", "project_submissions", "project_reviews", "resource_completions",
+        "student_badges", "notifications", "weekly_goals", "progress_logs", "certificates"
+    ]
+
+    for tbl in tables:
+        try:
+            for tid in target_ids:
+                if tbl == "users":
+                    cursor.execute("DELETE FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (tid, tid))
+                else:
+                    cursor.execute(f"DELETE FROM {tbl} WHERE student_id = ?", (tid,))
+        except Exception as e:
+            logger.warning(f"Error purging table {tbl} for {target_id}: {e}")
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "studentId": target_id,
+        "message": "Account and all associated records permanently wiped."
+    }
+
 
 

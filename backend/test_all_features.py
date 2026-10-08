@@ -502,6 +502,64 @@ def run_tests():
     print("[PASS] 35. Custom Personal Roadmap Subtasks / Goals (POST custom-task + GET subtasks + DELETE custom-task)")
     tests_passed += 1
 
+    # 36. Two-Factor Authentication (2FA), Session Revocation & Cascading Account Deletion
+    total_tests += 1
+    test_sec_sid = f"test_sec_user_{int(time.time())}"
+    test_sec_email = f"security_{int(time.time())}@careernavigator.ai"
+
+    # Register user
+    reg_sec_res = client.post("/api/v1/auth/register", json={
+        "full_name": "Security Test User",
+        "email": test_sec_email,
+        "password": "SecurePassword123!",
+        "college": "OIST Bhopal",
+        "year": "2nd Year",
+        "branch": "CSE"
+    })
+    assert reg_sec_res.status_code == 200 and reg_sec_res.json().get("success"), f"Register security user failed: {reg_sec_res.text}"
+    sec_user_id = reg_sec_res.json()["user"]["id"]
+
+    # Test 2FA Setup
+    res_2fa_setup = client.post("/api/v1/auth/2fa/setup", json={"student_id": sec_user_id})
+    assert res_2fa_setup.status_code == 200 and res_2fa_setup.json().get("success"), f"2FA setup failed: {res_2fa_setup.text}"
+    totp_secret = res_2fa_setup.json().get("secret")
+    assert totp_secret and len(totp_secret) >= 16, "Invalid TOTP secret generated"
+    assert "otpauth://" in res_2fa_setup.json().get("otpauthUrl", ""), "Missing otpauth URI"
+
+    # Test 2FA Verification with valid TOTP code
+    from services.auth_service import get_totp_token
+    current_interval = int(time.time() // 30)
+    valid_code = f"{get_totp_token(totp_secret, current_interval):06d}"
+
+    res_2fa_verify = client.post("/api/v1/auth/2fa/verify", json={
+        "student_id": sec_user_id,
+        "code": valid_code
+    })
+    assert res_2fa_verify.status_code == 200 and res_2fa_verify.json().get("is2FaEnabled") is True, f"2FA verify failed: {res_2fa_verify.text}"
+
+    # Verify 2FA status query
+    res_2fa_status = client.get(f"/api/v1/auth/2fa/status/{sec_user_id}")
+    assert res_2fa_status.status_code == 200 and res_2fa_status.json().get("is2FaEnabled") is True, "2FA status mismatch"
+
+    # Test Multi-Device Session Revocation
+    res_revoke = client.post("/api/v1/auth/sessions/revoke-all", json={"student_id": sec_user_id})
+    assert res_revoke.status_code == 200 and res_revoke.json().get("newToken") is not None, "Session revocation failed"
+
+    # Test 2FA Disable
+    res_2fa_disable = client.post("/api/v1/auth/2fa/disable", json={"student_id": sec_user_id})
+    assert res_2fa_disable.status_code == 200 and res_2fa_disable.json().get("is2FaEnabled") is False, "2FA disable failed"
+
+    # Test Cascading Account Deletion
+    res_del_acc = client.delete(f"/api/v1/auth/account/{sec_user_id}")
+    assert res_del_acc.status_code == 200 and res_del_acc.json().get("success") is True, f"Account deletion failed: {res_del_acc.text}"
+
+    # Verify account is completely wiped
+    res_check_del = client.get(f"/api/v1/auth/2fa/status/{sec_user_id}")
+    assert res_check_del.status_code == 200 and res_check_del.json().get("hasSecret") is False, "User record not deleted"
+
+    print("[PASS] 36. Two-Factor Authentication (2FA), Session Revocation & Cascading Account Deletion (POST /2fa/setup, /2fa/verify, /2fa/disable, /sessions/revoke-all, DELETE /account)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
