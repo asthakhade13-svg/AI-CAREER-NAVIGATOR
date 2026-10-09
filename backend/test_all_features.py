@@ -560,6 +560,55 @@ def run_tests():
     print("[PASS] 36. Two-Factor Authentication (2FA), Session Revocation & Cascading Account Deletion (POST /2fa/setup, /2fa/verify, /2fa/disable, /sessions/revoke-all, DELETE /account)")
     tests_passed += 1
 
+    # 37. Hackathon Events, Reminders, Calendar .ics & Track Syllabus PDF
+    total_tests += 1
+    
+    # 37.1 GET dashboard events
+    res_events = client.get("/api/v1/dashboard/events")
+    assert res_events.status_code == 200, f"Get events failed: {res_events.text}"
+    evts = res_events.json().get("events", [])
+    assert len(evts) >= 3, f"Expected at least 3 hackathons, got {len(evts)}"
+    event_ids = [e["id"] for e in evts]
+    assert "sih-2026" in event_ids, "Missing Smart India Hackathon 2026"
+    assert "gsoc-2026" in event_ids, "Missing Google Summer of Code 2026"
+    assert "meta-hacker-cup-2026" in event_ids, "Missing Meta Hacker Cup 2026"
+
+    # 37.2 POST event reminder
+    res_remind = client.post("/api/v1/dashboard/events/reminder", json={
+        "student_id": "test_student_events",
+        "event_id": "sih-2026",
+        "event_title": "Smart India Hackathon 2026",
+        "event_date": "Aug - Nov 2026",
+        "event_link": "https://sih.gov.in"
+    })
+    assert res_remind.status_code == 200 and res_remind.json().get("success"), f"Set event reminder failed: {res_remind.text}"
+
+    # Verify notification was logged
+    res_notifs = client.get("/api/v1/notifications/test_student_events")
+    assert res_notifs.status_code == 200
+    notifs = res_notifs.json().get("notifications", [])
+    assert any("Smart India Hackathon" in n.get("title", "") or "Smart India Hackathon" in n.get("message", "") for n in notifs), "Reminder notification not logged in DB"
+
+    # 37.3 GET event .ics calendar
+    res_ics = client.get("/api/v1/dashboard/events/ics/sih-2026")
+    assert res_ics.status_code == 200, f"Get ICS failed: {res_ics.text}"
+    assert "BEGIN:VCALENDAR" in res_ics.text and "BEGIN:VEVENT" in res_ics.text, "Invalid ICS calendar payload"
+    assert "Smart India Hackathon" in res_ics.text, "Event title missing in ICS"
+
+    # 37.4 GET syllabus route
+    res_syl_route = client.get("/api/v1/roadmap/syllabus/aiml")
+    assert res_syl_route.status_code == 200, f"Get syllabus route failed: {res_syl_route.text}"
+    assert "Artificial Intelligence" in res_syl_route.text, "Missing curriculum title in syllabus"
+
+    # 37.5 GET syllabus PDF (printable HTML document)
+    res_syl_pdf = client.get("/api/v1/roadmap/export-syllabus-pdf/aiml")
+    assert res_syl_pdf.status_code == 200, f"Get syllabus PDF failed: {res_syl_pdf.text}"
+    assert "Accreditation Curriculum" in res_syl_pdf.text or "Curriculum" in res_syl_pdf.text, "Missing curriculum header in syllabus PDF"
+    assert "window.print()" in res_syl_pdf.text, "Missing auto-print script in syllabus PDF"
+
+    print("[PASS] 37. Upcoming Tech Hackathons, Event Reminders, .ics Export & Track Syllabus PDF (GET /dashboard/events, POST /dashboard/events/reminder, GET /dashboard/events/ics/{id}, GET /roadmap/export-syllabus-pdf/{track})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

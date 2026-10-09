@@ -558,3 +558,165 @@ def search_dashboard(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Upcoming Tech Hackathons & Coding Contests ──────────────────────────────
+UPCOMING_HACKATHONS = [
+    {
+        "id": "sih-2026",
+        "title": "Smart India Hackathon 2026 (SIH)",
+        "organizer": "Ministry of Education & AICTE",
+        "category": "Nationwide Hackathon",
+        "date": "Nov 15 - Dec 20, 2026",
+        "prizes": "₹1,00,000 / Problem Statement",
+        "eligibility": "All Engineering Students (1st - 4th Year)",
+        "tags": ["AI/ML", "Web3", "Smart Automation", "Clean Tech"],
+        "icon": "fa-flag-checkered",
+        "color": "#4F46E5",
+        "link": "https://sih.gov.in",
+        "summary": "India's premier nationwide innovation challenge solving real-world government and industry problem statements."
+    },
+    {
+        "id": "gsoc-2026",
+        "title": "Google Summer of Code (GSoC 2026)",
+        "organizer": "Google Open Source",
+        "category": "Global Fellowship & Mentorship",
+        "date": "Feb 20 - Aug 15, 2026",
+        "prizes": "$1,500 - $3,300 Stipend (₹1.2L - ₹2.7L)",
+        "eligibility": "Open to all student open-source contributors",
+        "tags": ["Open Source", "Python", "Rust", "Linux", "Kubernetes"],
+        "icon": "fa-google",
+        "color": "#0284C7",
+        "link": "https://summerofcode.withgoogle.com",
+        "summary": "Global mentorship program bringing new open source contributors into open source software organizations."
+    },
+    {
+        "id": "meta-hacker-cup-2026",
+        "title": "Meta Hacker Cup 2026",
+        "organizer": "Meta (Facebook)",
+        "category": "Competitive Programming World Championship",
+        "date": "Jul 10 - Oct 25, 2026",
+        "prizes": "$20,000 Grand Prize + Fast-Track Interviews",
+        "eligibility": "Global algorithmic competitors",
+        "tags": ["Algorithms", "Data Structures", "C++", "Python", "Competitive Math"],
+        "icon": "fa-code",
+        "color": "#059669",
+        "link": "https://www.facebook.com/codingcompetitions/hacker-cup",
+        "summary": "Meta's flagship annual world open programming competition testing advanced algorithmic problem solving."
+    }
+]
+
+
+class EventReminderRequest(BaseModel):
+    student_id: str = "user_001"
+    event_id: str
+    event_title: Optional[str] = "Tech Contest"
+    event_date: Optional[str] = ""
+    event_link: Optional[str] = ""
+
+
+@router.get("/events")
+def get_dashboard_events():
+    """Returns curated upcoming hackathons and coding contests."""
+    return {
+        "success": True,
+        "totalEvents": len(UPCOMING_HACKATHONS),
+        "events": UPCOMING_HACKATHONS
+    }
+
+
+@router.post("/events/reminder")
+def set_event_reminder(payload: EventReminderRequest):
+    """
+    Persists hackathon reminder to notifications tray and activity stream in SQLite.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    ev = next((e for e in UPCOMING_HACKATHONS if e["id"] == payload.event_id), None)
+    title = ev["title"] if ev else payload.event_title
+    link = ev["link"] if ev else payload.event_link
+
+    # 1. Insert unread notification
+    try:
+        cursor.execute("""
+        INSERT INTO notifications (student_id, title, message, type, is_read, created_at)
+        VALUES (?, ?, ?, 'event_reminder', 0, CURRENT_TIMESTAMP)
+        """, (
+            payload.student_id,
+            f"📅 Reminder: {title}",
+            f"Reminder set for {title}. Registration & guidelines at {link}"
+        ))
+    except Exception as n_err:
+        logger.warning(f"Failed to insert notification: {n_err}")
+
+    # 2. Insert activity log stream item
+    try:
+        cursor.execute("""
+        INSERT INTO activity_logs (student_id, action_type, title, description, icon, color)
+        VALUES (?, 'event_reminder', ?, ?, 'fa-calendar-check', 'indigo')
+        """, (
+            payload.student_id,
+            f"Registered Contest Reminder: {title[:35]}",
+            f"Set reminder for upcoming {title} hackathon/contest."
+        ))
+    except Exception as a_err:
+        logger.warning(f"Failed to insert activity log: {a_err}")
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "eventId": payload.event_id,
+        "title": title,
+        "message": f"Reminder registered for '{title}'! Added to notification center."
+    }
+
+
+@router.get("/events/ics/{event_id}")
+def export_event_ics(event_id: str):
+    """
+    Generates downloadable .ics calendar file for a hackathon/contest.
+    """
+    from fastapi.responses import Response
+    from datetime import datetime, timedelta
+
+    ev = next((e for e in UPCOMING_HACKATHONS if e["id"] == event_id), None)
+    if not ev:
+        raise HTTPException(status_code=404, detail="Event not found.")
+
+    start_dt = datetime.now() + timedelta(days=7)
+    end_dt = start_dt + timedelta(hours=3)
+    start_str = start_dt.strftime("%Y%m%dT090000Z")
+    end_str = end_dt.strftime("%Y%m%dT120000Z")
+    now_str = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+
+    ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//AI Career Navigator//Hackathon Reminder//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:{ev['title']} Reminder
+X-WR-TIMEZONE:UTC
+BEGIN:VEVENT
+UID:cn-event-{event_id}-{start_dt.strftime("%Y%m%d")}@careernavigator.ai
+DTSTAMP:{now_str}
+DTSTART:{start_str}
+DTEND:{end_str}
+SUMMARY:{ev['title']} - Registration & Preparation
+DESCRIPTION:{ev['summary']} \\nOfficial Portal: {ev['link']}\\nPrizes: {ev['prizes']}
+URL:{ev['link']}
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR"""
+
+    return Response(
+        content=ics_content,
+        media_type="text/calendar",
+        headers={
+            "Content-Disposition": f'attachment; filename="CareerNavigator_{event_id}.ics"'
+        }
+    )
+
+
+

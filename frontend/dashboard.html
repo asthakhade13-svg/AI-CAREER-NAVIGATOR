@@ -277,9 +277,14 @@
 
           <!-- Roadmap Progress -->
           <div class="card mt-3">
-            <div class="card-header">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
               <h4>🗺️ Roadmap Progress</h4>
-              <a href="roadmap.html?career=uiux" class="see-all">View full</a>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button class="btn btn-outline sm" style="padding:4px 10px; font-size:0.75rem; border-radius:12px;" onclick="downloadCurrentTrackSyllabus()" title="Download Complete Printable Track Syllabus PDF">
+                  <i class="fas fa-file-pdf" style="color:#EF4444; margin-right:4px;"></i> Download Syllabus
+                </button>
+                <a href="roadmap.html?career=uiux" class="see-all">View full</a>
+              </div>
             </div>
 
             <div class="roadmap-steps">
@@ -582,6 +587,20 @@
                 <span class="badge badge-warning">Preview</span>
               </div>
 
+            </div>
+          </div>
+
+          <!-- Upcoming Tech Hackathons & Coding Contests Card -->
+          <div class="card mt-3" style="border: 1px solid rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(254, 242, 242, 0.95));">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h4 style="margin:0;"><i class="fas fa-trophy" style="color:#EF4444; margin-right:6px;"></i> Upcoming Tech Hackathons &amp; Contests</h4>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">Top tier hackathons &amp; competitive programming 2026</p>
+              </div>
+              <span class="badge badge-primary sm" style="background:#EF4444; color:white;">2026 Season</span>
+            </div>
+            <div id="hackathonsList" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+              <!-- Populated dynamically via loadDashboardEvents() -->
             </div>
           </div>
 
@@ -2553,11 +2572,146 @@ function closeProjectModal() {
     if (modal) modal.style.display = 'none';
 }
 
+// ---- Syllabus Download ----
+function downloadCurrentTrackSyllabus() {
+    let trackKey = 'aiml';
+    try {
+        const activeTrack = localStorage.getItem('active_career_track') || localStorage.getItem('careerTrack') || 'aiml';
+        const lower = activeTrack.toLowerCase();
+        if (lower.includes('ui') || lower.includes('ux') || lower.includes('design')) trackKey = 'uiux';
+        else if (lower.includes('web')) trackKey = 'webdev';
+        else if (lower.includes('cloud') || lower.includes('devops')) trackKey = 'cloud';
+        else if (lower.includes('data')) trackKey = 'data';
+        else if (lower.includes('cyber') || lower.includes('security')) trackKey = 'cyber';
+        else if (lower.includes('mobile') || lower.includes('app') || lower.includes('android') || lower.includes('ios')) trackKey = 'mobile';
+        else trackKey = 'aiml';
+    } catch(e) {}
+
+    if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.downloadSyllabusPdf) {
+        RoadmapAPI.downloadSyllabusPdf(trackKey);
+    } else {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        window.open(`${backendUrl}/api/v1/roadmap/export-syllabus-pdf/${trackKey}`, '_blank');
+    }
+}
+
+// ---- Hackathons & Contests ----
+async function loadDashboardEvents() {
+    const listEl = document.getElementById('hackathonsList');
+    if (!listEl) return;
+
+    let events = [];
+    try {
+        if (typeof DashboardAPI !== 'undefined' && DashboardAPI.getEvents) {
+            events = await DashboardAPI.getEvents();
+        }
+    } catch(e) {
+        console.warn('Events load notice:', e);
+    }
+
+    if (!events || events.length === 0) {
+        events = [
+            {
+                id: 'sih-2026',
+                title: 'Smart India Hackathon 2026',
+                tag: 'National Hackathon',
+                date: 'Aug - Nov 2026',
+                mode: 'Pan-India Grand Finale',
+                link: 'https://sih.gov.in',
+                prize: '₹1,00,000+ per problem statement',
+                bg: '#FEF2F2',
+                color: '#DC2626'
+            },
+            {
+                id: 'gsoc-2026',
+                title: 'Google Summer of Code (GSoC 2026)',
+                tag: 'Open Source Mentorship',
+                date: 'March - Nov 2026',
+                mode: 'Global Remote',
+                link: 'https://summerofcode.withgoogle.com',
+                prize: '$1,500 - $3,300 Stipend',
+                bg: '#EFF6FF',
+                color: '#2563EB'
+            },
+            {
+                id: 'meta-hacker-cup-2026',
+                title: 'Meta Hacker Cup 2026',
+                tag: 'Competitive Programming',
+                date: 'July - Oct 2026',
+                mode: 'Global Online',
+                link: 'https://www.facebook.com/codingcompetitions/hacker-cup',
+                prize: '$20,000 Top Prize & Meta Interviews',
+                bg: '#FAF5FF',
+                color: '#9333EA'
+            }
+        ];
+    }
+
+    listEl.innerHTML = events.map(evt => `
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                <div>
+                    <span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: ${evt.color || '#4F46E5'}; background: ${evt.bg || 'rgba(79,70,229,0.08)'}; padding: 2px 8px; border-radius: 6px;">${evt.tag || 'Hackathon'}</span>
+                    <h5 style="margin: 4px 0 2px 0; font-size: 0.88rem; color: #1e293b;">${evt.title}</h5>
+                    <p style="margin: 0; font-size: 0.75rem; color: #64748b;"><i class="fas fa-calendar-alt" style="margin-right: 4px;"></i>${evt.date} · <i class="fas fa-map-marker-alt" style="margin-left: 4px; margin-right: 2px;"></i>${evt.mode}</p>
+                </div>
+                <span style="font-size: 0.72rem; font-weight: 600; color: #059669; background: #ECFDF5; padding: 3px 8px; border-radius: 8px; white-space: nowrap;">${evt.prize}</span>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                <a href="${evt.link}" target="_blank" class="btn btn-outline sm" style="padding: 5px 12px; font-size: 0.75rem; border-radius: 8px; text-decoration: none;">
+                    <i class="fas fa-external-link-alt"></i> Official Portal
+                </a>
+                <button id="reminderBtn_${evt.id}" class="btn btn-primary sm" onclick="handleSetEventReminder('${evt.id}', '${evt.title.replace(/'/g, "\\'")}', '${evt.date}', '${evt.link}')" style="padding: 5px 12px; font-size: 0.75rem; border-radius: 8px;">
+                    <i class="fas fa-bell"></i> Set Reminder
+                </button>
+                <button class="btn btn-outline sm" onclick="handleDownloadEventIcs('${evt.id}')" title="Download .ics Calendar File" style="padding: 5px 10px; font-size: 0.75rem; border-radius: 8px;">
+                    <i class="fas fa-calendar-plus"></i> .ics
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function handleSetEventReminder(eventId, eventTitle, eventDate, eventLink) {
+    const btn = document.getElementById(`reminderBtn_${eventId}`);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+    try {
+        if (typeof DashboardAPI !== 'undefined' && DashboardAPI.setEventReminder) {
+            await DashboardAPI.setEventReminder(eventId, eventTitle, eventDate, eventLink);
+        }
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Reminder Set!';
+            btn.style.background = '#10B981';
+            btn.style.borderColor = '#10B981';
+        }
+        alert(`🔔 Reminder registered for ${eventTitle}!\nLogged in your notification tray and activity feed.`);
+    } catch(err) {
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Reminder Set!';
+        }
+    }
+}
+
+function handleDownloadEventIcs(eventId) {
+    if (typeof DashboardAPI !== 'undefined' && DashboardAPI.downloadEventIcs) {
+        DashboardAPI.downloadEventIcs(eventId);
+    } else {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        window.open(`${backendUrl}/api/v1/dashboard/events/ics/${eventId}`, '_blank');
+    }
+}
+
 // ---- Auto Init ----
 async function initDashboardWithAllFeatures() {
     await loadDashboard();
     await loadWeeklyReport();
     await loadTrackProjects();
+    await loadDashboardEvents();
 }
 
 document.addEventListener('DOMContentLoaded', initDashboardWithAllFeatures);

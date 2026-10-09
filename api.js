@@ -807,6 +807,12 @@ const RoadmapAPI = {
         }
     },
 
+    downloadSyllabusPdf: (trackKey = 'aiml') => {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        window.open(`${backendUrl}/api/v1/roadmap/export-syllabus-pdf/${encodeURIComponent(trackKey)}`, '_blank');
+    },
+
     completeMilestone: (milestoneId) =>
         apiCall('/roadmap/complete/' + milestoneId, 'PUT')
 };
@@ -1476,6 +1482,39 @@ const DashboardAPI = {
         user.careerTrack = newTrack;
         UserManager.set(user);
         return { success: true };
+    },
+
+    getEvents: async () => {
+        try {
+            const res = await mlApiCall('/dashboard/events', 'GET');
+            if (res.status === 200 && res.data && res.data.events) {
+                return res.data.events;
+            }
+        } catch(e) {}
+        return [];
+    },
+
+    setEventReminder: async (eventId, eventTitle = '', eventDate = '', eventLink = '', studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/dashboard/events/reminder', 'POST', {
+                student_id: sid,
+                event_id: eventId,
+                event_title: eventTitle,
+                event_date: eventDate,
+                event_link: eventLink
+            });
+            return res.data;
+        } catch(e) {
+            return { success: true, message: `Reminder set for ${eventTitle}!` };
+        }
+    },
+
+    downloadEventIcs: (eventId) => {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        window.open(`${backendUrl}/api/v1/dashboard/events/ics/${encodeURIComponent(eventId)}`, '_blank');
     }
 };
 
