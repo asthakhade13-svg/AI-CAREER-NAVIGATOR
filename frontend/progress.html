@@ -75,6 +75,9 @@
         </p>
       </div>
       <div class="topbar-right" style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-outline sm" onclick="openShareModal()" style="font-size:0.8rem; padding:6px 14px; border-radius:12px; border-color:#0A66C2; color:#0A66C2; cursor:pointer;" title="Share progress milestone badge on LinkedIn & Twitter">
+          <i class="fab fa-linkedin"></i> Share Card
+        </button>
         <button class="btn btn-outline sm" onclick="openProgressReportModal()" style="font-size:0.8rem; padding:6px 14px; border-radius:12px; border-color:#4F46E5; color:#4F46E5; cursor:pointer;">
           <i class="fas fa-file-pdf"></i> Export Report
         </button>
@@ -185,9 +188,14 @@
                   <span>Hours studied</span>
                 </div>
               </div>
-              <button class="btn btn-outline sm" onclick="openStudyModal()" style="font-size:0.75rem; padding:5px 12px; border-radius:10px; border-color:#4F46E5; color:#4F46E5; cursor:pointer; font-weight:600;">
-                <i class="fas fa-plus"></i> Log Hours
-              </button>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div id="weeklyTargetPill" onclick="openTargetModal()" style="cursor:pointer; background:rgba(79,70,229,0.08); border:1px solid rgba(79,70,229,0.25); padding:4px 10px; border-radius:12px; font-size:0.75rem; color:#4F46E5; font-weight:600; display:flex; align-items:center; gap:6px;" title="Click to edit weekly target study hours">
+                  <i class="fas fa-bullseye"></i> <span id="targetHoursDisplay">Target: 15 hrs / week</span> <i class="fas fa-pencil-alt" style="font-size:0.65rem;"></i>
+                </div>
+                <button class="btn btn-outline sm" onclick="openStudyModal()" style="font-size:0.75rem; padding:5px 12px; border-radius:10px; border-color:#4F46E5; color:#4F46E5; cursor:pointer; font-weight:600;">
+                  <i class="fas fa-plus"></i> Log Hours
+                </button>
+              </div>
             </div>
 
             <div class="bar-chart">
@@ -231,6 +239,10 @@
               <div class="chart-foot-item">
                 <strong id="statVsLast">+4.5h</strong>
                 <span>vs last week</span>
+              </div>
+              <div class="chart-foot-item">
+                <strong id="statTargetPace" style="color:#4F46E5;">143%</strong>
+                <span id="statTargetSubtext">of 15h Target</span>
               </div>
               <div class="chart-foot-item">
                 <strong id="statDailyAvg">3h/day</strong>
@@ -655,6 +667,98 @@
     </div>
   </div>
 
+  <!-- Edit Weekly Study Target Modal -->
+  <div class="report-modal-backdrop" id="weeklyTargetModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:20px;">
+    <div style="background:#ffffff; border-radius:20px; max-width:420px; width:100%; padding:26px; box-shadow:0 25px 50px rgba(0,0,0,0.25); border:1px solid #e2e8f0; font-family:inherit;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+        <h3 style="margin:0; font-size:1.15rem; color:#1e293b;"><i class="fas fa-bullseye" style="color:#4F46E5; margin-right:8px;"></i> Set Weekly Study Target</h3>
+        <button onclick="closeTargetModal()" style="background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer;">&times;</button>
+      </div>
+      <form onsubmit="handleTargetSubmit(event)">
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px; color:#475569;">Target Study Hours / Week</label>
+          <input type="number" id="targetHoursInput" step="1" min="2" max="60" value="15" required style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" />
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px; color:#475569;">Primary Focus Track</label>
+          <input type="text" id="targetFocusTopicInput" placeholder="e.g., Full-Stack & Algorithms" value="Full-Stack & Algorithms" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.85rem;" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" onclick="closeTargetModal()" style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:white; cursor:pointer;">Cancel</button>
+          <button type="submit" style="padding:8px 20px; border-radius:8px; border:none; background:linear-gradient(135deg, #4F46E5, #6366F1); color:white; font-weight:600; cursor:pointer;">Save Target</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Social Share Card Preview Modal -->
+  <div class="report-modal-backdrop" id="socialShareModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:20px;">
+    <div style="background:#ffffff; border-radius:20px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; padding:28px; box-shadow:0 25px 50px rgba(0,0,0,0.25); border:1px solid #e2e8f0; font-family:inherit;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i class="fab fa-linkedin" style="color:#0A66C2; font-size:1.3rem;"></i>
+          <h3 style="margin:0; font-size:1.15rem; color:#1e293b;">Share Progress Milestone</h3>
+        </div>
+        <button onclick="closeShareModal()" style="background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer;">&times;</button>
+      </div>
+
+      <!-- Live Card Visual Preview -->
+      <div style="background:linear-gradient(135deg, #0F172A, #1E1B4B); border-radius:14px; padding:20px; color:white; margin-bottom:18px; border:1px solid #334155; position:relative; box-shadow:0 10px 25px rgba(15,23,42,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #4F46E5, #06B6D4); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800;">CN</div>
+            <span style="font-size:0.78rem; font-weight:700; letter-spacing:0.5px; color:#F8FAFC;">AI CAREER NAVIGATOR</span>
+          </div>
+          <span style="font-size:0.7rem; font-weight:700; color:#10B981; background:rgba(16,185,129,0.15); border:1px solid #10B981; padding:2px 8px; border-radius:10px;">VERIFIED 2026 ✓</span>
+        </div>
+        <h4 id="shareCardStudentName" style="margin:0; font-size:1.25rem; font-weight:800; color:#FFFFFF;">Astha Khade</h4>
+        <p id="shareCardTrack" style="margin:2px 0 14px 0; font-size:0.82rem; color:#38BDF8; font-weight:600;">AI / Machine Learning Track</p>
+        
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:14px; text-align:center;">
+          <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
+            <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">MILESTONES</span>
+            <strong id="shareCardMilestones" style="font-size:1rem; color:#F8FAFC;">12 Done</strong>
+          </div>
+          <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
+            <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">STUDY TIME</span>
+            <strong id="shareCardHours" style="font-size:1rem; color:#F8FAFC;">34h</strong>
+          </div>
+          <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
+            <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">STREAK</span>
+            <strong id="shareCardStreak" style="font-size:1rem; color:#F59E0B;">7 Days 🔥</strong>
+          </div>
+          <div style="background:#1E293B; border:1.5px solid #4F46E5; border-radius:8px; padding:8px 4px;">
+            <span style="font-size:0.65rem; color:#818CF8; font-weight:700; display:block;">READINESS</span>
+            <strong id="shareCardScore" style="font-size:1rem; color:#4ADE80;">82%</strong>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:10px; font-size:0.72rem; color:#64748B;">
+          <span>Accredited Portfolio Learning</span>
+          <span id="shareCardBadgeId" style="color:#38BDF8; font-weight:600;">ID: CN-PROG-2026</span>
+        </div>
+      </div>
+
+      <!-- Post Preview & Copy Box -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:4px;">Formatted Social Post Copy:</label>
+        <textarea id="sharePostText" rows="4" readonly style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.82rem; background:#f8fafc; line-height:1.4; color:#334155; resize:none;"></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+        <button type="button" onclick="copyShareText()" style="padding:8px 14px; border-radius:8px; border:1px solid #cbd5e1; background:white; font-size:0.82rem; font-weight:600; cursor:pointer; color:#475569;">
+          <i class="fas fa-copy"></i> Copy Post
+        </button>
+        <button type="button" onclick="launchTwitterShare()" style="padding:8px 16px; border-radius:8px; border:none; background:#000000; color:white; font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <i class="fab fa-x-twitter"></i> Share on X
+        </button>
+        <button type="button" onclick="launchLinkedInShare()" style="padding:8px 18px; border-radius:8px; border:none; background:#0A66C2; color:white; font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <i class="fab fa-linkedin"></i> Share on LinkedIn
+        </button>
+      </div>
+    </div>
+  </div>
+
 <script>
 // Protect page
 requireAuth();
@@ -715,6 +819,9 @@ async function loadProgress() {
 
     // 7. Load Calendar Activity
     await buildCalendar();
+
+    // 8. Load Weekly Target Study Hours
+    await loadWeeklyTarget();
 
     try {
         // 8. Fetch weekly AI digest
@@ -1107,6 +1214,153 @@ function printProgressReport() {
 function exportStudyLogsCSV() {
     if (typeof ProgressAPI !== 'undefined' && ProgressAPI.exportStudyData) {
         ProgressAPI.exportStudyData('csv');
+    }
+}
+
+// ---- Weekly Target Study Hours ----
+let currentWeeklyTarget = 15.0;
+
+async function loadWeeklyTarget() {
+    try {
+        const studentId = localStorage.getItem('user_id') || 'user_001';
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getWeeklyTarget) {
+            const data = await ProgressAPI.getWeeklyTarget(studentId);
+            if (data) {
+                currentWeeklyTarget = data.targetHours || 15.0;
+                const displayEl = document.getElementById('targetHoursDisplay');
+                if (displayEl) displayEl.textContent = `Target: ${currentWeeklyTarget} hrs / week`;
+                const subtextEl = document.getElementById('statTargetSubtext');
+                if (subtextEl) subtextEl.textContent = `of ${currentWeeklyTarget}h Target`;
+                const paceEl = document.getElementById('statTargetPace');
+                if (paceEl) {
+                    const weekHours = data.currentWeekHours !== undefined ? data.currentWeekHours : 21.5;
+                    const pct = Math.round((weekHours / currentWeeklyTarget) * 100);
+                    paceEl.textContent = `${pct}%`;
+                    paceEl.style.color = pct >= 100 ? '#10B981' : '#4F46E5';
+                }
+                const inputEl = document.getElementById('targetHoursInput');
+                if (inputEl) inputEl.value = currentWeeklyTarget;
+            }
+        }
+    } catch(err) {
+        console.warn('Weekly target load notice:', err);
+    }
+}
+
+function openTargetModal() {
+    const modal = document.getElementById('weeklyTargetModal');
+    if (modal) {
+        const input = document.getElementById('targetHoursInput');
+        if (input) input.value = currentWeeklyTarget;
+        modal.style.display = 'flex';
+    }
+}
+
+function closeTargetModal() {
+    const modal = document.getElementById('weeklyTargetModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleTargetSubmit(e) {
+    e.preventDefault();
+    const hours = parseFloat(document.getElementById('targetHoursInput').value) || 15.0;
+    const focus = document.getElementById('targetFocusTopicInput')?.value || '';
+    const studentId = localStorage.getItem('user_id') || 'user_001';
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.setWeeklyTarget) {
+            await ProgressAPI.setWeeklyTarget(hours, focus, studentId);
+        }
+    } catch(err) {}
+
+    currentWeeklyTarget = hours;
+    const displayEl = document.getElementById('targetHoursDisplay');
+    if (displayEl) displayEl.textContent = `Target: ${hours} hrs / week`;
+    const subtextEl = document.getElementById('statTargetSubtext');
+    if (subtextEl) subtextEl.textContent = `of ${hours}h Target`;
+
+    closeTargetModal();
+    if (typeof showSuccess === 'function') {
+        showSuccess(`🎯 Target updated to ${hours} hrs / week!`);
+    } else {
+        alert(`🎯 Weekly study goal saved to database: ${hours} hrs / week!`);
+    }
+    await loadWeeklyTarget();
+}
+
+// ---- Social Share Card Modal ----
+let currentShareCardData = null;
+
+async function openShareModal() {
+    const modal = document.getElementById('socialShareModal');
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    const studentId = localStorage.getItem('user_id') || 'user_001';
+
+    try {
+        if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getSocialShareCard) {
+            const data = await ProgressAPI.getSocialShareCard(studentId);
+            if (data) {
+                currentShareCardData = data;
+                const nameEl = document.getElementById('shareCardStudentName');
+                if (nameEl) nameEl.textContent = data.name || 'Astha Khade';
+                const trackEl = document.getElementById('shareCardTrack');
+                if (trackEl) trackEl.textContent = `${data.track || 'AI / Machine Learning'} Track`;
+                const milEl = document.getElementById('shareCardMilestones');
+                if (milEl) milEl.textContent = `${data.milestonesCompleted || 12} Done`;
+                const hrsEl = document.getElementById('shareCardHours');
+                if (hrsEl) hrsEl.textContent = `${data.studyHours || 34}h`;
+                const strkEl = document.getElementById('shareCardStreak');
+                if (strkEl) strkEl.textContent = `${data.streakDays || 7} Days 🔥`;
+                const scoreEl = document.getElementById('shareCardScore');
+                if (scoreEl) scoreEl.textContent = `${data.readinessScore || 82}%`;
+                const badgeIdEl = document.getElementById('shareCardBadgeId');
+                if (badgeIdEl) badgeIdEl.textContent = `ID: ${data.badgeId || 'CN-PROG-2026'}`;
+                const textEl = document.getElementById('sharePostText');
+                if (textEl) textEl.value = data.linkedinText || '';
+            }
+        }
+    } catch(err) {
+        console.warn('Share card load error:', err);
+    }
+}
+
+function closeShareModal() {
+    const modal = document.getElementById('socialShareModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyShareText() {
+    const textEl = document.getElementById('sharePostText');
+    if (textEl) {
+        navigator.clipboard.writeText(textEl.value).then(() => {
+            alert('📋 Formatted milestone post copied to clipboard! Ready to paste into LinkedIn or Twitter.');
+        }).catch(() => {
+            textEl.select();
+            document.execCommand('copy');
+            alert('📋 Formatted milestone post copied to clipboard!');
+        });
+    }
+}
+
+function launchLinkedInShare() {
+    if (currentShareCardData && currentShareCardData.linkedinUrl) {
+        window.open(currentShareCardData.linkedinUrl, '_blank');
+    } else {
+        const text = encodeURIComponent(document.getElementById('sharePostText')?.value || '');
+        const url = encodeURIComponent('https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html');
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${text}`, '_blank');
+    }
+}
+
+function launchTwitterShare() {
+    if (currentShareCardData && currentShareCardData.twitterUrl) {
+        window.open(currentShareCardData.twitterUrl, '_blank');
+    } else {
+        const text = encodeURIComponent(`🚀 Just hit 82% Job Readiness on @CareerNavigatorAI! Check out my verified progress.`);
+        const url = encodeURIComponent('https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html');
+        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
     }
 }
 

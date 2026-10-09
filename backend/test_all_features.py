@@ -609,6 +609,45 @@ def run_tests():
     print("[PASS] 37. Upcoming Tech Hackathons, Event Reminders, .ics Export & Track Syllabus PDF (GET /dashboard/events, POST /dashboard/events/reminder, GET /dashboard/events/ics/{id}, GET /roadmap/export-syllabus-pdf/{track})")
     tests_passed += 1
 
+    # 38. Custom Weekly Study Hour Goal Target & Social Share Card Preview
+    total_tests += 1
+    test_prog_sid = f"test_prog_student_{int(time.time())}"
+
+    # 38.1 POST weekly-target
+    res_set_target = client.post("/api/v1/progress/weekly-target", json={
+        "student_id": test_prog_sid,
+        "target_hours": 18.5,
+        "focus_topic": "DSA & System Design"
+    })
+    assert res_set_target.status_code == 200 and res_set_target.json().get("success") is True, f"Set weekly target failed: {res_set_target.text}"
+    assert res_set_target.json().get("targetHours") == 18.5
+
+    # 38.2 GET weekly-target
+    res_get_target = client.get(f"/api/v1/progress/weekly-target/{test_prog_sid}")
+    assert res_get_target.status_code == 200, f"Get weekly target failed: {res_get_target.text}"
+    target_data = res_get_target.json()
+    assert target_data.get("targetHours") == 18.5, f"Expected target 18.5, got {target_data.get('targetHours')}"
+    assert target_data.get("focusTopic") == "DSA & System Design", "Focus topic mismatch"
+    assert "completionPercentage" in target_data, "Missing completion percentage"
+
+    # 38.3 GET social share card
+    res_share_card = client.get(f"/api/v1/progress/share-card/{test_prog_sid}")
+    assert res_share_card.status_code == 200, f"Get share card failed: {res_share_card.text}"
+    share_data = res_share_card.json()
+    assert share_data.get("success") is True, "Share card success is false"
+    assert "linkedinUrl" in share_data and "https://www.linkedin.com" in share_data["linkedinUrl"], "Missing valid LinkedIn share URL"
+    assert "twitterUrl" in share_data and "https://twitter.com" in share_data["twitterUrl"], "Missing valid Twitter share URL"
+    assert "badgeId" in share_data and "CN-PROG-" in share_data["badgeId"], "Missing valid badge ID"
+
+    # 38.4 GET social share SVG badge
+    res_svg_badge = client.get(f"/api/v1/progress/share-badge/{test_prog_sid}")
+    assert res_svg_badge.status_code == 200, f"Get share SVG badge failed: {res_svg_badge.text}"
+    assert "<svg" in res_svg_badge.text and "</svg>" in res_svg_badge.text, "Invalid SVG output"
+    assert "AI CAREER NAVIGATOR" in res_svg_badge.text, "Missing branding in SVG"
+
+    print("[PASS] 38. Custom Weekly Study Target & Social Share Card Preview (POST/GET /weekly-target, GET /share-card/{id}, GET /share-badge/{id})")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
