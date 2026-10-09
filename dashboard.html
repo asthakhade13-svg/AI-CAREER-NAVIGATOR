@@ -736,7 +736,7 @@
             AI / Machine Learning Engineer Specialization
           </div>
 
-          <div style="display:flex; justify-content:space-around; align-items:center; border-top:1px dashed #D1D5DB; padding-top:16px; margin-top:16px; font-size:0.8rem; color:#6B7280;">
+          <div style="display:flex; justify-content:space-around; align-items:center; border-top:1px dashed #D1D5DB; padding-top:16px; margin-top:16px; font-size:0.8rem; color:#6B7280; flex-wrap:wrap; gap:12px;">
             <div>
               <strong>Issue Date</strong>
               <p id="certIssueDate" style="margin:2px 0 0 0; color:#1F2937; font-weight:600;">Sep 26, 2026</p>
@@ -745,9 +745,18 @@
               <strong>Verification ID</strong>
               <p id="certVerifyId" style="margin:2px 0 0 0; color:#4F46E5; font-weight:700; font-family:monospace;">CN-2026-AIML-8F92A</p>
             </div>
+            <div style="text-align:center;">
+              <div style="display:inline-block; padding:4px; background:white; border:1px solid #E2E8F0; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.04);">
+                <img id="certQrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https%3A%2F%2Fasthakhade13-svg.github.io%2FAI-CAREER-NAVIGATOR%2Fverify.html%3FcertId%3DCN-2026-AIML-8F92A" alt="Verification QR" style="width:70px; height:70px; display:block;" />
+              </div>
+              <span style="font-size:0.65rem; color:#64748b; display:block; margin-top:2px;">Scan to Verify</span>
+            </div>
             <div>
-              <strong>Status</strong>
+              <strong>Recruiter Verification</strong>
               <p style="margin:2px 0 0 0; color:#10B981; font-weight:700;">Tamper-Proof ✓</p>
+              <a id="certVerifyDirectLink" href="verify.html?certId=CN-2026-AIML-8F92A" target="_blank" style="font-size:0.75rem; color:#4F46E5; text-decoration:none; font-weight:600; display:inline-block; margin-top:2px;">
+                <i class="fas fa-external-link-alt"></i> Public Portal
+              </a>
             </div>
           </div>
         </div>
@@ -2282,6 +2291,13 @@ async function openCertificateModal() {
             const cert = await CertificateAPI.generateCertificate(trackKey, 96);
             if (cert && cert.certificateId) {
                 document.getElementById('certVerifyId').textContent = cert.certificateId;
+                const verifyUrl = cert.verificationUrl || `https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId=${encodeURIComponent(cert.certificateId)}`;
+                const qrImg = document.getElementById('certQrCodeImg');
+                if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}`;
+                const directLink = document.getElementById('certVerifyDirectLink');
+                if (directLink) {
+                    directLink.href = `verify.html?certId=${encodeURIComponent(cert.certificateId)}`;
+                }
             }
         }
     } catch(e) {}
@@ -2324,8 +2340,8 @@ function printCertificate() {
 function shareCertificateLinkedIn() {
     const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
     const certId = document.getElementById('certVerifyId')?.textContent || 'CN-2026-AIML-8F92A';
-    const text = encodeURIComponent(`🎓 Proud to have completed and verified my ${rawSelected} Specialization with First-Gen AI Career Navigator! Verification ID: ${certId}`);
-    const url = encodeURIComponent('https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/');
+    const text = encodeURIComponent(`🎓 Proud to share my verified ${rawSelected} Specialization on AI Career Navigator! Verification ID: ${certId}`);
+    const url = encodeURIComponent(`https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId=${encodeURIComponent(certId)}`);
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${text}`, '_blank');
 }
 

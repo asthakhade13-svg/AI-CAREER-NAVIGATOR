@@ -71,7 +71,7 @@ def get_share_payload(cert_id: str):
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate ID not found")
 
-    verify_url = f"https://ai-career-navigator.onrender.com/verify.html?certId={cert_id}"
+    verify_url = f"https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId={cert_id}"
     student_name = cert.get("studentName", "Student")
     track_title = cert.get("trackTitle", "Career Track")
 
@@ -114,6 +114,7 @@ def download_certificate_pdf(cert_id: str):
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate ID not found")
 
+    verify_url = f"https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId={cert_id}"
     student_name = cert.get("studentName", "Student")
     track_title = cert.get("trackTitle", "Engineering Track")
     issued_at = cert.get("issuedAt", "2026-09-28")
@@ -190,6 +191,11 @@ def download_certificate_pdf(cert_id: str):
         <div><strong>Certificate ID:</strong> {cert_id}</div>
         <div><strong>Issue Date:</strong> {issued_at}</div>
         <div><strong>Verification Hash:</strong> {hash_val[:20]}...</div>
+        <div style="margin-top: 4px;"><a href="{verify_url}" target="_blank" style="color: #4338ca; text-decoration: none; font-weight: 600;">🔗 Public Verification Portal</a></div>
+      </div>
+      <div style="text-align: center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={urllib.parse.quote(verify_url)}" alt="Recruiter Verification QR" style="width: 78px; height: 78px; border: 1px solid #e2e8f0; padding: 4px; border-radius: 8px; background: white;" />
+        <div style="font-size: 10px; color: #64748b; margin-top: 2px; font-weight: 600;">SCAN TO VERIFY</div>
       </div>
       <div class="signature-box">
         <div class="signature-line">Dr. A. Sharma</div>

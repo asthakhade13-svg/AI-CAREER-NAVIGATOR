@@ -187,7 +187,7 @@
     // Extract query parameter if provided
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const certId = urlParams.get('certId') || urlParams.get('id');
+      const certId = urlParams.get('certId') || urlParams.get('id') || urlParams.get('badge') || urlParams.get('cert_id');
       if (certId) {
         document.getElementById('certInput').value = certId;
         lookupCertificate();

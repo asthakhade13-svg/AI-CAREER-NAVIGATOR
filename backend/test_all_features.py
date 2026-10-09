@@ -80,11 +80,13 @@ def run_tests():
     print(f"[PASS] 7. Certificate Generation (ID: {cert_id})")
     tests_passed += 1
 
-    # 8. Certificate PDF Printable Download Route
+    # 8. Certificate PDF Printable Download Route & Recruiter Verification QR
     total_tests += 1
     res = client.get(f"/api/v1/certificates/download-pdf/{cert_id}")
     assert res.status_code == 200 and "Certificate of Completion" in res.text, f"PDF Download failed: {res.text}"
-    print("[PASS] 8. Certificate Printable PDF Generator Route")
+    assert "create-qr-code" in res.text, "QR Code image generator missing in certificate PDF"
+    assert "verify.html?certId=" in res.text, "Public Recruiter verification link missing in certificate PDF"
+    print("[PASS] 8. Certificate Printable PDF Generator Route with Recruiter Verification QR Code")
     tests_passed += 1
 
     # 9. Study Logger
