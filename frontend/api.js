@@ -2056,101 +2056,340 @@ function logout() {
 }
 
 // ---- Notification Center Dropdown Helper ----
+let _cachedNotifData = { unreadCount: 0, notifications: [] };
+
+function ensureNotifStyles() {
+    if (!document.getElementById('notifTrayStyles')) {
+        const style = document.createElement('style');
+        style.id = 'notifTrayStyles';
+        style.textContent = `
+            @keyframes notifSlideDown {
+                from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .notif-tray-scroll::-webkit-scrollbar {
+                width: 6px;
+            }
+            .notif-tray-scroll::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+            .notif-tray-scroll::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+            .notif-item-hover:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function updateAllNotifDots(unreadCount) {
+    const dots = document.querySelectorAll('.notif-dot');
+    dots.forEach(dot => {
+        dot.style.display = unreadCount > 0 ? 'block' : 'none';
+    });
+}
+
+function formatNotifTime(dateStr) {
+    if (!dateStr) return 'Just now';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const diffMs = Date.now() - d.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours}h ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch(e) {
+        return dateStr;
+    }
+}
+
 async function initNotificationCenter() {
+    ensureNotifStyles();
     const notifBtns = document.querySelectorAll('.notif-btn');
     if (!notifBtns || notifBtns.length === 0) return;
 
-    let notifData = { unreadCount: 0, notifications: [] };
     try {
         if (typeof NotificationAPI !== 'undefined' && NotificationAPI.getList) {
-            notifData = await NotificationAPI.getList();
+            _cachedNotifData = await NotificationAPI.getList();
         }
     } catch(e) {}
 
+    updateAllNotifDots(_cachedNotifData.unreadCount || 0);
+
     notifBtns.forEach(btn => {
-        const dot = btn.querySelector('.notif-dot');
-        if (dot) {
-            dot.style.display = notifData.unreadCount > 0 ? 'block' : 'none';
-        }
         btn.style.position = 'relative';
         btn.style.cursor = 'pointer';
 
         btn.onclick = (e) => {
             e.stopPropagation();
-            toggleNotificationDropdown(btn, notifData);
+            toggleNotificationDropdown(btn);
         };
     });
 }
 
-function toggleNotificationDropdown(btn, notifData) {
+async function toggleNotificationDropdown(btn) {
+    ensureNotifStyles();
     let existing = document.getElementById('notifDropdown');
     if (existing) {
+        const isCurrentParent = existing.parentElement === btn;
         existing.remove();
-        return;
+        if (isCurrentParent) return;
     }
+
+    const isDark = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
 
     const dropdown = document.createElement('div');
     dropdown.id = 'notifDropdown';
+    dropdown.className = 'notif-dropdown-tray';
     dropdown.style.cssText = `
         position: absolute;
-        top: 48px;
+        top: calc(100% + 10px);
         right: 0;
-        width: 320px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.18);
-        border: 1px solid rgba(0,0,0,0.08);
-        z-index: 99999;
-        padding: 16px;
+        width: 360px;
+        max-width: calc(100vw - 32px);
+        background: ${isDark ? '#1e293b' : '#ffffff'};
+        color: ${isDark ? '#f1f5f9' : '#0f172a'};
+        border-radius: 14px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
+        border: 1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(226, 232, 240, 0.9)'};
+        z-index: 999999;
+        overflow: hidden;
         font-family: inherit;
-        animation: fadeIn 0.2s ease;
+        animation: notifSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: default;
+        display: flex;
+        flex-direction: column;
     `;
 
-    const itemsHtml = (notifData.notifications || []).map(n => `
-        <div style="padding: 10px; border-radius: 10px; background: ${n.isRead ? '#f8fafc' : 'rgba(79,70,229,0.06)'}; margin-bottom: 8px; border-left: 3px solid ${n.isRead ? '#cbd5e1' : '#4F46E5'};">
-            <strong style="font-size: 0.84rem; color: #1e293b; display: block;">${n.title}</strong>
-            <p style="font-size: 0.76rem; color: #64748b; margin: 2px 0 4px 0; line-height: 1.3;">${n.message}</p>
-            <span style="font-size: 0.68rem; color: #94a3b8;">${n.createdAt || 'Recent'}</span>
-        </div>
-    `).join('') || '<p style="font-size:0.8rem; color:#94a3b8; text-align:center;">No new notifications</p>';
+    const typeMeta = {
+        streak: { icon: 'fa-fire', color: '#D97706', bg: isDark ? 'rgba(217, 119, 6, 0.2)' : '#FEF3C7', label: 'Streak' },
+        report: { icon: 'fa-chart-pie', color: '#0284C7', bg: isDark ? 'rgba(2, 132, 199, 0.2)' : '#E0F2FE', label: 'Weekly Digest' },
+        cert: { icon: 'fa-award', color: '#9333EA', bg: isDark ? 'rgba(147, 51, 234, 0.2)' : '#F3E8FF', label: 'Certificate' },
+        internship: { icon: 'fa-briefcase', color: '#059669', bg: isDark ? 'rgba(5, 150, 105, 0.2)' : '#D1FAE5', label: 'Internship' },
+        event_reminder: { icon: 'fa-calendar-check', color: '#DC2626', bg: isDark ? 'rgba(220, 38, 38, 0.2)' : '#FEE2E2', label: 'Event Reminder' },
+        milestone: { icon: 'fa-trophy', color: '#D97706', bg: isDark ? 'rgba(217, 119, 6, 0.2)' : '#FEF3C7', label: 'Milestone' },
+        review: { icon: 'fa-code-branch', color: '#7C3AED', bg: isDark ? 'rgba(124, 58, 237, 0.2)' : '#EDE9FE', label: 'Mentor Review' },
+        info: { icon: 'fa-info-circle', color: '#4F46E5', bg: isDark ? 'rgba(79, 70, 229, 0.2)' : '#EEF2FF', label: 'Update' }
+    };
 
-    dropdown.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
-            <strong style="font-size:0.95rem; color:#1e293b;"><i class="fas fa-bell" style="color:#4F46E5; margin-right:6px;"></i> Notifications</strong>
-            <button id="markReadBtn" style="background:none; border:none; color:#4F46E5; font-size:0.76rem; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:5px; padding:3px 6px; border-radius:6px; transition:background 0.2s;" title="Mark all as read">
-                <i class="fas fa-check-double" style="font-size:0.72rem;"></i> Mark All as Read
-            </button>
-        </div>
-        <div style="max-height: 260px; overflow-y: auto;">
-            ${itemsHtml}
-        </div>
-    `;
+    function renderTrayContent(data) {
+        const unreadCount = data.unreadCount || 0;
+        const notifs = data.notifications || [];
 
-    btn.appendChild(dropdown);
+        let itemsHtml = '';
+        if (notifs.length === 0) {
+            itemsHtml = `
+                <div style="padding: 36px 16px; text-align: center;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: ${isDark ? 'rgba(255,255,255,0.05)' : '#EEF2FF'}; color: #4F46E5; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 1.2rem;">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <div style="font-weight: 600; font-size: 0.88rem; color: ${isDark ? '#e2e8f0' : '#1e293b'}; margin-bottom: 4px;">No notifications yet</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">You're completely caught up! New reminders and alerts will appear here.</div>
+                </div>
+            `;
+        } else {
+            itemsHtml = notifs.map(n => {
+                const meta = typeMeta[n.type] || typeMeta.info;
+                const isRead = !!n.isRead;
+                const itemBg = isRead 
+                    ? (isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc')
+                    : (isDark ? 'rgba(79, 70, 229, 0.12)' : 'rgba(79, 70, 229, 0.05)');
+                const borderAccent = isRead ? (isDark ? '#334155' : '#cbd5e1') : '#4F46E5';
 
-    const markBtn = dropdown.querySelector('#markReadBtn');
-    if (markBtn) {
-        markBtn.onclick = async (e) => {
-            e.stopPropagation();
-            try {
-                if (typeof NotificationAPI !== 'undefined' && NotificationAPI.markAllRead) {
-                    await NotificationAPI.markAllRead();
-                } else if (typeof NotificationAPI !== 'undefined') {
-                    await NotificationAPI.markRead();
+                return `
+                    <div class="notif-item-hover notif-card" data-notif-id="${n.id}" data-is-read="${isRead ? '1' : '0'}" style="display: flex; gap: 10px; padding: 12px; border-radius: 10px; background: ${itemBg}; margin-bottom: 8px; border-left: 3px solid ${borderAccent}; transition: all 0.18s ease; cursor: ${isRead ? 'default' : 'pointer'}; position: relative;" title="${isRead ? '' : 'Click to mark as read'}">
+                        <div style="width: 32px; height: 32px; border-radius: 8px; background: ${meta.bg}; color: ${meta.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem;">
+                            <i class="fas ${meta.icon}"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 2px;">
+                                <strong style="font-size: 0.83rem; color: ${isDark ? '#f8fafc' : '#1e293b'}; line-height: 1.3; font-weight: ${isRead ? '600' : '700'};">${n.title}</strong>
+                                <span style="font-size: 0.68rem; color: #94a3b8; white-space: nowrap; flex-shrink: 0;">${formatNotifTime(n.createdAt)}</span>
+                            </div>
+                            <p style="font-size: 0.76rem; color: ${isDark ? '#94a3b8' : '#64748b'}; margin: 0 0 6px 0; line-height: 1.35;">${n.message}</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 0.65rem; font-weight: 600; padding: 2px 7px; border-radius: 6px; background: ${meta.bg}; color: ${meta.color}; display: inline-block;">${meta.label}</span>
+                                ${!isRead ? '<span class="unread-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #4F46E5; display: inline-block;" title="Unread"></span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        dropdown.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9'}; background: ${isDark ? '#0f172a' : '#f8fafc'};">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong style="font-size: 0.92rem; color: ${isDark ? '#f8fafc' : '#1e293b'}; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-bell" style="color: #4F46E5;"></i> Notifications
+                    </strong>
+                    <span id="notifHeaderBadge" style="display: ${unreadCount > 0 ? 'inline-block' : 'none'}; background: #EF4444; color: #ffffff; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 12px; line-height: 1.2;">
+                        ${unreadCount} unread
+                    </span>
+                </div>
+                <button id="markAllReadBtn" style="background: none; border: none; color: #4F46E5; font-size: 0.74rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; padding: 4px 7px; border-radius: 6px; transition: all 0.2s; outline: none;" title="Mark all notifications as read">
+                    <i class="fas fa-check-double" style="font-size: 0.72rem;"></i> Mark All as Read
+                </button>
+            </div>
+            <div id="notifListContainer" class="notif-tray-scroll" style="max-height: 340px; overflow-y: auto; padding: 12px;">
+                ${itemsHtml}
+            </div>
+            <div style="padding: 10px 16px; background: ${isDark ? '#0f172a' : '#f8fafc'}; border-top: 1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9'}; display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94a3b8;">
+                <span><i class="fas fa-bolt" style="color: #F59E0B; margin-right: 4px;"></i> Live Updates Active</span>
+                <span id="closeTrayText" style="cursor: pointer; color: ${isDark ? '#cbd5e1' : '#64748b'}; font-weight: 500;">Close</span>
+            </div>
+        `;
+
+        // Wire "Mark All as Read"
+        const markBtn = dropdown.querySelector('#markAllReadBtn');
+        if (markBtn) {
+            markBtn.onclick = async (e) => {
+                e.stopPropagation();
+                markBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:0.72rem;"></i> Marking...';
+                markBtn.disabled = true;
+
+                try {
+                    if (typeof NotificationAPI !== 'undefined' && NotificationAPI.markAllRead) {
+                        await NotificationAPI.markAllRead();
+                    } else if (typeof NotificationAPI !== 'undefined' && NotificationAPI.markRead) {
+                        await NotificationAPI.markRead();
+                    }
+                } catch(err) {
+                    console.warn('Mark all read error:', err);
                 }
-            } catch(err) {}
-            const dot = btn.querySelector('.notif-dot');
-            if (dot) dot.style.display = 'none';
-            dropdown.remove();
-        };
+
+                // Update memory & UI
+                if (_cachedNotifData && _cachedNotifData.notifications) {
+                    _cachedNotifData.notifications.forEach(n => { n.isRead = true; });
+                    _cachedNotifData.unreadCount = 0;
+                }
+                updateAllNotifDots(0);
+
+                const badge = dropdown.querySelector('#notifHeaderBadge');
+                if (badge) badge.style.display = 'none';
+
+                dropdown.querySelectorAll('.notif-card').forEach(card => {
+                    card.style.background = isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc';
+                    card.style.borderLeftColor = isDark ? '#334155' : '#cbd5e1';
+                    card.style.cursor = 'default';
+                    const title = card.querySelector('strong');
+                    if (title) title.style.fontWeight = '600';
+                    const dot = card.querySelector('.unread-dot');
+                    if (dot) dot.remove();
+                    card.setAttribute('data-is-read', '1');
+                });
+
+                markBtn.innerHTML = '<span style="color:#10B981;"><i class="fas fa-check" style="font-size:0.72rem;"></i> Caught up</span>';
+                setTimeout(() => {
+                    if (markBtn) {
+                        markBtn.innerHTML = '<i class="fas fa-check-double" style="font-size: 0.72rem;"></i> Mark All as Read';
+                        markBtn.disabled = false;
+                    }
+                }, 1800);
+            };
+        }
+
+        // Wire single-item click to mark as read
+        dropdown.querySelectorAll('.notif-card').forEach(card => {
+            card.onclick = async (e) => {
+                e.stopPropagation();
+                const isRead = card.getAttribute('data-is-read') === '1';
+                if (isRead) return;
+
+                const notifId = card.getAttribute('data-notif-id');
+                card.setAttribute('data-is-read', '1');
+                card.style.background = isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc';
+                card.style.borderLeftColor = isDark ? '#334155' : '#cbd5e1';
+                card.style.cursor = 'default';
+                const title = card.querySelector('strong');
+                if (title) title.style.fontWeight = '600';
+                const dot = card.querySelector('.unread-dot');
+                if (dot) dot.remove();
+
+                if (_cachedNotifData && _cachedNotifData.notifications) {
+                    const found = _cachedNotifData.notifications.find(n => String(n.id) === String(notifId));
+                    if (found) found.isRead = true;
+                    _cachedNotifData.unreadCount = Math.max(0, (_cachedNotifData.unreadCount || 1) - 1);
+                }
+
+                const currentUnread = _cachedNotifData ? _cachedNotifData.unreadCount : 0;
+                updateAllNotifDots(currentUnread);
+
+                const badge = dropdown.querySelector('#notifHeaderBadge');
+                if (badge) {
+                    if (currentUnread > 0) {
+                        badge.textContent = `${currentUnread} unread`;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                try {
+                    if (typeof NotificationAPI !== 'undefined' && NotificationAPI.markRead) {
+                        await NotificationAPI.markRead(notifId);
+                    }
+                } catch(err) {
+                    console.warn('Single mark read error:', err);
+                }
+            };
+        });
+
+        const closeText = dropdown.querySelector('#closeTrayText');
+        if (closeText) {
+            closeText.onclick = (e) => {
+                e.stopPropagation();
+                dropdown.remove();
+            };
+        }
     }
 
-    document.addEventListener('click', function closeNotif(e) {
-        if (!dropdown.contains(e.target) && e.target !== btn) {
-            dropdown.remove();
-            document.removeEventListener('click', closeNotif);
+    // Render immediately with cached data
+    renderTrayContent(_cachedNotifData);
+    btn.appendChild(dropdown);
+
+    // Refresh live in background
+    try {
+        if (typeof NotificationAPI !== 'undefined' && NotificationAPI.getList) {
+            const freshData = await NotificationAPI.getList();
+            if (freshData && freshData.notifications) {
+                _cachedNotifData = freshData;
+                updateAllNotifDots(_cachedNotifData.unreadCount || 0);
+                if (document.getElementById('notifDropdown') === dropdown) {
+                    renderTrayContent(_cachedNotifData);
+                }
+            }
         }
-    });
+    } catch(e) {}
+
+    // Global listener to close on outside click or escape
+    function closeNotifTray(e) {
+        if (e.type === 'keydown' && e.key === 'Escape') {
+            dropdown.remove();
+            document.removeEventListener('click', closeNotifTray);
+            document.removeEventListener('keydown', closeNotifTray);
+            return;
+        }
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener('click', closeNotifTray);
+            document.removeEventListener('keydown', closeNotifTray);
+        }
+    }
+
+    setTimeout(() => {
+        document.addEventListener('click', closeNotifTray);
+        document.addEventListener('keydown', closeNotifTray);
+    }, 10);
 }
 
 // ---- Global Profile Editor Modal ----
