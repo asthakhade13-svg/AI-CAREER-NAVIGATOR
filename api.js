@@ -823,7 +823,7 @@ const RoadmapAPI = {
 const ChatAPI = {
     sendMessage: async (message, apiKey = null) => {
         const user = UserManager.get() || { email: 'student@example.com' };
-        const studentId = user.email || user.id || 'student';
+        const studentId = localStorage.getItem('user_id') || user.id || user.email || 'user_001';
         const savedKey = apiKey || localStorage.getItem('GEMINI_API_KEY') || null;
 
         try {
@@ -859,11 +859,11 @@ const ChatAPI = {
         };
     },
 
-    getHistory: async () => {
+    getHistory: async (studentId = null) => {
         const user = UserManager.get() || { email: 'student@example.com' };
-        const studentId = user.email || user.id || 'student';
+        const sid = studentId || localStorage.getItem('user_id') || user.id || user.email || 'user_001';
         try {
-            const res = await mlApiCall(`/chatbot/history/${encodeURIComponent(studentId)}`, 'GET');
+            const res = await mlApiCall(`/chatbot/history/${encodeURIComponent(sid)}`, 'GET');
             if (res.status === 200 && res.data && res.data.messages) {
                 return res.data.messages;
             }
@@ -871,41 +871,50 @@ const ChatAPI = {
         return [];
     },
 
-    clearHistory: async () => {
+    clearHistory: async (studentId = null) => {
         const user = UserManager.get() || { email: 'student@example.com' };
-        const studentId = user.email || user.id || 'student';
+        const sid = studentId || localStorage.getItem('user_id') || user.id || user.email || 'user_001';
         try {
-            return await mlApiCall(`/chatbot/history/${encodeURIComponent(studentId)}`, 'DELETE');
+            return await mlApiCall(`/chatbot/history/${encodeURIComponent(sid)}`, 'DELETE');
         } catch(e) {
             return { success: true };
         }
     },
 
-    sendVoice: async (audioBlob, apiKey = null) => {
+    sendVoice: async (audioBlob, apiKey = null, transcribedText = null) => {
         const user = UserManager.get() || { email: 'student@example.com' };
-        const studentId = user.email || user.id || 'student';
+        const studentId = localStorage.getItem('user_id') || user.id || user.email || 'user_001';
         const savedKey = apiKey || localStorage.getItem('GEMINI_API_KEY') || '';
 
         const formData = new FormData();
         formData.append('student_id', studentId);
         formData.append('api_key', savedKey);
+        if (transcribedText) {
+            formData.append('transcript', transcribedText);
+        }
         formData.append('audio', audioBlob, 'voice_query.webm');
 
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const backendBase = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
 
         try {
-            const res = await fetch(`${backendBase}/api/v1/chatbot/voice`, {
+            let res = await fetch(`${backendBase}/api/v1/chatbot/transcribe-voice`, {
                 method: 'POST',
                 body: formData
             });
+            if (!res.ok && res.status === 404) {
+                res = await fetch(`${backendBase}/api/v1/chatbot/voice`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
             const data = await res.json();
             return {
                 status: res.status,
                 data: {
                     success: true,
-                    aiResponse: data.response || "Voice query processed.",
-                    transcript: data.transcript || "Voice query received"
+                    aiResponse: data.aiResponse || data.response || "Voice query processed.",
+                    transcript: data.transcript || transcribedText || "Voice query received"
                 }
             };
         } catch(e) {
@@ -914,7 +923,7 @@ const ChatAPI = {
                 data: {
                     success: true,
                     aiResponse: "I received your voice note! To excel in technical interviews, focus on core data structures, system design basics, and explain your thinking step by step.",
-                    transcript: "Voice query processed"
+                    transcript: transcribedText || "Voice query processed"
                 }
             };
         }

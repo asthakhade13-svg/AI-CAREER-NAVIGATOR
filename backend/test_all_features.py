@@ -1,6 +1,7 @@
 import sys
 from fastapi.testclient import TestClient
 from app import app
+from services.auth_service import get_db_connection
 
 client = TestClient(app)
 
@@ -648,6 +649,54 @@ def run_tests():
     assert "AI CAREER NAVIGATOR" in res_svg_badge.text, "Missing branding in SVG"
 
     print("[PASS] 38. Custom Weekly Study Target & Social Share Card Preview (POST/GET /weekly-target, GET /share-card/{id}, GET /share-badge/{id})")
+    tests_passed += 1
+
+    # 39. AI Mentor Persistent Chat History & Voice Input
+    total_tests += 1
+    test_chat_sid = "test_chat_student_99"
+
+    # 39.1 POST text chat message
+    res_chat = client.post("/api/v1/chatbot/chat", json={
+        "student_id": test_chat_sid,
+        "message": "How do I optimize SQL queries for large datasets?"
+    })
+    assert res_chat.status_code == 200 and res_chat.json().get("success"), f"Chat POST failed: {res_chat.text}"
+    assert "response" in res_chat.json(), "Missing response in chat output"
+
+    # 39.2 POST voice transcription audio
+    res_voice = client.post(
+        "/api/v1/chatbot/transcribe-voice",
+        data={"student_id": test_chat_sid, "transcript": "What are microservices best practices?"},
+        files={"audio": ("voice_sample.webm", b"RIFF....WAVEfmt ....data....", "audio/webm")}
+    )
+    assert res_voice.status_code == 200 and res_voice.json().get("success"), f"Transcribe voice failed: {res_voice.text}"
+    assert "microservices" in res_voice.json().get("transcript", "").lower(), "Transcript mismatch in voice response"
+
+    # 39.3 GET chat history thread from SQLite (chat_history table)
+    res_hist = client.get(f"/api/v1/chatbot/history/{test_chat_sid}")
+    assert res_hist.status_code == 200, f"Get chat history failed: {res_hist.text}"
+    hist_data = res_hist.json()
+    assert hist_data.get("success") is True, "Chat history success flag is not True"
+    assert hist_data.get("totalMessages", 0) >= 4, f"Expected at least 4 messages in thread, got {hist_data.get('totalMessages')}"
+    messages = hist_data.get("messages", [])
+    assert any("SQL" in (m.get("text") or m.get("content") or "") for m in messages), "Text query missing in saved history"
+    assert any("microservices" in (m.get("text") or m.get("content") or "") for m in messages), "Voice query missing in saved history"
+
+    # 39.4 Verify records directly inside SQLite chat_history table
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) as count FROM chat_history WHERE student_id = ?", (test_chat_sid,))
+    row = c.fetchone()
+    conn.close()
+    assert row and row["count"] >= 4, f"Expected >= 4 records in SQLite chat_history table, got {row['count'] if row else 0}"
+
+    # 39.5 DELETE chat history thread
+    res_del_hist = client.delete(f"/api/v1/chatbot/history/{test_chat_sid}")
+    assert res_del_hist.status_code == 200 and res_del_hist.json().get("success"), f"Delete chat history failed: {res_del_hist.text}"
+    res_hist_after = client.get(f"/api/v1/chatbot/history/{test_chat_sid}")
+    assert res_hist_after.json().get("totalMessages") == 0, "Chat history should be 0 after delete"
+
+    print("[PASS] 39. AI Mentor Persistent Chat History & Voice Input (chat_history table & /transcribe-voice)")
     tests_passed += 1
 
     print("==================================================")

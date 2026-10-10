@@ -183,16 +183,27 @@
                 oninput="autoResize(this)"
               ></textarea>
               <button
+                class="mic-btn"
+                onclick="toggleVoiceRecording()"
+                id="micBtn"
+                title="Speak to CareerBot (Voice Input)"
+                type="button"
+              >
+                <i class="fas fa-microphone"></i>
+              </button>
+              <button
                 class="send-btn"
                 onclick="sendMessage()"
                 id="sendBtn"
+                type="button"
               >
                 <i class="fas fa-paper-plane"></i>
               </button>
             </div>
             <p class="input-hint">
               Press <kbd>Enter</kbd> to send ·
-              <kbd>Shift+Enter</kbd> for new line
+              <kbd>Shift+Enter</kbd> for new line ·
+              Click <i class="fas fa-microphone" style="font-size:0.75rem;"></i> for hands-free voice
             </p>
           </div>
 
@@ -408,20 +419,155 @@ async function sendMessage() {
 
 
 
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let speechRecognizer = null;
+let liveTranscribedText = '';
+
+async function toggleVoiceRecording() {
+    const micBtn = document.getElementById('micBtn');
+    const input = document.getElementById('userInput');
+
+    if (isRecording) {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+        if (speechRecognizer) {
+            try { speechRecognizer.stop(); } catch(e) {}
+        }
+        return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Voice input requires microphone access. Please use Chrome, Edge, or Firefox.');
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        liveTranscribedText = '';
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+            try {
+                speechRecognizer = new SpeechRec();
+                speechRecognizer.continuous = true;
+                speechRecognizer.interimResults = true;
+                speechRecognizer.lang = 'en-US';
+                speechRecognizer.onresult = (evt) => {
+                    let interim = '';
+                    for (let i = evt.resultIndex; i < evt.results.length; ++i) {
+                        interim += evt.results[i][0].transcript;
+                    }
+                    if (interim) {
+                        liveTranscribedText = interim;
+                        input.value = interim;
+                        autoResize(input);
+                    }
+                };
+                speechRecognizer.start();
+            } catch(e) {}
+        }
+
+        mediaRecorder.onstart = () => {
+            isRecording = true;
+            micBtn.classList.add('recording');
+            micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            micBtn.title = 'Click to stop recording and send voice question';
+            input.placeholder = '🎙️ Listening... Speak your career question now...';
+        };
+
+        mediaRecorder.onstop = async () => {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            micBtn.title = 'Speak to CareerBot (Voice Input)';
+            input.placeholder = 'Ask your career question...';
+
+            stream.getTracks().forEach(t => t.stop());
+
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            await handleVoiceAudioSubmission(audioBlob, liveTranscribedText || input.value.trim());
+        };
+
+        mediaRecorder.start();
+
+    } catch(err) {
+        console.error('Microphone access denied or error:', err);
+        alert('Microphone access was denied or is unavailable. Please grant microphone permissions.');
+        micBtn.classList.remove('recording');
+        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+    }
+}
+
+async function handleVoiceAudioSubmission(audioBlob, transcribedText) {
+    const input = document.getElementById('userInput');
+    input.value = '';
+    input.style.height = 'auto';
+
+    const qp = document.getElementById('quickPrompts');
+    if (qp) qp.style.display = 'none';
+
+    showTyping();
+
+    try {
+        const result = await ChatAPI.sendVoice(audioBlob, null, transcribedText);
+        removeTyping();
+
+        if (result && result.data) {
+            const queryText = result.data.transcript || transcribedText || 'Technical interview preparation';
+            addMessage(`🎙️ ${queryText}`, 'user');
+            messageCount++;
+
+            const aiResp = result.data.aiResponse || result.data.response || "Here's the mentor's advice!";
+            addMessage(aiResp, 'bot');
+            messageCount++;
+
+            const countEl = document.getElementById('msgCount');
+            if (countEl) countEl.textContent = messageCount;
+        } else {
+            addMessage('⚠️ Voice processing encountered an error. Please try again or type your question.', 'bot');
+        }
+    } catch(error) {
+        removeTyping();
+        console.error('Voice send error:', error);
+        addMessage('⚠️ Voice processing failed. Please check if backend is running!', 'bot');
+    }
+}
+
 // Load chat history from backend SQLite
 async function loadChatHistory() {
     try {
         const history = await ChatAPI.getHistory();
         if (history && history.length > 0) {
+            const container = document.getElementById('chatMessages');
+            // Remove static welcome message if past messages exist
+            const welcome = container.querySelector('.msg.bot-msg');
+            if (welcome) welcome.remove();
+
             const qp = document.getElementById('quickPrompts');
             if (qp) qp.style.display = 'none';
 
             history.forEach(m => {
-                addMessage(m.content, m.sender, false);
+                const text = m.text || m.content || m.message_text || '';
+                const sender = m.sender || 'bot';
+                if (text) {
+                    addMessage(text, sender, false);
+                }
             });
             messageCount = history.length;
             const countEl = document.getElementById('msgCount');
             if (countEl) countEl.textContent = messageCount;
+            scrollToBottom();
         }
     } catch(e) {
         console.warn('History load notice:', e);
