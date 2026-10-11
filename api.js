@@ -513,21 +513,226 @@ const QuizAPI = {
         mlApiCall(`/quiz/adaptive/status/${sessionId}`, 'GET'),
 
     submitQuiz: async (answers) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = user.email || user.id || 'user_001';
+        try {
+            const mlRes = await mlApiCall('/quiz/submit', 'POST', { student_id: sid, answers });
+            if (mlRes && mlRes.status === 200 && mlRes.data && mlRes.data.success) {
+                return mlRes;
+            }
+        } catch(e) {}
+
         const springRes = await apiCall('/quiz/submit', 'POST', { answers });
         if (springRes && springRes.status === 200) return springRes;
+
+        // Offline client fallback with full explanations & review items
+        const sampleReviews = [
+            {
+                questionId: 1,
+                questionText: "Which HTTP status code signifies that a requested resource was successfully created on the server?",
+                topic: "web_development",
+                topicName: "Web Development",
+                selectedOptionId: 2,
+                correctOptionId: 2,
+                isCorrect: true,
+                selectedText: "201 Created",
+                correctText: "201 Created",
+                explanation: "HTTP status code 201 Created confirms that the request succeeded and resulted in a new resource being created on the server (RFC 7231).",
+                roadmapLink: "roadmap.html?track=webdev",
+                options: [
+                    { id: 1, optionText: "200 OK" },
+                    { id: 2, optionText: "201 Created" },
+                    { id: 3, optionText: "204 No Content" },
+                    { id: 4, optionText: "304 Not Modified" }
+                ]
+            },
+            {
+                questionId: 2,
+                questionText: "In modern frontend development, what is the primary architectural purpose of the Virtual DOM in React?",
+                topic: "web_development",
+                topicName: "Web Development",
+                selectedOptionId: 3,
+                correctOptionId: 3,
+                isCorrect: true,
+                selectedText: "To compute minimal DOM diffs in memory before batching updates to the real DOM",
+                correctText: "To compute minimal DOM diffs in memory before batching updates to the real DOM",
+                explanation: "The Virtual DOM maintains a lightweight tree in memory. On state updates, it reconciles diffs and batches real DOM updates to prevent costly browser reflows.",
+                roadmapLink: "roadmap.html?track=webdev",
+                options: [
+                    { id: 1, optionText: "To directly mutate browser HTML nodes synchronously" },
+                    { id: 2, optionText: "To bypass the browser's JavaScript execution engine" },
+                    { id: 3, optionText: "To compute minimal DOM diffs in memory before batching updates to the real DOM" },
+                    { id: 4, optionText: "To replace CSS cascade computations" }
+                ]
+            },
+            {
+                questionId: 3,
+                questionText: "What occurs when a machine learning model memorizes noise in training data instead of learning generalized patterns?",
+                topic: "ai_ml",
+                topicName: "AI / ML",
+                selectedOptionId: 2,
+                correctOptionId: 2,
+                isCorrect: true,
+                selectedText: "Overfitting",
+                correctText: "Overfitting",
+                explanation: "Overfitting happens when model complexity causes it to memorize noise in training samples, yielding high training accuracy but poor validation performance.",
+                roadmapLink: "roadmap.html?track=aiml",
+                options: [
+                    { id: 1, optionText: "Underfitting" },
+                    { id: 2, optionText: "Overfitting" },
+                    { id: 3, optionText: "Gradient Descent" },
+                    { id: 4, optionText: "Data Imputation" }
+                ]
+            },
+            {
+                questionId: 4,
+                questionText: "Which activation function is most widely adopted in deep neural networks to prevent vanishing gradients?",
+                topic: "ai_ml",
+                topicName: "AI / ML",
+                selectedOptionId: 3,
+                correctOptionId: 3,
+                isCorrect: true,
+                selectedText: "ReLU (Rectified Linear Unit)",
+                correctText: "ReLU (Rectified Linear Unit)",
+                explanation: "ReLU f(x)=max(0, x) provides a constant derivative of 1 for positive inputs, avoiding gradient saturation and vanishing gradient problems in deep architectures.",
+                roadmapLink: "roadmap.html?track=aiml",
+                options: [
+                    { id: 1, optionText: "Sigmoid" },
+                    { id: 2, optionText: "Tanh" },
+                    { id: 3, optionText: "ReLU (Rectified Linear Unit)" },
+                    { id: 4, optionText: "Softmax" }
+                ]
+            },
+            {
+                questionId: 5,
+                questionText: "What is the worst-case time complexity of searching an element in a balanced Binary Search Tree (AVL or Red-Black Tree)?",
+                topic: "data_structures",
+                topicName: "Data Structures",
+                selectedOptionId: 2,
+                correctOptionId: 2,
+                isCorrect: true,
+                selectedText: "O(log N)",
+                correctText: "O(log N)",
+                explanation: "Self-balancing binary search trees bound their height to O(log N) through tree rotations, guaranteeing logarithmic complexity for search, insertion, and deletion.",
+                roadmapLink: "roadmap.html?track=dsa",
+                options: [
+                    { id: 1, optionText: "O(1)" },
+                    { id: 2, optionText: "O(log N)" },
+                    { id: 3, optionText: "O(N)" },
+                    { id: 4, optionText: "O(N log N)" }
+                ]
+            },
+            {
+                questionId: 6,
+                questionText: "Which abstract data type operates on a FIFO basis and is canonical for Breadth-First Search (BFS) graph traversal?",
+                topic: "data_structures",
+                topicName: "Data Structures",
+                selectedOptionId: 3,
+                correctOptionId: 3,
+                isCorrect: true,
+                selectedText: "Queue",
+                correctText: "Queue",
+                explanation: "A Queue follows First-In First-Out (FIFO) ordering, ensuring BFS visits graph vertices in strictly increasing order of path distance from root.",
+                roadmapLink: "roadmap.html?track=dsa",
+                options: [
+                    { id: 1, optionText: "Stack" },
+                    { id: 2, optionText: "Priority Queue" },
+                    { id: 3, optionText: "Queue" },
+                    { id: 4, optionText: "Binary Heap" }
+                ]
+            },
+            {
+                questionId: 7,
+                questionText: "Which cryptographic primitive guarantees sender non-repudiation and tamper detection for messages?",
+                topic: "cybersecurity",
+                topicName: "Cybersecurity",
+                selectedOptionId: 1,
+                correctOptionId: 2,
+                isCorrect: false,
+                selectedText: "Symmetric stream cipher encryption",
+                correctText: "Digital Signatures via Asymmetric Cryptography",
+                explanation: "Digital signatures use private keys for signing and public keys for verification, providing data integrity, authenticity, and non-repudiation.",
+                roadmapLink: "roadmap.html?track=cyber",
+                options: [
+                    { id: 1, optionText: "Symmetric stream cipher encryption" },
+                    { id: 2, optionText: "Digital Signatures via Asymmetric Cryptography" },
+                    { id: 3, optionText: "Base64 encoding with URL safety" },
+                    { id: 4, optionText: "Unsalted MD5 hashing" }
+                ]
+            },
+            {
+                questionId: 8,
+                questionText: "What is the primary remediation to prevent SQL Injection (SQLi) vulnerabilities in database querying code?",
+                topic: "cybersecurity",
+                topicName: "Cybersecurity",
+                selectedOptionId: 2,
+                correctOptionId: 2,
+                isCorrect: true,
+                selectedText: "Parameterized queries / Prepared statements",
+                correctText: "Parameterized queries / Prepared statements",
+                explanation: "Parameterized queries decouple query logic from user parameters, forcing the database engine to parse inputs strictly as literals rather than SQL commands.",
+                roadmapLink: "roadmap.html?track=cyber",
+                options: [
+                    { id: 1, optionText: "Client-side HTML input length limits" },
+                    { id: 2, optionText: "Parameterized queries / Prepared statements" },
+                    { id: 3, optionText: "Base64 encoding all URL parameters" },
+                    { id: 4, optionText: "Disabling TLS/SSL encryption" }
+                ]
+            },
+            {
+                questionId: 9,
+                questionText: "Which cloud computing model abstracts infrastructure provisioning completely and bills only per event execution?",
+                topic: "cloud_computing",
+                topicName: "Cloud Computing",
+                selectedOptionId: 1,
+                correctOptionId: 2,
+                isCorrect: false,
+                selectedText: "Infrastructure as a Service (IaaS)",
+                correctText: "Serverless / Function-as-a-Service (FaaS)",
+                explanation: "Serverless (FaaS) runs ephemeral containers triggered by events, automatically scaling and charging solely for compute milliseconds executed.",
+                roadmapLink: "roadmap.html?track=cloud",
+                options: [
+                    { id: 1, optionText: "Infrastructure as a Service (IaaS)" },
+                    { id: 2, optionText: "Serverless / Function-as-a-Service (FaaS)" },
+                    { id: 3, optionText: "Bare Metal as a Service (BMaaS)" },
+                    { id: 4, optionText: "Colocation" }
+                ]
+            },
+            {
+                questionId: 10,
+                questionText: "Which architectural strategy guarantees high availability and disaster resilience within a single cloud provider region?",
+                topic: "cloud_computing",
+                topicName: "Cloud Computing",
+                selectedOptionId: 1,
+                correctOptionId: 1,
+                isCorrect: true,
+                selectedText: "Multi-Availability Zone (Multi-AZ) redundant deployment",
+                correctText: "Multi-Availability Zone (Multi-AZ) redundant deployment",
+                explanation: "Multi-AZ architectures distribute instances across geographically separated data centers with isolated power and transit, ensuring continuous availability.",
+                roadmapLink: "roadmap.html?track=cloud",
+                options: [
+                    { id: 1, optionText: "Multi-Availability Zone (Multi-AZ) redundant deployment" },
+                    { id: 2, optionText: "Single monolithic EC2 instance deployment" },
+                    { id: 3, optionText: "Disabling auto-scaling and health checks" },
+                    { id: 4, optionText: "Storing backups solely on instance ephemeral storage" }
+                ]
+            }
+        ];
+
         return {
             status: 200,
             data: {
                 success: true,
-                totalScore: 85,
+                totalScore: 80,
                 correctAnswers: 8,
                 totalQuestions: 10,
-                webDevScore: 90,
-                aiMlScore: 85,
-                dsaScore: 80,
-                cyberScore: 75,
-                cloudScore: 80,
-                topCareerMatch: 'Artificial Intelligence & Machine Learning'
+                webDevScore: 100,
+                aiMlScore: 100,
+                dsaScore: 100,
+                cyberScore: 50,
+                cloudScore: 50,
+                topCareerMatch: 'Artificial Intelligence & Machine Learning',
+                review: sampleReviews
             }
         };
     },

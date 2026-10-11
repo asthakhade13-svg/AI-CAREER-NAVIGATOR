@@ -727,7 +727,7 @@ def run_tests():
 
     # 40.4 Certified Specialist: Seed issued certificate
     c.execute("""
-    INSERT INTO certificates (certificate_id, student_id, student_name, track_key, track_title, score_percentage, verification_hash)
+    INSERT OR REPLACE INTO certificates (certificate_id, student_id, student_name, track_key, track_title, score_percentage, verification_hash)
     VALUES ('CN-TEST-BADGE-01', ?, 'Test Student', 'webdev', 'Full-Stack Specialization', 96, 'HASH1234')
     """, (test_badge_sid,))
     conn.commit()
@@ -754,6 +754,60 @@ def run_tests():
     assert b_cert and b_cert.get("isUnlocked") is True, "Certified Specialist should be unlocked"
 
     print("[PASS] 40. Gamification & Achievement Badges (GET /progress/badges/{id} with Consistency King, ATS Pro, Capstone Finisher, Certified Specialist)")
+    tests_passed += 1
+
+    # 41. Quiz Assessment & Review Mistakes with Concept Explanations
+    total_tests += 1
+    # 41.1 Verify GET /api/v1/quiz/questions returns standard 10 questions
+    res_q = client.get("/api/v1/quiz/questions")
+    assert res_q.status_code == 200, f"Get quiz questions failed: {res_q.text}"
+    questions = res_q.json()
+    assert len(questions) == 10, f"Expected 10 questions, got {len(questions)}"
+    for q in questions:
+        assert "id" in q and "topic" in q and "questionText" in q and "options" in q, "Malformed question structure"
+        assert len(q["options"]) == 4, f"Expected 4 options per question, got {len(q['options'])}"
+
+    # 41.2 Verify POST /api/v1/quiz/submit returns evaluation, domain scores, and review items
+    sample_answers = [
+        {"questionId": 1, "selectedOptionId": 2},  # Correct (201 Created)
+        {"questionId": 2, "selectedOptionId": 3},  # Correct (Virtual DOM diffs)
+        {"questionId": 3, "selectedOptionId": 2},  # Correct (Overfitting)
+        {"questionId": 4, "selectedOptionId": 3},  # Correct (ReLU)
+        {"questionId": 5, "selectedOptionId": 2},  # Correct (O(log N))
+        {"questionId": 6, "selectedOptionId": 3},  # Correct (Queue)
+        {"questionId": 7, "selectedOptionId": 1},  # Incorrect (chose symmetric cipher instead of asymmetric signature)
+        {"questionId": 8, "selectedOptionId": 2},  # Correct (Parameterized queries)
+        {"questionId": 9, "selectedOptionId": 1},  # Incorrect (chose IaaS instead of FaaS)
+        {"questionId": 10, "selectedOptionId": 1}  # Correct (Multi-AZ)
+    ]
+    res_sub = client.post("/api/v1/quiz/submit", json={
+        "student_id": "test_quiz_review_student",
+        "answers": sample_answers
+    })
+    assert res_sub.status_code == 200, f"Submit quiz failed: {res_sub.text}"
+    sub_data = res_sub.json()
+    assert sub_data.get("success") is True, "Quiz submit success should be True"
+    assert sub_data.get("totalScore") == 80, f"Expected score 80%, got {sub_data.get('totalScore')}"
+    assert sub_data.get("correctAnswers") == 8, f"Expected 8 correct, got {sub_data.get('correctAnswers')}"
+    assert sub_data.get("totalQuestions") == 10, f"Expected 10 total, got {sub_data.get('totalQuestions')}"
+    assert "webDevScore" in sub_data and "aiMlScore" in sub_data and "cyberScore" in sub_data
+    assert "topCareerMatch" in sub_data
+
+    # 41.3 Verify detailed review items for Review Mistakes Modal
+    reviews = sub_data.get("review", [])
+    assert len(reviews) == 10, f"Expected 10 review items, got {len(reviews)}"
+    q7_rev = next((r for r in reviews if r.get("questionId") == 7), None)
+    assert q7_rev is not None, "Question 7 review item not found"
+    assert q7_rev.get("isCorrect") is False, "Question 7 should be marked incorrect"
+    assert "explanation" in q7_rev and len(q7_rev["explanation"]) > 10, "Question 7 explanation missing"
+    assert "roadmapLink" in q7_rev and "roadmap.html" in q7_rev["roadmapLink"], "Question 7 roadmap link missing"
+    assert q7_rev.get("selectedOptionId") == 1 and q7_rev.get("correctOptionId") == 2
+
+    q1_rev = next((r for r in reviews if r.get("questionId") == 1), None)
+    assert q1_rev is not None and q1_rev.get("isCorrect") is True, "Question 1 should be marked correct"
+    assert "explanation" in q1_rev and len(q1_rev["explanation"]) > 10, "Question 1 explanation missing"
+
+    print("[PASS] 41. Quiz Assessment & Review Mistakes Modal (GET /questions, POST /submit with domain scores, concept explanations & roadmap links)")
     tests_passed += 1
 
     print("==================================================")

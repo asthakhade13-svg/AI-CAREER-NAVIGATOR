@@ -140,6 +140,25 @@
             </div>
           </div>
 
+          <!-- Strict Timed Exam Mode Toggle -->
+          <div style="margin: 22px auto; max-width: 480px; background: rgba(79, 70, 229, 0.05); border: 1px solid rgba(79, 70, 229, 0.2); border-radius: 14px; padding: 14px 18px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.1rem;">
+                <i class="fas fa-stopwatch"></i>
+              </div>
+              <div>
+                <div style="font-weight: 700; font-size: 0.95rem; color: #1e293b;">Strict Timed Exam Mode</div>
+                <div style="font-size: 0.8rem; color: #64748b;">10-min countdown timer • Auto-submits on expiration</div>
+              </div>
+            </div>
+            <label class="switch" style="position: relative; display: inline-block; width: 48px; height: 26px; margin: 0; flex-shrink: 0; cursor: pointer;">
+              <input type="checkbox" id="examModeToggle" checked onchange="toggleExamMode(this.checked)" style="opacity: 0; width: 0; height: 0;">
+              <span id="examSliderTrack" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--primary); transition: .3s; border-radius: 26px; display: block;">
+                <span id="examSliderThumb" style="position: absolute; height: 18px; width: 18px; left: 24px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></span>
+              </span>
+            </label>
+          </div>
+
           <button
             class="btn btn-primary"
             style="padding: 14px 40px; font-size: 1rem;"
@@ -170,9 +189,14 @@
         <div class="quiz-progress-wrap">
           <div class="quiz-progress-info">
             <span id="questionCount">Question 1 of 10</span>
-            <span id="timerDisplay">
-              <i class="fas fa-clock"></i> 10:00
-            </span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="examModeBadge" class="badge" style="background: rgba(79, 70, 229, 0.1); color: var(--primary); font-size: 0.76rem; font-weight: 700; padding: 4px 8px; border-radius: 6px;">
+                <i class="fas fa-bolt"></i> Strict Exam Mode
+              </span>
+              <span id="timerDisplay">
+                <i class="fas fa-clock"></i> 10:00
+              </span>
+            </div>
           </div>
           <div class="quiz-progress-bar">
             <div class="quiz-progress-fill"
@@ -333,9 +357,55 @@
       </div>
 
     </div>
-  </main>
+  <!-- ===== DETAILED REVIEW ANSWERS & MISTAKES MODAL ===== -->
+  <div id="reviewMistakesModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.65); z-index:9999; backdrop-filter:blur(5px); align-items:center; justify-content:center; padding:16px;">
+    <div class="modal-card" style="background:white; width:100%; max-width:840px; max-height:90vh; border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.3); display:flex; flex-direction:column; overflow:hidden;">
+      
+      <!-- Modal Header -->
+      <div style="padding:18px 24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+        <div>
+          <h3 style="margin:0; font-size:1.25rem; color:#1e293b; display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-microscope" style="color:var(--primary);"></i>
+            Assessment Review & Concept Explanations
+          </h3>
+          <p id="reviewModalSubtitle" style="margin:4px 0 0 0; font-size:0.85rem; color:#64748b;">
+            Inspect your answers, verified solutions, core computer science concepts, and targeted roadmap tracks.
+          </p>
+        </div>
+        <button onclick="closeMistakesReviewModal()" style="background:transparent; border:none; font-size:1.6rem; color:#94a3b8; cursor:pointer; padding:4px 8px; line-height:1; border-radius:8px;" title="Close">&times;</button>
+      </div>
 
- 
+      <!-- Filter Controls -->
+      <div style="padding:12px 24px; background:white; border-bottom:1px solid #f1f5f9; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span style="font-size:0.82rem; font-weight:700; color:#475569;">Filter Questions:</span>
+        <button class="review-filter-btn" id="filterAllBtn" onclick="filterReviewQuestions('all')" style="padding:6px 14px; border-radius:20px; font-size:0.82rem; font-weight:600; border:1px solid var(--primary); background:var(--primary); color:white; cursor:pointer; transition:all 0.2s;">
+          All Questions (<span id="countAll">10</span>)
+        </button>
+        <button class="review-filter-btn" id="filterMistakesBtn" onclick="filterReviewQuestions('mistakes')" style="padding:6px 14px; border-radius:20px; font-size:0.82rem; font-weight:600; border:1px solid #fca5a5; background:#fef2f2; color:#ef4444; cursor:pointer; transition:all 0.2s;">
+          Mistakes Only (<span id="countMistakes">0</span>)
+        </button>
+        <button class="review-filter-btn" id="filterCorrectBtn" onclick="filterReviewQuestions('correct')" style="padding:6px 14px; border-radius:20px; font-size:0.82rem; font-weight:600; border:1px solid #86efac; background:#f0fdf4; color:#16a34a; cursor:pointer; transition:all 0.2s;">
+          Correct Answers (<span id="countCorrect">10</span>)
+        </button>
+      </div>
+
+      <!-- Scrollable Question List -->
+      <div id="reviewQuestionsContainer" style="padding:20px 24px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:18px;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding:14px 24px; border-top:1px solid #e2e8f0; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <span style="font-size:0.82rem; color:#64748b;">
+          <i class="fas fa-info-circle" style="color:var(--primary); margin-right:4px;"></i> Click "Study in Roadmap" on any question to jump into that career path's curriculum.
+        </span>
+        <button class="btn btn-primary" onclick="closeMistakesReviewModal()" style="padding:8px 22px; font-size:0.88rem;">
+          Done Reviewing
+        </button>
+      </div>
+
+    </div>
+  </div>
 
 <!-- At BOTTOM of body - only this script -->
 <script>
@@ -352,6 +422,23 @@ let timerInterval;
 let timeLeft = 600;
 let questionTimings = {};
 let questionStartTime = Date.now();
+let isExamMode = true;
+let lastReviewData = [];
+
+function toggleExamMode(checked) {
+    isExamMode = checked;
+    const track = document.getElementById('examSliderTrack');
+    const thumb = document.getElementById('examSliderThumb');
+    if (track && thumb) {
+        if (checked) {
+            track.style.backgroundColor = 'var(--primary)';
+            thumb.style.left = '24px';
+        } else {
+            track.style.backgroundColor = '#cbd5e1';
+            thumb.style.left = '4px';
+        }
+    }
+}
 
 function recordCurrentQuestionTime() {
     if (!questions || !questions[current]) return;
@@ -392,6 +479,28 @@ async function loadQuestions() {
 // START QUIZ
 // ========================================
 async function startQuiz() {
+    const toggleEl = document.getElementById('examModeToggle');
+    if (toggleEl) {
+        isExamMode = toggleEl.checked;
+    }
+
+    const badge = document.getElementById('examModeBadge');
+    if (badge) {
+        if (isExamMode) {
+            badge.style.display = 'inline-flex';
+            badge.style.background = 'rgba(239, 68, 68, 0.1)';
+            badge.style.color = 'var(--danger)';
+            badge.innerHTML = '<i class="fas fa-bolt" style="margin-right:4px;"></i> Strict Exam Mode';
+            timeLeft = 600;
+        } else {
+            badge.style.display = 'inline-flex';
+            badge.style.background = 'rgba(79, 70, 229, 0.1)';
+            badge.style.color = 'var(--primary)';
+            badge.innerHTML = '<i class="fas fa-book-open" style="margin-right:4px;"></i> Practice Mode';
+            timeLeft = 0;
+        }
+    }
+
     // Hide start screen
     document.getElementById('startScreen')
         .style.display = 'none';
@@ -422,27 +531,50 @@ async function startQuiz() {
 // TIMER
 // ========================================
 function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+
     timerInterval = setInterval(() => {
-        timeLeft--;
-        const m = Math.floor(timeLeft / 60)
-            .toString().padStart(2, '0');
-        const s = (timeLeft % 60)
-            .toString().padStart(2, '0');
+        const timerEl = document.getElementById('timerDisplay');
 
-        const timerEl =
-            document.getElementById('timerDisplay');
-        if (timerEl) {
-            timerEl.innerHTML =
-                `<i class="fas fa-clock"></i> ${m}:${s}`;
-        }
+        if (isExamMode) {
+            timeLeft--;
+            const m = Math.floor(Math.max(0, timeLeft) / 60)
+                .toString().padStart(2, '0');
+            const s = (Math.max(0, timeLeft) % 60)
+                .toString().padStart(2, '0');
 
-        if (timeLeft <= 60 && timerEl) {
-            timerEl.style.color = 'var(--danger)';
-        }
+            if (timerEl) {
+                timerEl.innerHTML =
+                    `<i class="fas fa-stopwatch"></i> ${m}:${s}`;
+            }
 
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            submitQuiz();
+            if (timeLeft <= 60 && timerEl) {
+                timerEl.style.color = 'var(--danger)';
+                timerEl.style.fontWeight = '800';
+            } else if (timerEl) {
+                timerEl.style.color = '';
+                timerEl.style.fontWeight = '';
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                if (typeof showToast === 'function') {
+                    showToast('Time expired! Submitting your exam automatically...', 'warning');
+                }
+                submitQuiz();
+            }
+        } else {
+            timeLeft++;
+            const m = Math.floor(timeLeft / 60)
+                .toString().padStart(2, '0');
+            const s = (timeLeft % 60)
+                .toString().padStart(2, '0');
+
+            if (timerEl) {
+                timerEl.innerHTML =
+                    `<i class="fas fa-clock"></i> ${m}:${s}`;
+                timerEl.style.color = '';
+            }
         }
     }, 1000);
 }
@@ -577,6 +709,7 @@ function prevQuestion() {
 // ========================================
 async function submitQuiz() {
     recordCurrentQuestionTime();
+    if (timerInterval) clearInterval(timerInterval);
 
     // Hide quiz screen
     document.getElementById('quizScreen')
@@ -595,7 +728,7 @@ async function submitQuiz() {
                 Analyzing your results... 🤖
             </h3>
             <p style="color:var(--gray-400)">
-                AI is processing your answers
+                AI is processing your answers and preparing concept review
             </p>
         </div>
     `;
@@ -604,16 +737,6 @@ async function submitQuiz() {
     const validAnswers = answers
         .filter(a => a !== null);
 
-    if (validAnswers.length === 0) {
-        showError(
-            'Please answer at least one question!'
-        );
-        resultScreen.style.display = 'none';
-        document.getElementById('quizScreen')
-            .style.display = 'block';
-        return;
-    }
-
     try {
         // Submit to backend
         const result = await QuizAPI.submitQuiz(
@@ -621,14 +744,16 @@ async function submitQuiz() {
         );
 
         if (result.status === 200 &&
-            result.data.success) {
+            result.data && result.data.success) {
+
+            lastReviewData = result.data.review || [];
 
             // Show results
             showResults(result.data);
 
             // Log attempt to ledger with granular per-question timings
             try {
-                const timeTaken = 600 - timeLeft;
+                const timeTaken = isExamMode ? Math.max(1, 600 - timeLeft) : Math.max(1, timeLeft);
                 const totalScore = result.data.totalScore || 85;
                 const correctAnswers = result.data.correctAnswers || 8;
                 const totalQuestions = result.data.totalQuestions || 10;
@@ -679,6 +804,11 @@ function showResults(data) {
         data.totalScore >= 60 ? 'Great Job! 🎉'   :
         data.totalScore >= 40 ? 'Good Start! 👍'  :
         'Keep Learning! 💪';
+
+    const mistakesCount = (lastReviewData || []).filter(r => !r.isCorrect).length;
+    const mistakesPill = mistakesCount > 0
+        ? `<span class="badge" style="background:#fee2e2; color:#ef4444; font-size:0.75rem; margin-left:6px; padding:2px 8px; border-radius:10px;"><i class="fas fa-exclamation-triangle" style="margin-right:3px;"></i>${mistakesCount} Mistakes</span>`
+        : `<span class="badge" style="background:#dcfce7; color:#16a34a; font-size:0.75rem; margin-left:6px; padding:2px 8px; border-radius:10px;"><i class="fas fa-check" style="margin-right:3px;"></i>100% Perfect</span>`;
 
     resultScreen.innerHTML = `
         <div class="result-card">
@@ -732,11 +862,24 @@ function showResults(data) {
                 </p>
             </div>
 
-            <div class="result-actions">
+            <div class="result-actions" style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px;">
+                <button class="btn btn-outline"
+                        id="openReviewMistakesBtn"
+                        style="border-color: #6366f1; color: #4f46e5; font-weight: 700; background: rgba(99, 102, 241, 0.06);"
+                        onclick="openMistakesReviewModal()">
+                    <i class="fas fa-clipboard-check"></i>
+                    Review Answers & Mistakes
+                    ${mistakesPill}
+                </button>
                 <a href="careers.html"
                    class="btn btn-primary">
                     <i class="fas fa-briefcase"></i>
                     View Career Paths
+                </a>
+                <a href="roadmap.html"
+                   class="btn btn-outline">
+                    <i class="fas fa-map"></i>
+                    View Roadmap
                 </a>
                 <button class="btn btn-outline"
                         onclick="retakeQuiz()">
@@ -747,6 +890,156 @@ function showResults(data) {
 
         </div>
     `;
+}
+
+// ========================================
+// REVIEW ANSWERS & MISTAKES MODAL LOGIC
+// ========================================
+let currentReviewFilter = 'all';
+
+function openMistakesReviewModal() {
+    const modal = document.getElementById('reviewMistakesModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    filterReviewQuestions('all');
+}
+
+function closeMistakesReviewModal() {
+    const modal = document.getElementById('reviewMistakesModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function filterReviewQuestions(filter) {
+    currentReviewFilter = filter;
+
+    const allBtn = document.getElementById('filterAllBtn');
+    const mistakesBtn = document.getElementById('filterMistakesBtn');
+    const correctBtn = document.getElementById('filterCorrectBtn');
+
+    if (allBtn) {
+        allBtn.style.background = filter === 'all' ? 'var(--primary)' : '#f8fafc';
+        allBtn.style.color = filter === 'all' ? 'white' : '#475569';
+        allBtn.style.borderColor = filter === 'all' ? 'var(--primary)' : '#cbd5e1';
+    }
+    if (mistakesBtn) {
+        mistakesBtn.style.background = filter === 'mistakes' ? '#ef4444' : '#fef2f2';
+        mistakesBtn.style.color = filter === 'mistakes' ? 'white' : '#ef4444';
+        mistakesBtn.style.borderColor = filter === 'mistakes' ? '#ef4444' : '#fca5a5';
+    }
+    if (correctBtn) {
+        correctBtn.style.background = filter === 'correct' ? '#16a34a' : '#f0fdf4';
+        correctBtn.style.color = filter === 'correct' ? 'white' : '#16a34a';
+        correctBtn.style.borderColor = filter === 'correct' ? '#16a34a' : '#86efac';
+    }
+
+    renderReviewList();
+}
+
+function renderReviewList() {
+    const container = document.getElementById('reviewQuestionsContainer');
+    const subtitle = document.getElementById('reviewModalSubtitle');
+    const countAllEl = document.getElementById('countAll');
+    const countMistakesEl = document.getElementById('countMistakes');
+    const countCorrectEl = document.getElementById('countCorrect');
+
+    if (!container) return;
+
+    const reviewItems = lastReviewData || [];
+    const mistakes = reviewItems.filter(r => !r.isCorrect);
+    const correct = reviewItems.filter(r => r.isCorrect);
+
+    if (countAllEl) countAllEl.textContent = reviewItems.length;
+    if (countMistakesEl) countMistakesEl.textContent = mistakes.length;
+    if (countCorrectEl) countCorrectEl.textContent = correct.length;
+
+    if (subtitle) {
+        subtitle.textContent = `${correct.length} of ${reviewItems.length} correct • ${mistakes.length} mistakes • ${Math.round((correct.length / (reviewItems.length || 1)) * 100)}% accuracy`;
+    }
+
+    let itemsToDisplay = reviewItems;
+    if (currentReviewFilter === 'mistakes') {
+        itemsToDisplay = mistakes;
+    } else if (currentReviewFilter === 'correct') {
+        itemsToDisplay = correct;
+    }
+
+    if (itemsToDisplay.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:40px 20px; color:#64748b;">
+                <i class="fas fa-check-circle" style="font-size:2.4rem; color:var(--success); margin-bottom:12px; display:block;"></i>
+                <h4 style="color:#1e293b; margin:0 0 6px 0;">No Questions Found</h4>
+                <p style="margin:0; font-size:0.88rem;">${currentReviewFilter === 'mistakes' ? 'Outstanding work! You had no incorrect answers in this assessment.' : 'No questions in this category.'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = itemsToDisplay.map((item, idx) => {
+        const isCorrect = item.isCorrect;
+        const statusBadge = isCorrect
+            ? `<span style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:5px;"><i class="fas fa-check-circle"></i> Correct</span>`
+            : `<span style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:5px;"><i class="fas fa-times-circle"></i> Incorrect</span>`;
+
+        const optionsHtml = (item.options || []).map((opt, oIdx) => {
+            const letter = ['A', 'B', 'C', 'D'][oIdx] || (oIdx + 1);
+            const isUserChoice = (opt.id === item.selectedOptionId);
+            const isCorrectOption = (opt.id === item.correctOptionId);
+
+            let optStyle = "background:#f8fafc; border:1px solid #e2e8f0; color:#334155;";
+            let tagBadge = "";
+
+            if (isCorrectOption) {
+                optStyle = "background:#f0fdf4; border:1.5px solid #16a34a; color:#15803d; font-weight:600;";
+                tagBadge = `<span style="background:#dcfce7; color:#15803d; font-size:0.72rem; padding:2px 8px; border-radius:8px; margin-left:auto; display:flex; align-items:center; gap:4px;"><i class="fas fa-check"></i> Correct Answer</span>`;
+            } else if (isUserChoice && !isCorrect) {
+                optStyle = "background:#fef2f2; border:1.5px solid #ef4444; color:#b91c1c; font-weight:600;";
+                tagBadge = `<span style="background:#fee2e2; color:#b91c1c; font-size:0.72rem; padding:2px 8px; border-radius:8px; margin-left:auto; display:flex; align-items:center; gap:4px;"><i class="fas fa-times"></i> Your Choice</span>`;
+            }
+
+            return `
+                <div style="display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:10px; margin-bottom:6px; font-size:0.86rem; ${optStyle}">
+                    <span style="font-weight:700; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background:rgba(0,0,0,0.06);">${letter}</span>
+                    <span style="flex:1;">${opt.optionText}</span>
+                    ${tagBadge}
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="review-question-card" style="border:1px solid #e2e8f0; border-radius:14px; padding:18px; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-weight:700; color:#1e293b; font-size:0.9rem;">Question ${item.questionId || (idx + 1)}</span>
+                        <span class="badge badge-primary" style="font-size:0.72rem; text-transform:capitalize;">${(item.topicName || item.topic || '').replace(/_/g, ' ')}</span>
+                    </div>
+                    ${statusBadge}
+                </div>
+
+                <div style="font-weight:600; color:#1e293b; font-size:0.95rem; margin-bottom:14px; line-height:1.45;">
+                    ${item.questionText}
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    ${optionsHtml}
+                </div>
+
+                <div style="background:rgba(79, 70, 229, 0.05); border-left:4px solid var(--primary); padding:10px 14px; border-radius:0 10px 10px 0; margin-top:12px;">
+                    <div style="font-weight:700; font-size:0.82rem; color:var(--primary); margin-bottom:3px; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-lightbulb"></i> Core Concept Explanation
+                    </div>
+                    <div style="font-size:0.84rem; color:#334155; line-height:1.4;">
+                        ${item.explanation || 'Review fundamental topics and practical coding principles for this domain.'}
+                    </div>
+                </div>
+
+                <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                    <a href="${item.roadmapLink || 'roadmap.html'}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; color:var(--primary); text-decoration:none; padding:5px 12px; border-radius:8px; background:rgba(79, 70, 229, 0.08); transition:background 0.2s;">
+                        <i class="fas fa-map-signs"></i> Study in ${(item.topicName || 'Roadmap')} &rarr;
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function makeBar(label, score, color) {
@@ -803,11 +1096,18 @@ function retakeQuiz() {
     current   = 0;
     answers   = [];
     questions = [];
-    timeLeft  = 600;
+    timeLeft  = isExamMode ? 600 : 0;
+    lastReviewData = [];
 
     const timerEl =
         document.getElementById('timerDisplay');
-    if (timerEl) timerEl.style.color = '';
+    if (timerEl) {
+        timerEl.style.color = '';
+        timerEl.style.fontWeight = '';
+        timerEl.innerHTML = `<i class="fas fa-clock"></i> 10:00`;
+    }
+
+    closeMistakesReviewModal();
 
     document.getElementById('resultScreen')
         .style.display = 'none';

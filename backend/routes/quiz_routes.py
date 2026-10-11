@@ -237,5 +237,283 @@ def delete_quiz_state(student_id: str):
     }
 
 
+# ── 7. Standard 10-Question Assessment & Review Mistakes Endpoints ───────────
+
+QUIZ_QUESTIONS_DATABASE = [
+    {
+        "id": 1,
+        "topic": "web_development",
+        "topicName": "Web Development",
+        "questionText": "Which HTTP status code signifies that a requested resource was successfully created on the server?",
+        "options": [
+            {"id": 1, "optionText": "200 OK"},
+            {"id": 2, "optionText": "201 Created"},
+            {"id": 3, "optionText": "204 No Content"},
+            {"id": 4, "optionText": "304 Not Modified"}
+        ],
+        "correctOptionId": 2,
+        "explanation": "HTTP status code 201 Created confirms that the request succeeded and resulted in a new resource being created on the server (RFC 7231).",
+        "roadmapLink": "roadmap.html?track=webdev"
+    },
+    {
+        "id": 2,
+        "topic": "web_development",
+        "topicName": "Web Development",
+        "questionText": "In modern frontend development, what is the primary architectural purpose of the Virtual DOM in React?",
+        "options": [
+            {"id": 1, "optionText": "To directly mutate browser HTML nodes synchronously"},
+            {"id": 2, "optionText": "To bypass the browser's JavaScript execution engine"},
+            {"id": 3, "optionText": "To compute minimal DOM diffs in memory before batching updates to the real DOM"},
+            {"id": 4, "optionText": "To replace CSS cascade computations"}
+        ],
+        "correctOptionId": 3,
+        "explanation": "The Virtual DOM maintains a lightweight tree in memory. On state updates, it reconciles diffs and batches real DOM updates to prevent costly browser reflows.",
+        "roadmapLink": "roadmap.html?track=webdev"
+    },
+    {
+        "id": 3,
+        "topic": "ai_ml",
+        "topicName": "AI / ML",
+        "questionText": "What occurs when a machine learning model memorizes noise in training data instead of learning generalized patterns?",
+        "options": [
+            {"id": 1, "optionText": "Underfitting"},
+            {"id": 2, "optionText": "Overfitting"},
+            {"id": 3, "optionText": "Gradient Descent"},
+            {"id": 4, "optionText": "Data Imputation"}
+        ],
+        "correctOptionId": 2,
+        "explanation": "Overfitting happens when model complexity causes it to memorize noise in training samples, yielding high training accuracy but poor validation performance.",
+        "roadmapLink": "roadmap.html?track=aiml"
+    },
+    {
+        "id": 4,
+        "topic": "ai_ml",
+        "topicName": "AI / ML",
+        "questionText": "Which activation function is most widely adopted in deep neural networks to prevent vanishing gradients?",
+        "options": [
+            {"id": 1, "optionText": "Sigmoid"},
+            {"id": 2, "optionText": "Tanh"},
+            {"id": 3, "optionText": "ReLU (Rectified Linear Unit)"},
+            {"id": 4, "optionText": "Softmax"}
+        ],
+        "correctOptionId": 3,
+        "explanation": "ReLU f(x)=max(0, x) provides a constant derivative of 1 for positive inputs, avoiding gradient saturation and vanishing gradient problems in deep architectures.",
+        "roadmapLink": "roadmap.html?track=aiml"
+    },
+    {
+        "id": 5,
+        "topic": "data_structures",
+        "topicName": "Data Structures",
+        "questionText": "What is the worst-case time complexity of searching an element in a balanced Binary Search Tree (AVL or Red-Black Tree)?",
+        "options": [
+            {"id": 1, "optionText": "O(1)"},
+            {"id": 2, "optionText": "O(log N)"},
+            {"id": 3, "optionText": "O(N)"},
+            {"id": 4, "optionText": "O(N log N)"}
+        ],
+        "correctOptionId": 2,
+        "explanation": "Self-balancing binary search trees bound their height to O(log N) through tree rotations, guaranteeing logarithmic complexity for search, insertion, and deletion.",
+        "roadmapLink": "roadmap.html?track=dsa"
+    },
+    {
+        "id": 6,
+        "topic": "data_structures",
+        "topicName": "Data Structures",
+        "questionText": "Which abstract data type operates on a FIFO basis and is canonical for Breadth-First Search (BFS) graph traversal?",
+        "options": [
+            {"id": 1, "optionText": "Stack"},
+            {"id": 2, "optionText": "Priority Queue"},
+            {"id": 3, "optionText": "Queue"},
+            {"id": 4, "optionText": "Binary Heap"}
+        ],
+        "correctOptionId": 3,
+        "explanation": "A Queue follows First-In First-Out (FIFO) ordering, ensuring BFS visits graph vertices in strictly increasing order of path distance from root.",
+        "roadmapLink": "roadmap.html?track=dsa"
+    },
+    {
+        "id": 7,
+        "topic": "cybersecurity",
+        "topicName": "Cybersecurity",
+        "questionText": "Which cryptographic primitive guarantees sender non-repudiation and tamper detection for messages?",
+        "options": [
+            {"id": 1, "optionText": "Symmetric stream cipher encryption"},
+            {"id": 2, "optionText": "Digital Signatures via Asymmetric Cryptography"},
+            {"id": 3, "optionText": "Base64 encoding with URL safety"},
+            {"id": 4, "optionText": "Unsalted MD5 hashing"}
+        ],
+        "correctOptionId": 2,
+        "explanation": "Digital signatures use private keys for signing and public keys for verification, providing data integrity, authenticity, and non-repudiation.",
+        "roadmapLink": "roadmap.html?track=cyber"
+    },
+    {
+        "id": 8,
+        "topic": "cybersecurity",
+        "topicName": "Cybersecurity",
+        "questionText": "What is the primary remediation to prevent SQL Injection (SQLi) vulnerabilities in database querying code?",
+        "options": [
+            {"id": 1, "optionText": "Client-side HTML input length limits"},
+            {"id": 2, "optionText": "Parameterized queries / Prepared statements"},
+            {"id": 3, "optionText": "Base64 encoding all URL parameters"},
+            {"id": 4, "optionText": "Disabling TLS/SSL encryption"}
+        ],
+        "correctOptionId": 2,
+        "explanation": "Parameterized queries decouple query logic from user parameters, forcing the database engine to parse inputs strictly as literals rather than SQL commands.",
+        "roadmapLink": "roadmap.html?track=cyber"
+    },
+    {
+        "id": 9,
+        "topic": "cloud_computing",
+        "topicName": "Cloud Computing",
+        "questionText": "Which cloud computing model abstracts infrastructure provisioning completely and bills only per event execution?",
+        "options": [
+            {"id": 1, "optionText": "Infrastructure as a Service (IaaS)"},
+            {"id": 2, "optionText": "Serverless / Function-as-a-Service (FaaS)"},
+            {"id": 3, "optionText": "Bare Metal as a Service (BMaaS)"},
+            {"id": 4, "optionText": "Colocation"}
+        ],
+        "correctOptionId": 2,
+        "explanation": "Serverless (FaaS) runs ephemeral containers triggered by events, automatically scaling and charging solely for compute milliseconds executed.",
+        "roadmapLink": "roadmap.html?track=cloud"
+    },
+    {
+        "id": 10,
+        "topic": "cloud_computing",
+        "topicName": "Cloud Computing",
+        "questionText": "Which architectural strategy guarantees high availability and disaster resilience within a single cloud provider region?",
+        "options": [
+            {"id": 1, "optionText": "Multi-Availability Zone (Multi-AZ) redundant deployment"},
+            {"id": 2, "optionText": "Single monolithic EC2 instance deployment"},
+            {"id": 3, "optionText": "Disabling auto-scaling and health checks"},
+            {"id": 4, "optionText": "Storing backups solely on instance ephemeral storage"}
+        ],
+        "correctOptionId": 1,
+        "explanation": "Multi-AZ architectures distribute instances across geographically separated data centers with isolated power and transit, ensuring continuous availability.",
+        "roadmapLink": "roadmap.html?track=cloud"
+    }
+]
+
+
+@router.get("/questions")
+def get_standard_quiz_questions():
+    """
+    Returns the standard 10 multi-domain assessment questions for quiz.html.
+    Excludes the correct answer key so students cannot inspect it during the live assessment.
+    """
+    return [
+        {
+            "id": q["id"],
+            "topic": q["topic"],
+            "topicName": q["topicName"],
+            "questionText": q["questionText"],
+            "options": q["options"]
+        }
+        for q in QUIZ_QUESTIONS_DATABASE
+    ]
+
+
+class QuizSubmissionPayload(BaseModel):
+    student_id: Optional[str] = "user_001"
+    answers: List[Dict[str, Any]]
+
+
+@router.post("/submit")
+def submit_standard_quiz(payload: QuizSubmissionPayload):
+    """
+    Evaluates quiz submissions, calculates multi-domain scores, recommends top career match,
+    and returns comprehensive question-by-question review items with concept explanations and roadmap links.
+    """
+    submitted_map = {}
+    for item in payload.answers:
+        q_id = item.get("questionId") or item.get("id")
+        opt_id = item.get("selectedOptionId") or item.get("optionId")
+        if q_id is not None:
+            submitted_map[int(q_id)] = int(opt_id) if opt_id is not None else None
+
+    total_questions = len(QUIZ_QUESTIONS_DATABASE)
+    correct_count = 0
+    domain_totals = {
+        "web_development": {"correct": 0, "total": 0},
+        "ai_ml": {"correct": 0, "total": 0},
+        "data_structures": {"correct": 0, "total": 0},
+        "cybersecurity": {"correct": 0, "total": 0},
+        "cloud_computing": {"correct": 0, "total": 0}
+    }
+
+    review_list = []
+
+    for q in QUIZ_QUESTIONS_DATABASE:
+        q_id = q["id"]
+        topic = q["topic"]
+        domain_totals[topic]["total"] += 1
+
+        selected_opt_id = submitted_map.get(q_id)
+        correct_opt_id = q["correctOptionId"]
+        is_correct = (selected_opt_id == correct_opt_id)
+
+        if is_correct:
+            correct_count += 1
+            domain_totals[topic]["correct"] += 1
+
+        # Resolve selected text and correct text
+        selected_text = "Not Answered"
+        correct_text = ""
+        for opt in q["options"]:
+            if opt["id"] == selected_opt_id:
+                selected_text = opt["optionText"]
+            if opt["id"] == correct_opt_id:
+                correct_text = opt["optionText"]
+
+        review_list.append({
+            "questionId": q_id,
+            "questionText": q["questionText"],
+            "topic": topic,
+            "topicName": q["topicName"],
+            "selectedOptionId": selected_opt_id,
+            "correctOptionId": correct_opt_id,
+            "isCorrect": is_correct,
+            "selectedText": selected_text,
+            "correctText": correct_text,
+            "explanation": q["explanation"],
+            "roadmapLink": q["roadmapLink"],
+            "options": q["options"]
+        })
+
+    def calc_pct(c, t):
+        return round((c / t) * 100) if t > 0 else 0
+
+    web_score = calc_pct(domain_totals["web_development"]["correct"], domain_totals["web_development"]["total"])
+    aiml_score = calc_pct(domain_totals["ai_ml"]["correct"], domain_totals["ai_ml"]["total"])
+    dsa_score = calc_pct(domain_totals["data_structures"]["correct"], domain_totals["data_structures"]["total"])
+    cyber_score = calc_pct(domain_totals["cybersecurity"]["correct"], domain_totals["cybersecurity"]["total"])
+    cloud_score = calc_pct(domain_totals["cloud_computing"]["correct"], domain_totals["cloud_computing"]["total"])
+    total_score = round((correct_count / total_questions) * 100)
+
+    # Determine top career match
+    domain_scores = [
+        ("Web Development", web_score),
+        ("Artificial Intelligence & Machine Learning", aiml_score),
+        ("Data Structures & Algorithms Engineering", dsa_score),
+        ("Cybersecurity Engineering", cyber_score),
+        ("Cloud Solutions Architecture", cloud_score)
+    ]
+    domain_scores.sort(key=lambda x: x[1], reverse=True)
+    top_career = domain_scores[0][0]
+
+    return {
+        "success": True,
+        "totalScore": total_score,
+        "correctAnswers": correct_count,
+        "totalQuestions": total_questions,
+        "webDevScore": web_score,
+        "aiMlScore": aiml_score,
+        "dsaScore": dsa_score,
+        "cyberScore": cyber_score,
+        "cloudScore": cloud_score,
+        "topCareerMatch": top_career,
+        "review": review_list
+    }
+
+
+
 
 
