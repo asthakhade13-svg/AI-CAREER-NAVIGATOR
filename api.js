@@ -1018,6 +1018,20 @@ const RoadmapAPI = {
         window.open(`${backendUrl}/api/v1/roadmap/export-syllabus-pdf/${encodeURIComponent(trackKey)}`, '_blank');
     },
 
+    runCode: async (code, language = 'python', studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/roadmap/run-code', 'POST', {
+                code: code,
+                language: language,
+                student_id: sid
+            });
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
     completeMilestone: (milestoneId) =>
         apiCall('/roadmap/complete/' + milestoneId, 'PUT')
 };

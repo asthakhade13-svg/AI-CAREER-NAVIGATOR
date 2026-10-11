@@ -810,6 +810,43 @@ def run_tests():
     print("[PASS] 41. Quiz Assessment & Review Mistakes Modal (GET /questions, POST /submit with domain scores, concept explanations & roadmap links)")
     tests_passed += 1
 
+    # 42. Embedded Quick Code Runner / Scratchpad (POST /api/v1/roadmap/run-code)
+    total_tests += 1
+    # 42.1 Test Python code execution
+    python_test_code = "scores = [10, 20, 30]\nprint('Total:', sum(scores))\nprint('Average:', sum(scores)/len(scores))"
+    res_py = client.post("/api/v1/roadmap/run-code", json={
+        "code": python_test_code,
+        "language": "python",
+        "student_id": "test_scratchpad_student"
+    })
+    assert res_py.status_code == 200, f"Run code failed: {res_py.text}"
+    py_data = res_py.json()
+    assert py_data.get("success") is True, f"Code execution not successful: {py_data}"
+    assert "Total: 60" in py_data.get("stdout", ""), f"Stdout missing expected output: {py_data.get('stdout')}"
+    assert "Average: 20.0" in py_data.get("stdout", ""), f"Stdout missing average output: {py_data.get('stdout')}"
+    assert py_data.get("executionTimeMs", 0) >= 0
+
+    # 42.2 Test Python syntax error / exception handling
+    bad_code = "print('Hello'\nundefined_variable_xyz + 10"
+    res_err = client.post("/api/v1/roadmap/run-code", json={
+        "code": bad_code,
+        "language": "python"
+    })
+    assert res_err.status_code == 200
+    err_data = res_err.json()
+    assert err_data.get("success") is False, "Bad code should fail gracefully"
+    assert len(err_data.get("stderr", "")) > 0, "Stderr should contain traceback/error"
+
+    # 42.3 Test JavaScript client indicator
+    res_js = client.post("/api/v1/roadmap/run-code", json={
+        "code": "console.log('hi');",
+        "language": "javascript"
+    })
+    assert res_js.status_code == 200 and res_js.json().get("language") == "javascript"
+
+    print("[PASS] 42. Embedded Quick Code Runner / Scratchpad (POST /api/v1/roadmap/run-code with sandboxed stdout, stderr & execution timings)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

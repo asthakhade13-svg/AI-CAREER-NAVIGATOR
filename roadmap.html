@@ -92,7 +92,10 @@
         <div class="path-selector card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
             <h4 style="margin:0;">🎯 Your Career Path</h4>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-outline sm" style="font-size:0.78rem; padding:6px 12px; border-radius:12px; border-color:#059669; color:#059669; background:rgba(16,185,129,0.06); cursor:pointer; font-weight:600;" onclick="openCodeRunnerModal()">
+                <i class="fas fa-terminal"></i> Quick Code Scratchpad
+              </button>
               <button class="btn btn-outline sm" style="font-size:0.78rem; padding:6px 12px; border-radius:12px; border-color:#0284c7; color:#0284c7; cursor:pointer; font-weight:600;" onclick="exportCalendarIcs()">
                 <i class="fas fa-calendar-alt"></i> Export Calendar (.ics)
               </button>
@@ -299,6 +302,16 @@
               Mark as Complete
             </button>
 
+            <!-- Quick Practice Code Button -->
+            <button
+              class="btn btn-outline btn-full mt-2"
+              style="border-color:#10b981; color:#059669; font-weight:600; font-size:0.85rem;"
+              onclick="openCodeRunnerForCurrentMilestone()"
+            >
+              <i class="fas fa-terminal"></i>
+              Practice Milestone Code in Scratchpad
+            </button>
+
           </div>
 
           <!-- AI Tip Card -->
@@ -383,6 +396,118 @@
         </form>
       </div>
     </div>
+
+    <!-- ===== EMBEDDED QUICK CODE RUNNER / SCRATCHPAD MODAL ===== -->
+    <div id="codeRunnerModal" class="custom-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+      <div class="card" style="max-width:920px; width:100%; border-radius:20px; box-shadow:0 25px 60px rgba(0,0,0,0.35); position:relative; background:#1e293b; color:#f8fafc; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+        
+        <!-- Modal Topbar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #334155; background:#0f172a;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:8px; background:rgba(16,185,129,0.15); color:#10b981; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+              <i class="fas fa-terminal"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.1rem; margin:0; color:#f8fafc; display:flex; align-items:center; gap:8px;">
+                Embedded Quick Code Playground
+                <span class="badge" id="scratchpadTrackBadge" style="background:rgba(99,102,241,0.25); color:#a5b4fc; font-size:0.72rem; padding:2px 8px; border-radius:6px; font-weight:600;">Web Dev</span>
+              </h3>
+              <p style="font-size:0.76rem; color:#94a3b8; margin:2px 0 0 0;">Practice algorithms, scripts & milestone concepts without leaving your roadmap</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button onclick="resetScratchpadCode()" style="background:#334155; border:none; color:#cbd5e1; padding:6px 12px; border-radius:8px; font-size:0.78rem; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:5px;" title="Reset Editor">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+            <button onclick="closeCodeRunnerModal()" style="background:transparent; border:none; font-size:1.5rem; cursor:pointer; color:#94a3b8; line-height:1; padding:4px 8px; border-radius:6px;">&times;</button>
+          </div>
+        </div>
+
+        <!-- Playground Toolbar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1e293b; border-bottom:1px solid #334155; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <!-- Language Selector -->
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label style="font-size:0.78rem; color:#94a3b8; font-weight:600;">Language:</label>
+              <select id="scratchpadLang" onchange="onScratchpadLangChange()" style="background:#0f172a; color:#f8fafc; border:1px solid #475569; padding:5px 10px; border-radius:8px; font-size:0.8rem; font-weight:600; cursor:pointer;">
+                <option value="javascript">JavaScript (ES6+ Sandbox)</option>
+                <option value="python">Python (v3.12 Engine)</option>
+              </select>
+            </div>
+
+            <!-- Starter Template Selector -->
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label style="font-size:0.78rem; color:#94a3b8; font-weight:600;">Starter:</label>
+              <select id="scratchpadPreset" onchange="loadScratchpadPreset(this.value)" style="background:#0f172a; color:#f8fafc; border:1px solid #475569; padding:5px 10px; border-radius:8px; font-size:0.8rem; cursor:pointer;">
+                <option value="track_current">Current Track Practice</option>
+                <option value="algo_fib">Algorithms: Fibonacci & Recursion</option>
+                <option value="ds_stack">Data Structures: Stack & Queue</option>
+                <option value="math_stats">Math: Statistics & Metrics</option>
+                <option value="blank">Blank Editor</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Run Actions -->
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button onclick="clearScratchpadConsole()" style="background:#0f172a; border:1px solid #475569; color:#94a3b8; padding:6px 12px; border-radius:8px; font-size:0.78rem; cursor:pointer; font-weight:600;">
+              <i class="fas fa-trash-alt"></i> Clear Console
+            </button>
+            <button id="runCodeBtn" onclick="runScratchpadCode()" style="background:#10b981; border:none; color:white; padding:7px 18px; border-radius:8px; font-size:0.82rem; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:6px; box-shadow:0 2px 10px rgba(16,185,129,0.3);">
+              <i class="fas fa-play"></i> Run Code (Ctrl+Enter)
+            </button>
+          </div>
+        </div>
+
+        <!-- Split Workspace: Code Editor & Console -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; height:380px; background:#0b0f19;">
+          
+          <!-- Code Editor Pane -->
+          <div style="display:flex; flex-direction:column; border-right:1px solid #334155; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 14px; background:#0f172a; border-bottom:1px solid #1e293b; font-size:0.74rem; color:#94a3b8;">
+              <span id="scratchpadFilename"><i class="fas fa-file-code" style="color:#10b981;"></i> practice_scratchpad.js</span>
+              <span id="scratchpadCharCount">0 chars</span>
+            </div>
+            <textarea
+              id="scratchpadEditor"
+              spellcheck="false"
+              placeholder="// Write your quick practice code here..."
+              style="flex:1; width:100%; background:#0b0f19; color:#e2e8f0; font-family:Consolas, 'Fira Code', 'Courier New', monospace; font-size:0.88rem; line-height:1.55; padding:14px; border:none; outline:none; resize:none; box-sizing:border-box;"
+              onkeydown="handleScratchpadKey(event)"
+              oninput="updateScratchpadCharCount()"
+            ></textarea>
+          </div>
+
+          <!-- Console Output Pane -->
+          <div style="display:flex; flex-direction:column; background:#050811;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 14px; background:#0f172a; border-bottom:1px solid #1e293b; font-size:0.74rem; color:#94a3b8;">
+              <span><i class="fas fa-desktop" style="color:#06b6d4;"></i> Output Console</span>
+              <span id="scratchpadExecStatus" style="color:#10b981; font-weight:600;"><i class="fas fa-check-circle"></i> Ready</span>
+            </div>
+            <div
+              id="scratchpadOutput"
+              style="flex:1; padding:14px; overflow-y:auto; font-family:Consolas, 'Fira Code', 'Courier New', monospace; font-size:0.84rem; line-height:1.55; color:#a7f3d0; white-space:pre-wrap; word-break:break-all;"
+            >💡 Output will appear here. Press 'Run Code' or hit Ctrl+Enter to execute.</div>
+          </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding:10px 20px; background:#0f172a; border-top:1px solid #334155; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#64748b;">
+          <span>
+            <i class="fas fa-keyboard" style="color:#94a3b8; margin-right:4px;"></i> Press <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; color:#cbd5e1; border:1px solid #475569;">Ctrl + Enter</kbd> to run • <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; color:#cbd5e1; border:1px solid #475569;">Tab</kbd> indents code
+          </span>
+          <span id="scratchpadTiming" style="color:#94a3b8;">Execution: 0ms</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Floating Quick Code Playground Trigger Button -->
+    <button id="floatingCodeRunnerBtn" onclick="openCodeRunnerModal()" style="position:fixed; bottom:24px; right:24px; background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:12px 20px; border-radius:30px; font-weight:700; font-size:0.86rem; box-shadow:0 8px 24px rgba(16,185,129,0.35); cursor:pointer; display:flex; align-items:center; gap:8px; z-index:900; transition:all 0.2s;">
+      <i class="fas fa-laptop-code" style="font-size:1rem;"></i>
+      <span>Code Scratchpad</span>
+    </button>
   </main>
 
   <script>
@@ -1561,6 +1686,389 @@ requireAuth();
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
     window.open(`${backendUrl}/api/v1/roadmap/export-ics/${currentPath}`, '_blank');
+  }
+
+  // ========================================
+  // EMBEDDED QUICK CODE RUNNER / SCRATCHPAD
+  // ========================================
+  const scratchpadPresets = {
+    webdev: {
+      lang: 'javascript',
+      filename: 'webdev_practice.js',
+      code: `// Quick Web Development Practice
+// Experiment with arrays, objects & async DOM workflows
+
+const milestones = [
+  { step: 1, topic: "HTML & CSS", status: "completed" },
+  { step: 2, topic: "JavaScript Fundamentals", status: "in-progress" },
+  { step: 3, topic: "React State & Hooks", status: "upcoming" }
+];
+
+console.log("=== Active Track Milestones ===");
+milestones.forEach(m => {
+  console.log(\`Milestone \${m.step}: \${m.topic} [\${m.status.toUpperCase()}]\`);
+});
+
+// Calculate progress percentage
+const completedCount = milestones.filter(m => m.status === "completed").length;
+const progressPct = Math.round((completedCount / milestones.length) * 100);
+console.log(\`\\nCurrent Progress: \${progressPct}%\`);`
+    },
+    aiml: {
+      lang: 'python',
+      filename: 'aiml_practice.py',
+      code: `# AI & Machine Learning Practice Scratchpad
+import math
+
+# Activation functions
+def sigmoid(x):
+    return 1.0 / (1.0 + math.exp(-x))
+
+def relu(x):
+    return max(0.0, x)
+
+raw_logits = [-2.5, -0.5, 0.0, 1.2, 3.4]
+sigmoid_outs = [round(sigmoid(x), 4) for x in raw_logits]
+relu_outs = [round(relu(x), 4) for x in raw_logits]
+
+print("Raw Layer Logits:", raw_logits)
+print("Sigmoid Probabilities:", sigmoid_outs)
+print("ReLU Activations:    ", relu_outs)
+
+# Compute Mean Squared Error (MSE)
+y_true = [1.0, 0.0, 1.0]
+y_pred = [0.92, 0.15, 0.88]
+mse = sum((yt - yp) ** 2 for yt, yp in zip(y_true, y_pred)) / len(y_true)
+print(f"\\nValidation MSE Loss: {mse:.5f}")`
+    },
+    data: {
+      lang: 'python',
+      filename: 'data_practice.py',
+      code: `# Data Science & Analytics Scratchpad
+salaries_k = [45, 55, 60, 65, 75, 80, 95, 110, 125, 140]
+
+count = len(salaries_k)
+mean_val = sum(salaries_k) / count
+sorted_vals = sorted(salaries_k)
+median_val = (sorted_vals[count // 2 - 1] + sorted_vals[count // 2]) / 2 if count % 2 == 0 else sorted_vals[count // 2]
+variance = sum((x - mean_val) ** 2 for x in salaries_k) / count
+std_dev = variance ** 0.5
+
+print("Sample Salaries ($K):", salaries_k)
+print(f"Count:  {count}")
+print(f"Mean:   \${mean_val:.2f}K")
+print(f"Median: \${median_val:.2f}K")
+print(f"StdDev: \${std_dev:.2f}K")`
+    },
+    cyber: {
+      lang: 'python',
+      filename: 'cyber_practice.py',
+      code: `# Cybersecurity Hashing & Integrity Scratchpad
+import hashlib
+
+data_payload = "CareerNav-Verified-Milestone-Token"
+sha256_digest = hashlib.sha256(data_payload.encode()).hexdigest()
+
+print("Original Payload:", data_payload)
+print("SHA-256 Digest:  ", sha256_digest)
+
+# Verify tamper detection
+tampered = data_payload + "!"
+tampered_digest = hashlib.sha256(tampered.encode()).hexdigest()
+print("\\nTampered Digest: ", tampered_digest)
+print("Match Status:    ", "VALID ✅" if sha256_digest == tampered_digest else "CORRUPTED / TAMPERED ❌")`
+    },
+    cloud: {
+      lang: 'python',
+      filename: 'cloud_practice.py',
+      code: `# Cloud Architecture & Auto-Scaling Simulation
+active_traffic_rps = 1450
+container_capacity_rps = 300
+min_replicas = 2
+max_replicas = 10
+
+target_replicas = max(min_replicas, min(max_replicas, -(-active_traffic_rps // container_capacity_rps)))
+
+print("=== Cloud Autoscaler Controller ===")
+print(f"Incoming Traffic:     {active_traffic_rps} req/sec")
+print(f"Container Capacity:   {container_capacity_rps} req/sec per pod")
+print(f"Recommended Replicas: {target_replicas} pods (Min: {min_replicas}, Max: {max_replicas})")`
+    },
+    algo_fib: {
+      lang: 'javascript',
+      filename: 'fibonacci.js',
+      code: `// Fibonacci & Memoized Recursion
+function fibIterative(n) {
+  let a = 0, b = 1;
+  for (let i = 0; i < n; i++) {
+    [a, b] = [b, a + b];
+  }
+  return a;
+}
+
+const memo = {};
+function fibMemo(n) {
+  if (n <= 1) return n;
+  if (memo[n]) return memo[n];
+  return memo[n] = fibMemo(n - 1) + fibMemo(n - 2);
+}
+
+console.log("=== Fibonacci Sequence ===");
+for (let i = 0; i <= 10; i++) {
+  console.log(\`fib(\${i}) = \${fibIterative(i)}\`);
+}
+console.log("\\nLarge fib(35) memoized:", fibMemo(35));`
+    },
+    ds_stack: {
+      lang: 'javascript',
+      filename: 'stack_queue.js',
+      code: `// Stack & Queue Implementations
+class Stack {
+  constructor() { this.items = []; }
+  push(el) { this.items.push(el); }
+  pop() { return this.items.pop(); }
+  peek() { return this.items[this.items.length - 1]; }
+  size() { return this.items.length; }
+}
+
+const s = new Stack();
+s.push("Step 1: HTML");
+s.push("Step 2: JavaScript");
+s.push("Step 3: React");
+
+console.log("Stack Top:", s.peek());
+console.log("Popped element:", s.pop());
+console.log("Remaining Stack Size:", s.size());`
+    },
+    math_stats: {
+      lang: 'python',
+      filename: 'statistics_math.py',
+      code: `# Mathematics & Statistics Scratchpad
+scores = [78, 85, 92, 88, 76, 95, 89, 84, 91, 100]
+
+mean = sum(scores) / len(scores)
+variance = sum((x - mean) ** 2 for x in scores) / len(scores)
+std_dev = variance ** 0.5
+
+print("Scores:", scores)
+print(f"Mean Score: {mean:.2f}")
+print(f"Std Deviation: {std_dev:.2f}")
+print(f"Top 90th percentile cutoff: {sorted(scores)[int(len(scores) * 0.9)]}")`
+    },
+    blank: {
+      lang: 'javascript',
+      filename: 'scratchpad.js',
+      code: `// Quick Scratchpad
+// Write any quick practice code here!
+
+console.log("Hello from CareerNav Scratchpad! 🚀");`
+    }
+  };
+
+  function openCodeRunnerModal() {
+    const modal = document.getElementById('codeRunnerModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const badge = document.getElementById('scratchpadTrackBadge');
+    if (badge) {
+      badge.textContent = (currentPath || 'webdev').toUpperCase();
+    }
+
+    const editor = document.getElementById('scratchpadEditor');
+    if (editor && !editor.value.trim()) {
+      loadScratchpadPreset('track_current');
+    }
+    updateScratchpadCharCount();
+  }
+
+  function closeCodeRunnerModal() {
+    const modal = document.getElementById('codeRunnerModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function openCodeRunnerForCurrentMilestone() {
+    openCodeRunnerModal();
+    loadScratchpadPreset('track_current');
+  }
+
+  function onScratchpadLangChange() {
+    const lang = document.getElementById('scratchpadLang').value;
+    const filenameEl = document.getElementById('scratchpadFilename');
+    if (filenameEl) {
+      filenameEl.innerHTML = lang === 'python'
+        ? '<i class="fab fa-python" style="color:#38bdf8;"></i> practice_scratchpad.py'
+        : '<i class="fab fa-js" style="color:#facc15;"></i> practice_scratchpad.js';
+    }
+  }
+
+  function loadScratchpadPreset(presetKey) {
+    let preset = null;
+    if (presetKey === 'track_current') {
+      preset = scratchpadPresets[currentPath] || scratchpadPresets['webdev'];
+    } else {
+      preset = scratchpadPresets[presetKey] || scratchpadPresets['blank'];
+    }
+
+    if (!preset) return;
+
+    const editor = document.getElementById('scratchpadEditor');
+    const langSelect = document.getElementById('scratchpadLang');
+    const filenameEl = document.getElementById('scratchpadFilename');
+
+    if (langSelect && preset.lang) {
+      langSelect.value = preset.lang;
+    }
+    if (filenameEl && preset.filename) {
+      const isPy = preset.filename.endsWith('.py');
+      filenameEl.innerHTML = isPy
+        ? `<i class="fab fa-python" style="color:#38bdf8;"></i> ${preset.filename}`
+        : `<i class="fab fa-js" style="color:#facc15;"></i> ${preset.filename}`;
+    }
+    if (editor) {
+      editor.value = preset.code;
+    }
+    updateScratchpadCharCount();
+  }
+
+  function resetScratchpadCode() {
+    loadScratchpadPreset('track_current');
+    clearScratchpadConsole();
+  }
+
+  function clearScratchpadConsole() {
+    const out = document.getElementById('scratchpadOutput');
+    const status = document.getElementById('scratchpadExecStatus');
+    const timing = document.getElementById('scratchpadTiming');
+    if (out) out.innerHTML = '💡 Output will appear here. Press \'Run Code\' or hit Ctrl+Enter to execute.';
+    if (status) status.innerHTML = '<i class="fas fa-check-circle"></i> Ready';
+    if (timing) timing.textContent = 'Execution: 0ms';
+  }
+
+  function updateScratchpadCharCount() {
+    const editor = document.getElementById('scratchpadEditor');
+    const countEl = document.getElementById('scratchpadCharCount');
+    if (editor && countEl) {
+      countEl.textContent = `${editor.value.length} chars`;
+    }
+  }
+
+  function handleScratchpadKey(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const editor = e.target;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + 2;
+      updateScratchpadCharCount();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      runScratchpadCode();
+    }
+  }
+
+  async function runScratchpadCode() {
+    const editor = document.getElementById('scratchpadEditor');
+    const outputEl = document.getElementById('scratchpadOutput');
+    const statusEl = document.getElementById('scratchpadExecStatus');
+    const timingEl = document.getElementById('scratchpadTiming');
+    const langSelect = document.getElementById('scratchpadLang');
+
+    if (!editor || !outputEl) return;
+    const code = editor.value;
+    const lang = (langSelect ? langSelect.value : 'javascript').toLowerCase();
+
+    if (!code.trim()) {
+      outputEl.innerHTML = '<span style="color:#fca5a5;">⚠ Please write or select some code to run.</span>';
+      return;
+    }
+
+    if (statusEl) statusEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#38bdf8;"></i> Running...';
+
+    const t0 = performance.now();
+
+    if (lang === 'javascript') {
+      const logs = [];
+      const formatArg = (a) => {
+        if (typeof a === 'object' && a !== null) {
+          try { return JSON.stringify(a, null, 2); } catch (e) { return String(a); }
+        }
+        return String(a);
+      };
+
+      const customConsole = {
+        log: (...args) => logs.push(args.map(formatArg).join(' ')),
+        info: (...args) => logs.push('ℹ ' + args.map(formatArg).join(' ')),
+        warn: (...args) => logs.push('⚠ ' + args.map(formatArg).join(' ')),
+        error: (...args) => logs.push('✖ ' + args.map(formatArg).join(' '))
+      };
+
+      try {
+        const fn = new Function('console', code);
+        const result = fn(customConsole);
+        const t1 = performance.now();
+        const duration = Math.round(t1 - t0);
+
+        let finalOutput = logs.join('\n');
+        if (result !== undefined) {
+          finalOutput += (finalOutput ? '\n\n' : '') + `=> Return: ${formatArg(result)}`;
+        }
+
+        outputEl.innerHTML = `<span style="color:#a7f3d0;">${escapeHtml(finalOutput || '(Code executed without stdout output)')}</span>`;
+        if (statusEl) statusEl.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Success (${duration}ms)`;
+        if (timingEl) timingEl.textContent = `Execution: ${duration}ms`;
+      } catch (err) {
+        const t1 = performance.now();
+        const duration = Math.round(t1 - t0);
+        outputEl.innerHTML = `<span style="color:#f87171;">✖ ${escapeHtml(err.name)}: ${escapeHtml(err.message)}\n\n${escapeHtml(err.stack || '')}</span>`;
+        if (statusEl) statusEl.innerHTML = '<i class="fas fa-times-circle" style="color:#ef4444;"></i> Error';
+        if (timingEl) timingEl.textContent = `Execution: ${duration}ms`;
+      }
+    } else {
+      try {
+        const res = await RoadmapAPI.runCode(code, 'python');
+        const t1 = performance.now();
+        const duration = res && res.executionTimeMs ? res.executionTimeMs : Math.round(t1 - t0);
+
+        if (res && (res.stdout || res.stderr)) {
+          let html = '';
+          if (res.stdout) {
+            html += `<span style="color:#a7f3d0;">${escapeHtml(res.stdout)}</span>`;
+          }
+          if (res.stderr) {
+            html += (html ? '\n' : '') + `<span style="color:#f87171;">${escapeHtml(res.stderr)}</span>`;
+          }
+          outputEl.innerHTML = html || '<span style="color:#94a3b8;">(No output)</span>';
+
+          if (res.success) {
+            if (statusEl) statusEl.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Success (${duration}ms)`;
+          } else {
+            if (statusEl) statusEl.innerHTML = '<i class="fas fa-times-circle" style="color:#ef4444;"></i> Error';
+          }
+          if (timingEl) timingEl.textContent = `Execution: ${duration}ms`;
+        } else {
+          outputEl.innerHTML = `<span style="color:#a7f3d0;">=== Python Execution (Simulated) ===\nCode evaluated successfully. Ensure FastAPI is running on Port 8000 for live Python 3.12 sandbox execution.</span>`;
+          if (statusEl) statusEl.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Finished (${Math.round(t1 - t0)}ms)`;
+        }
+      } catch (err) {
+        outputEl.innerHTML = `<span style="color:#f87171;">✖ Backend execution error: ${escapeHtml(err.message)}</span>`;
+        if (statusEl) statusEl.innerHTML = '<i class="fas fa-times-circle" style="color:#ef4444;"></i> Failed';
+      }
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   // ========================================

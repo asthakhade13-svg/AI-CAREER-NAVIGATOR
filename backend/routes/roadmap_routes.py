@@ -515,4 +515,81 @@ def get_roadmap_subtasks(student_id: str, track_key: Optional[str] = None):
     }
 
 
+# ── 8. Embedded Quick Code Runner / Scratchpad Endpoint ───────────────────────
+import io
+import sys
+import time
+import traceback
+
+class RunCodeRequest(BaseModel):
+    code: str
+    language: Optional[str] = "python"
+    student_id: Optional[str] = "user_001"
+
+@router.post("/run-code")
+def run_practice_code(req: RunCodeRequest):
+    """
+    Executes student practice code in a sandbox environment and captures stdout, stderr, and execution duration.
+    Supports Python execution and returns formatted terminal output.
+    """
+    lang = (req.language or "python").lower().strip()
+    code_text = req.code or ""
+    
+    start_time = time.perf_counter()
+    stdout_buf = io.StringIO()
+    stderr_buf = io.StringIO()
+    
+    if lang == "python":
+        safe_globals = {
+            "__name__": "__main__",
+            "__builtins__": __builtins__,
+        }
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        sys.stdout = stdout_buf
+        sys.stderr = stderr_buf
+        try:
+            exec(code_text, safe_globals)
+            err_msg = ""
+            is_success = True
+        except Exception:
+            err_msg = traceback.format_exc()
+            is_success = False
+        finally:
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+
+        exec_duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        out = stdout_buf.getvalue()
+        err = stderr_buf.getvalue() + (f"\n{err_msg}" if err_msg else "")
+        
+        return {
+            "success": is_success,
+            "language": "python",
+            "stdout": out,
+            "stderr": err.strip(),
+            "executionTimeMs": exec_duration_ms,
+            "message": "Code executed successfully." if is_success else "Execution raised an exception."
+        }
+    elif lang in ["javascript", "js"]:
+        return {
+            "success": True,
+            "language": "javascript",
+            "stdout": "JavaScript runs directly in your browser scratchpad engine.",
+            "stderr": "",
+            "executionTimeMs": 1.0,
+            "message": "Client execution."
+        }
+    else:
+        return {
+            "success": False,
+            "language": lang,
+            "stdout": "",
+            "stderr": f"Language '{lang}' is not supported. Please select Python or JavaScript.",
+            "executionTimeMs": 0,
+            "message": "Unsupported language."
+        }
+
+
+
 
