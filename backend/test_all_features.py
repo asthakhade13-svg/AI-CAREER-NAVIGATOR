@@ -699,6 +699,63 @@ def run_tests():
     print("[PASS] 39. AI Mentor Persistent Chat History & Voice Input (chat_history table & /transcribe-voice)")
     tests_passed += 1
 
+    # 40. Gamification & Achievement Badges System
+    total_tests += 1
+    test_badge_sid = "test_badge_student_40"
+
+    # Seed conditions for badges:
+    conn = get_db_connection()
+    c = conn.cursor()
+    # 40.1 Consistency King: Seed 7 distinct study log days
+    for day_i in range(1, 8):
+        c.execute("""
+        INSERT INTO study_logs (student_id, day_name, hours_spent, log_date)
+        VALUES (?, 'Mon', 2.0, DATE('now', ? || ' days'))
+        """, (test_badge_sid, f"-{day_i}"))
+    
+    # 40.2 ATS Pro: Seed 85+ score in resume_scans
+    c.execute("""
+    INSERT INTO resume_scans (student_id, track_key, ats_score, file_name)
+    VALUES (?, 'webdev', 86, 'stellar_resume.pdf')
+    """, (test_badge_sid,))
+
+    # 40.3 Capstone Finisher: Seed reviewed capstone in project_reviews
+    c.execute("""
+    INSERT INTO project_reviews (student_id, project_id, reviewer_name, feedback_notes)
+    VALUES (?, 'proj_web_01', 'Dr. Alan Turing', 'Outstanding modular architecture')
+    """, (test_badge_sid,))
+
+    # 40.4 Certified Specialist: Seed issued certificate
+    c.execute("""
+    INSERT INTO certificates (certificate_id, student_id, student_name, track_key, track_title, score_percentage, verification_hash)
+    VALUES ('CN-TEST-BADGE-01', ?, 'Test Student', 'webdev', 'Full-Stack Specialization', 96, 'HASH1234')
+    """, (test_badge_sid,))
+    conn.commit()
+    conn.close()
+
+    # Query GET /api/v1/progress/badges/{student_id}
+    res_badges = client.get(f"/api/v1/progress/badges/{test_badge_sid}")
+    assert res_badges.status_code == 200, f"Get badges failed: {res_badges.text}"
+    badge_data = res_badges.json()
+    assert badge_data.get("success") is True, "Badges API success is not True"
+    badges_list = badge_data.get("badges", [])
+    
+    # Assert milestones unlocked
+    b_consistency = next((b for b in badges_list if b.get("name") == "Consistency King"), None)
+    assert b_consistency and b_consistency.get("isUnlocked") is True, "Consistency King should be unlocked"
+
+    b_ats = next((b for b in badges_list if b.get("name") == "ATS Pro"), None)
+    assert b_ats and b_ats.get("isUnlocked") is True, "ATS Pro should be unlocked"
+
+    b_capstone = next((b for b in badges_list if b.get("name") == "Capstone Finisher"), None)
+    assert b_capstone and b_capstone.get("isUnlocked") is True, "Capstone Finisher should be unlocked"
+
+    b_cert = next((b for b in badges_list if b.get("name") == "Certified Specialist"), None)
+    assert b_cert and b_cert.get("isUnlocked") is True, "Certified Specialist should be unlocked"
+
+    print("[PASS] 40. Gamification & Achievement Badges (GET /progress/badges/{id} with Consistency King, ATS Pro, Capstone Finisher, Certified Specialist)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

@@ -1030,28 +1030,29 @@ const ProgressAPI = {
         ];
     },
 
-    getBadges: async () => {
-        const studentId = (UserManager.get() && (UserManager.get().email || UserManager.get().fullName)) || 'user_001';
+    getBadges: async (studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || localStorage.getItem('user_id') || user.id || user.email || 'user_001';
         try {
-            const res = await mlApiCall(`/progress/badges/${encodeURIComponent(studentId)}`, 'GET');
+            const res = await mlApiCall(`/progress/badges/${encodeURIComponent(sid)}`, 'GET');
             if (res.status === 200 && res.data) return res.data;
         } catch(e) {}
         return {
-            unlockedCount: 5,
+            unlockedCount: 6,
             totalBadges: 12,
             badges: [
-                { id: "b1", name: "First Steps", desc: "Started your career assessment", icon: "🚀", isUnlocked: true },
-                { id: "b2", name: "Quiz Taker", desc: "Completed CS skill quiz", icon: "🧠", isUnlocked: true },
-                { id: "b3", name: "Quick Learner", desc: "Completed 5 topics in one week", icon: "⚡", isUnlocked: true },
-                { id: "b4", name: "Streak Master", desc: "Maintained 7 consecutive active days", icon: "🔥", isUnlocked: true },
-                { id: "b5", name: "Job Hunter", desc: "Explored 5+ career tracks", icon: "💼", isUnlocked: true },
-                { id: "b6", name: "Topic Master", desc: "Complete 10 roadmap milestones", icon: "🔒", isUnlocked: false },
-                { id: "b7", name: "30 Day Streak", desc: "Check-in daily for a month", icon: "🔒", isUnlocked: false },
-                { id: "b8", name: "Go-Getter", desc: "Bookmark 5+ internships", icon: "🔒", isUnlocked: false },
-                { id: "b9", name: "Quiz Master", desc: "Score 90%+ on assessment", icon: "🔒", isUnlocked: true },
-                { id: "b10", name: "Road Warrior", desc: "Complete 100% of a career path", icon: "🔒", isUnlocked: false },
-                { id: "b11", name: "Century Club", desc: "Accumulate 100 study hours", icon: "🔒", isUnlocked: false },
-                { id: "b12", name: "Intern Ready", desc: "Finish portfolio capstone project", icon: "🔒", isUnlocked: false }
+                { id: "b_consistency", name: "Consistency King", desc: "Maintained a 7-day study check-in streak", icon: "🔥", color: "#F59E0B", isUnlocked: true, category: "Streak", progress: "7/7 days" },
+                { id: "b_ats_pro", name: "ATS Pro", desc: "Achieved 80+ points on ATS Resume Evaluation", icon: "🎯", color: "#10B981", isUnlocked: true, category: "Placement", progress: "84/80 pts" },
+                { id: "b_capstone", name: "Capstone Finisher", desc: "GitHub repository validated & reviewed by mentor", icon: "🚀", color: "#6366F1", isUnlocked: true, category: "Projects", progress: "Reviewed" },
+                { id: "b_certified", name: "Certified Specialist", desc: "Claimed Verifiable Professional Specialization Certificate", icon: "🎓", color: "#9333EA", isUnlocked: true, category: "Academics", progress: "Verified" },
+                { id: "b1", name: "First Steps", desc: "Started career assessment and explored pathways", icon: "🧭", color: "#3B82F6", isUnlocked: true, category: "Orientation", progress: "Complete" },
+                { id: "b2", name: "Quiz Taker", desc: "Completed technical milestone skill assessment", icon: "🧠", color: "#8B5CF6", isUnlocked: true, category: "Assessment", progress: "Complete" },
+                { id: "b3", name: "Quick Learner", desc: "Completed core programming topics in one week", icon: "⚡", color: "#F59E0B", isUnlocked: true, category: "Learning", progress: "Complete" },
+                { id: "b5", name: "Job Hunter", desc: "Explored 5+ tech career tracks", icon: "💼", color: "#06B6D4", isUnlocked: true, category: "Careers", progress: "Complete" },
+                { id: "b6", name: "Topic Master", desc: "Complete 10 roadmap milestones", icon: "🏆", color: "#EAB308", isUnlocked: true, category: "Roadmap", progress: "12/10 milestones" },
+                { id: "b8", name: "Go-Getter", desc: "Bookmark 5+ high-impact internships", icon: "📌", color: "#EC4899", isUnlocked: false, category: "Internships", progress: "2/5 saved" },
+                { id: "b9", name: "Quiz Master", desc: "Scored 90%+ on technical assessment", icon: "🌟", color: "#F43F5E", isUnlocked: true, category: "Assessment", progress: "95% score" },
+                { id: "b11", name: "Century Club", desc: "Accumulate 100 study hours on stopwatch ledger", icon: "⏳", color: "#14B8A6", isUnlocked: false, category: "Study", progress: "34/100 hrs" }
             ]
         };
     },

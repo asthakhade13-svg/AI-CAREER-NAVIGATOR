@@ -910,18 +910,20 @@ async function loadSkillsProgress(trackKey) {
 // 3. Badges Earned
 async function loadBadges() {
     try {
-        const res = await ProgressAPI.getBadges();
+        const studentId = localStorage.getItem('user_id') || 'student_1';
+        const res = await ProgressAPI.getBadges(studentId);
         const grid = document.getElementById('badgesGrid');
         const badgeCount = document.getElementById('badgesCountBadge');
         if (res && res.badges) {
-            if (badgeCount) badgeCount.textContent = `${res.unlockedCount || res.earned_count || 5} / ${res.totalBadges || res.total_count || 12}`;
+            if (badgeCount) badgeCount.textContent = `${res.unlockedCount || 6} / ${res.totalBadges || 12}`;
             if (grid) {
                 grid.innerHTML = res.badges.map(b => {
-                    const isEarned = b.isUnlocked || b.earned;
+                    const isEarned = !!b.isUnlocked;
                     return `
-                      <div class="badge-item ${isEarned ? 'earned' : 'locked'}" title="${b.desc || b.description || b.name}">
-                        <div class="badge-icon">${isEarned ? (b.icon || '🏆') : '🔒'}</div>
-                        <span>${b.name}</span>
+                      <div class="badge-item ${isEarned ? 'earned' : 'locked'}" onclick="showBadgeDetailModal('${encodeURIComponent(JSON.stringify(b))}')" style="cursor:pointer; position:relative;" title="Click for badge details">
+                        <div class="badge-icon" style="filter:${isEarned ? 'none' : 'grayscale(1)'}">${isEarned ? (b.icon || '🏆') : '🔒'}</div>
+                        <span style="font-size:0.68rem; font-weight:700; color:${isEarned ? '#1e293b' : '#64748b'};">${b.name}</span>
+                        <span style="font-size:0.58rem; color:${isEarned ? '#10B981' : '#94a3b8'};">${isEarned ? 'Unlocked' : 'Locked'}</span>
                       </div>
                     `;
                 }).join('');
@@ -929,6 +931,51 @@ async function loadBadges() {
         }
     } catch(e) {
         console.warn('Badges load error:', e);
+    }
+}
+
+function showBadgeDetailModal(encodedJson) {
+    try {
+        const b = JSON.parse(decodeURIComponent(encodedJson));
+        let modal = document.getElementById('badgeDetailModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'badgeDetailModal';
+            modal.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:16px;';
+            document.body.appendChild(modal);
+        }
+
+        const isEarned = !!b.isUnlocked;
+        modal.innerHTML = `
+            <div style="background:#ffffff; border-radius:20px; max-width:380px; width:100%; padding:24px; box-shadow:0 25px 50px rgba(0,0,0,0.25); border:1px solid #e2e8f0; text-align:center; animation:fadeIn 0.2s ease;">
+                <div style="width:72px; height:72px; border-radius:50%; background:${isEarned ? 'rgba(79,70,229,0.1)' : 'rgba(0,0,0,0.04)'}; display:inline-flex; align-items:center; justify-content:center; font-size:2.4rem; margin-bottom:12px; border:2px solid ${isEarned ? '#4F46E5' : '#cbd5e1'};">
+                    ${isEarned ? b.icon : '🔒'}
+                </div>
+                <h3 style="margin:0 0 4px 0; font-size:1.2rem; color:#1e293b;">${b.name}</h3>
+                <span style="display:inline-block; font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:12px; background:${isEarned ? '#DCFCE7' : '#F1F5F9'}; color:${isEarned ? '#15803D' : '#64748B'}; margin-bottom:12px;">
+                    ${isEarned ? '✓ Achievement Unlocked' : '🔒 Locked Milestone'}
+                </span>
+                <p style="font-size:0.84rem; color:#64748b; line-height:1.45; margin:0 0 16px 0;">${b.desc}</p>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-bottom:18px; text-align:left; font-size:0.78rem;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="color:#64748b;">Category:</span>
+                        <strong style="color:#1e293b;">${b.category || 'Milestone'}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#64748b;">Status / Progress:</span>
+                        <strong style="color:${isEarned ? '#10B981' : '#F59E0B'};">${b.progress || (isEarned ? 'Unlocked' : 'In Progress')}</strong>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('badgeDetailModal').remove()" style="width:100%; padding:10px; background:#4F46E5; color:white; border:none; border-radius:10px; font-weight:600; font-size:0.85rem; cursor:pointer;">
+                    Close
+                </button>
+            </div>
+        `;
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+    } catch(err) {
+        console.warn('Badge modal error:', err);
     }
 }
 
