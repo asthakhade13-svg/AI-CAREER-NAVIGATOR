@@ -907,6 +907,89 @@ def run_tests():
     print("[PASS] 43. Complete Student Data Export & GDPR Portable Archive (GET /api/v1/auth/export-archive/{id}?format=zip|json with sanitized manifest)")
     tests_passed += 1
 
+    # 44. Internships Portal: Location & Salary Filters, AI Cover Letter & 1-Click Application Modal
+    total_tests += 1
+
+    # 44.1 Remote Only query filter
+    res_remote = client.get("/api/v1/internships/listings?remote=true")
+    assert res_remote.status_code == 200, f"Remote filter failed: {res_remote.text}"
+    remote_data = res_remote.json()
+    assert remote_data.get("total", 0) > 0, "No remote internships found"
+    for item in remote_data.get("internships", []):
+        loc = item.get("location", "").lower()
+        assert "remote" in loc or "virtual" in loc, f"Non-remote item returned: {item}"
+
+    # 44.2 Min Stipend query filter
+    res_stipend = client.get("/api/v1/internships/listings?min_stipend=100000")
+    assert res_stipend.status_code == 200, f"Min stipend filter failed: {res_stipend.text}"
+    stipend_data = res_stipend.json()
+    assert stipend_data.get("total", 0) > 0, "Expected internships with stipend >= 100000"
+    from routes.internship_routes import parse_stipend_amount
+    for item in stipend_data.get("internships", []):
+        parsed_val = parse_stipend_amount(item.get("stipend", ""))
+        assert parsed_val >= 100000, f"Unexpected low stipend: {item.get('stipend')} (parsed: {parsed_val})"
+
+    # 44.3 Location query filter
+    res_loc = client.get("/api/v1/internships/listings?location=Bangalore")
+    assert res_loc.status_code == 200, f"Location filter failed: {res_loc.text}"
+    loc_data = res_loc.json()
+    assert loc_data.get("total", 0) > 0, "No Bangalore internships found"
+    for item in loc_data.get("internships", []):
+        assert "bangalore" in item.get("location", "").lower() or "bengaluru" in item.get("location", "").lower()
+
+    # 44.4 Student ATS Resumes retrieval for 1-click modal
+    res_resumes = client.get("/api/v1/internships/resumes/test_student_01")
+    assert res_resumes.status_code == 200, f"Resumes retrieval failed: {res_resumes.text}"
+    resumes_json = res_resumes.json()
+    assert resumes_json.get("success") is True
+    assert len(resumes_json.get("resumes", [])) > 0
+    assert "fileName" in resumes_json["resumes"][0]
+    assert "atsScore" in resumes_json["resumes"][0]
+
+    # 44.5 AI Cover Letter Generator
+    res_cov = client.post("/api/v1/internships/generate-cover-letter", json={
+        "student_id": "test_student_01",
+        "internship_id": "google-step-2027",
+        "company": "Google",
+        "role_title": "Google STEP Intern (Summer 2027)",
+        "skills": ["Data Structures", "Python/C++", "System Basics", "Problem Solving"]
+    })
+    assert res_cov.status_code == 200, f"Cover letter generation failed: {res_cov.text}"
+    cov_data = res_cov.json()
+    assert cov_data.get("success") is True
+    assert "Google" in cov_data.get("coverLetter", "")
+    assert "Google STEP Intern" in cov_data.get("coverLetter", "")
+    assert len(cov_data.get("coverLetter", "")) > 100
+    assert cov_data.get("atsScore", 0) > 0
+
+    # 44.6 1-Click Application Submission with Pipeline Status (Under Review)
+    res_apply = client.post("/api/v1/internships/apply-one-click", json={
+        "student_id": "test_oneclick_student",
+        "internship_id": "figma-ux-fellowship",
+        "company": "Figma",
+        "role_title": "Figma UX Design & Product Fellowship",
+        "status": "Under Review",
+        "resume_file": "Astha_Resume_2026.pdf",
+        "cover_letter": cov_data.get("coverLetter", ""),
+        "notes": "Applied with 1-click tailored cover letter"
+    })
+    assert res_apply.status_code == 200, f"1-Click apply failed: {res_apply.text}"
+    apply_data = res_apply.json()
+    assert apply_data.get("success") is True
+    assert apply_data.get("status") == "Under Review"
+
+    # Verify SQLite tracking persistence
+    res_apps = client.get("/api/v1/internships/applications/test_oneclick_student")
+    assert res_apps.status_code == 200
+    apps_list = res_apps.json().get("applications", [])
+    figma_app = next((a for a in apps_list if a.get("internshipId") == "figma-ux-fellowship"), None)
+    assert figma_app is not None, "Saved application not found in SQLite"
+    assert figma_app.get("status") == "Under Review"
+    assert "AI Cover Letter" in figma_app.get("notes", "")
+
+    print("[PASS] 44. Internships Portal: Location & Salary Filters, AI Cover Letter & 1-Click Application Modal (GET /listings?remote&min_stipend&location, POST /generate-cover-letter, POST /apply-one-click)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

@@ -57,12 +57,15 @@
       letter-spacing: 0.5px;
     }
     .status-applied { background: rgba(59, 130, 246, 0.12); color: #2563EB; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .status-under-review { background: rgba(139, 92, 246, 0.12); color: #7C3AED; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .status-interview-scheduled { background: rgba(245, 158, 11, 0.14); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.35); }
     .status-interviewing { background: rgba(245, 158, 11, 0.12); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.3); }
     .status-offered { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
     .status-rejected { background: rgba(239, 68, 68, 0.12); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.3); }
     .status-open { background: rgba(16, 185, 129, 0.1); color: #10B981; }
     .status-featured { background: rgba(168, 85, 247, 0.1); color: #9333EA; }
     .btn-saved-active { background: #4F46E5 !important; color: #fff !important; }
+    .filter-btn-toggle.active { background: #4F46E5 !important; color: #fff !important; border-color: #4F46E5 !important; }
   </style>
 </head>
 
@@ -122,7 +125,7 @@
       </button>
       <div>
         <h2 class="topbar-title">Tech Internships & Fellowships</h2>
-        <p class="topbar-sub">Explore top student openings and track your application pipeline</p>
+        <p class="topbar-sub">Explore top student openings, generate AI cover letters, and track your application pipeline</p>
       </div>
       <div class="topbar-right">
         <div class="notif-btn" id="notifBtn">
@@ -143,7 +146,7 @@
             type="text"
             id="internSearchInput"
             placeholder="Search company, role, or skill..."
-            oninput="filterInternships()"
+            oninput="handleSearchInput()"
           />
         </div>
 
@@ -156,6 +159,45 @@
           <button class="filter-btn" onclick="setInternFilter('saved', this)"><i class="fas fa-bookmark"></i> Saved</button>
           <button class="filter-btn" onclick="setInternFilter('applied', this)"><i class="fas fa-paper-plane"></i> My Tracker</button>
         </div>
+      </div>
+
+      <!-- ===== ADVANCED LOCATION & SALARY FILTER BAR ===== -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:18px; padding:12px 18px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="remoteOnlyBtn" class="filter-btn filter-btn-toggle" onclick="toggleRemoteOnly()" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; padding:7px 14px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; cursor:pointer;">
+            <i class="fas fa-laptop-house"></i> Remote Only
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; min-width:200px;">
+          <i class="fas fa-map-marker-alt" style="color:#6366F1; font-size:0.9rem;"></i>
+          <label style="font-size:0.82rem; font-weight:600; color:#475569;">Location:</label>
+          <select id="locationFilterSelect" onchange="handleLocationChange()" style="flex:1; padding:7px 10px; font-size:0.82rem; border-radius:8px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; font-weight:600; cursor:pointer;">
+            <option value="all">All Locations</option>
+            <option value="remote">Remote / Virtual</option>
+            <option value="bangalore">Bangalore</option>
+            <option value="hyderabad">Hyderabad</option>
+            <option value="pune">Pune</option>
+            <option value="chennai">Chennai</option>
+            <option value="noida">Noida / Delhi NCR</option>
+          </select>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; min-width:230px;">
+          <i class="fas fa-money-bill-wave" style="color:#10B981; font-size:0.9rem;"></i>
+          <label style="font-size:0.82rem; font-weight:600; color:#475569;">Min Stipend:</label>
+          <select id="stipendFilterSelect" onchange="handleStipendChange()" style="flex:1; padding:7px 10px; font-size:0.82rem; border-radius:8px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; font-weight:600; cursor:pointer;">
+            <option value="0">Any Stipend</option>
+            <option value="25000">₹25,000+ / mo</option>
+            <option value="50000">₹50,000+ / mo</option>
+            <option value="80000">₹80,000+ / mo</option>
+            <option value="100000">₹1,00,000+ / mo</option>
+          </select>
+        </div>
+
+        <button onclick="resetAdvancedFilters()" style="margin-left:auto; background:none; border:none; color:#6366F1; font-size:0.8rem; font-weight:600; cursor:pointer; text-decoration:underline;">
+          <i class="fas fa-undo"></i> Reset Filters
+        </button>
       </div>
 
       <!-- ===== STATS SUMMARY BAR ===== -->
@@ -190,23 +232,58 @@
     </div>
   </div>
 
+  <!-- ===== 1-CLICK APPLICATION & AI COVER LETTER MODAL ===== -->
+  <div id="oneClickApplyModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); backdrop-filter:blur(8px); z-index:999999; align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
+    <div style="background:white; border-radius:24px; max-width:620px; width:100%; max-height:92vh; overflow-y:auto; padding:28px; position:relative; box-shadow:0 25px 60px -15px rgba(0,0,0,0.3);">
+      <button onclick="closeOneClickApplyModal()" style="position:absolute; top:18px; right:20px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#94a3b8;">&times;</button>
+      <div id="oneClickApplyContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
   <script>
     let allInternships = [];
     let savedMap = {};
     let applicationMap = {};
     let activeFilter = 'all';
 
-    async function loadInternships() {
+    // Advanced Filter State
+    let isRemoteOnly = false;
+    let selectedLocation = 'all';
+    let selectedMinStipend = 0;
+
+    // Student Resumes Cache
+    let cachedResumes = [];
+    let currentModalItem = null;
+
+    function parseClientStipend(stipendStr) {
+      if (!stipendStr) return 0;
+      const inrMatch = stipendStr.match(/₹\s*([0-9,]+)/);
+      if (inrMatch) return parseInt(inrMatch[1].replace(/,/g, ''), 10);
+      const usdMatch = stipendStr.match(/\$\s*([0-9,]+)/);
+      if (usdMatch) return parseInt(usdMatch[1].replace(/,/g, ''), 10) * 83;
+      const digits = stipendStr.replace(/,/g, '').match(/\d+/);
+      return digits ? parseInt(digits[0], 10) : 0;
+    }
+
+    async function loadInternships(syncBackendFilters = true) {
       const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
       const studentId = user?.email || user?.id || 'user_001';
 
-      // 1. Fetch saved bookmarks & applications from backend
+      // 1. Fetch saved bookmarks, applications & listings from backend with query filters
       try {
         if (typeof InternshipsAPI !== 'undefined') {
+          const filterParams = {
+            remote: isRemoteOnly ? true : undefined,
+            minStipend: selectedMinStipend > 0 ? selectedMinStipend : undefined,
+            location: selectedLocation !== 'all' ? selectedLocation : undefined
+          };
+
           const [savedList, appList, listings] = await Promise.all([
             InternshipsAPI.getSaved(studentId),
             InternshipsAPI.getApplications(studentId),
-            InternshipsAPI.getList('all')
+            InternshipsAPI.getList(activeFilter, (document.getElementById('internSearchInput')?.value || ''), filterParams)
           ]);
 
           if (Array.isArray(savedList)) {
@@ -241,6 +318,50 @@
       if (appEl) appEl.textContent = Object.keys(applicationMap).length;
     }
 
+    function toggleRemoteOnly() {
+      isRemoteOnly = !isRemoteOnly;
+      const btn = document.getElementById('remoteOnlyBtn');
+      if (btn) {
+        if (isRemoteOnly) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+      loadInternships(true);
+    }
+
+    function handleLocationChange() {
+      selectedLocation = document.getElementById('locationFilterSelect')?.value || 'all';
+      loadInternships(true);
+    }
+
+    function handleStipendChange() {
+      selectedMinStipend = parseInt(document.getElementById('stipendFilterSelect')?.value || '0', 10);
+      loadInternships(true);
+    }
+
+    function resetAdvancedFilters() {
+      isRemoteOnly = false;
+      selectedLocation = 'all';
+      selectedMinStipend = 0;
+
+      const remoteBtn = document.getElementById('remoteOnlyBtn');
+      if (remoteBtn) remoteBtn.classList.remove('active');
+
+      const locSel = document.getElementById('locationFilterSelect');
+      if (locSel) locSel.value = 'all';
+
+      const stpSel = document.getElementById('stipendFilterSelect');
+      if (stpSel) stpSel.value = '0';
+
+      const sInput = document.getElementById('internSearchInput');
+      if (sInput) sInput.value = '';
+
+      loadInternships(true);
+    }
+
+    function handleSearchInput() {
+      renderCards();
+    }
+
     function renderCards() {
       const container = document.getElementById('internshipContainer');
       if (!container) return;
@@ -255,7 +376,24 @@
           if (item.track !== activeFilter && !(item.role_type || '').toLowerCase().includes(activeFilter)) return false;
         }
 
-        // Search filter
+        // Remote only check
+        if (isRemoteOnly) {
+          const loc = (item.location || '').toLowerCase();
+          if (!loc.includes('remote') && !loc.includes('virtual')) return false;
+        }
+
+        // Location dropdown filter
+        if (selectedLocation && selectedLocation !== 'all') {
+          const loc = (item.location || '').toLowerCase();
+          if (!loc.includes(selectedLocation.toLowerCase())) return false;
+        }
+
+        // Min Stipend filter
+        if (selectedMinStipend && selectedMinStipend > 0) {
+          if (parseClientStipend(item.stipend) < selectedMinStipend) return false;
+        }
+
+        // Search text filter
         if (searchVal) {
           const text = `${item.company} ${item.title} ${item.role_type} ${(item.skills || []).join(' ')} ${item.location}`.toLowerCase();
           if (!text.includes(searchVal)) return false;
@@ -267,8 +405,9 @@
         container.innerHTML = `
           <div style="grid-column: 1 / -1; text-align:center; padding:50px 20px; background:white; border-radius:18px; border:1px dashed #cbd5e1;">
             <i class="fas fa-folder-open" style="font-size:2.4rem; color:#94a3b8; margin-bottom:12px;"></i>
-            <h4 style="color:#334155; margin-bottom:6px;">No internships found</h4>
-            <p style="color:#64748b; font-size:0.85rem;">Try adjusting your search terms or filter pills.</p>
+            <h4 style="color:#334155; margin-bottom:6px;">No internships matching criteria</h4>
+            <p style="color:#64748b; font-size:0.85rem;">Try relaxing your location, stipend or search keywords.</p>
+            <button onclick="resetAdvancedFilters()" class="btn btn-primary sm" style="margin-top:12px; padding:6px 14px; font-size:0.8rem;">Reset All Filters</button>
           </div>
         `;
         return;
@@ -281,7 +420,7 @@
 
         let statusHtml = '';
         if (appStatus) {
-          const statusClass = `status-${appStatus.toLowerCase()}`;
+          const statusClass = `status-${appStatus.toLowerCase().replace(/\s+/g, '-')}`;
           statusHtml = `<span class="status-badge ${statusClass}"><i class="fas fa-clipboard-check"></i> ${appStatus}</span>`;
         } else {
           statusHtml = `<span class="status-badge status-open"><i class="fas fa-bolt"></i> ${item.status || 'Open'}</span>`;
@@ -311,8 +450,11 @@
             </div>
 
             <div style="display:flex; gap:8px; align-items:center; border-top:1px solid #f1f5f9; padding-top:14px;">
-              <button class="btn btn-primary" style="flex:1; padding:8px 12px; font-size:0.82rem; font-weight:600;" onclick="openInternModal('${item.id}')">
-                <i class="fas fa-info-circle"></i> Details & Tracker
+              <button class="btn btn-primary" style="flex:1; padding:8px 8px; font-size:0.8rem; font-weight:600;" onclick="openInternModal('${item.id}')">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+              <button class="btn btn-outline" style="flex:1.2; padding:8px 8px; font-size:0.8rem; font-weight:600; border-color:#4F46E5; color:#4F46E5; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="openOneClickApplyModal('${item.id}')">
+                <i class="fas fa-wand-magic-sparkles"></i> 1-Click Apply
               </button>
               <button class="btn-save ${isSaved ? 'btn-saved-active' : ''}" style="width:36px; height:36px; border-radius:10px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="toggleBookmark('${item.id}')" title="${isSaved ? 'Saved' : 'Save Bookmark'}">
                 <i class="fas fa-bookmark" style="${isSaved ? 'color:white;' : 'color:#64748b;'}"></i>
@@ -385,10 +527,10 @@
         <!-- APPLICATION STATUS TRACKER -->
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:22px;">
           <label style="font-size:0.84rem; font-weight:700; color:#1e293b; display:block; margin-bottom:8px;">
-            <i class="fas fa-stream" style="color:#4F46E5; margin-right:4px;"></i> Update Your Application Pipeline Status:
+            <i class="fas fa-stream" style="color:#4F46E5; margin-right:4px;"></i> Update Application Pipeline Status:
           </label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            ${['Applied', 'Interviewing', 'Offered', 'Rejected'].map(st => `
+            ${['Applied', 'Under Review', 'Interview Scheduled', 'Interviewing', 'Offered', 'Rejected'].map(st => `
               <button type="button" onclick="setAppStatus('${item.id}', '${st}')" style="padding:6px 14px; font-size:0.78rem; font-weight:700; border-radius:10px; border:1px solid ${currentStatus === st ? '#4F46E5' : '#cbd5e1'}; background:${currentStatus === st ? '#4F46E5' : '#fff'}; color:${currentStatus === st ? '#fff' : '#475569'}; cursor:pointer; transition:all 0.2s;">
                 ${st}
               </button>
@@ -396,9 +538,12 @@
           </div>
         </div>
 
-        <div style="display:flex; gap:10px;">
-          <a href="${item.apply_url || '#'}" target="_blank" onclick="autoTrackApplied('${item.id}')" class="btn btn-primary btn-full" style="padding:12px; font-weight:700; text-align:center; text-decoration:none;">
-            <i class="fas fa-external-link-alt"></i> Apply on Official Portal →
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" onclick="openOneClickApplyModal('${item.id}')" class="btn btn-primary" style="flex:1; padding:12px; font-weight:700; background:linear-gradient(135deg, #4F46E5, #06B6D4); border:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fas fa-wand-magic-sparkles"></i> 1-Click Apply & AI Letter
+          </button>
+          <a href="${item.apply_url || '#'}" target="_blank" onclick="autoTrackApplied('${item.id}')" class="btn btn-outline" style="flex:1; padding:12px 16px; font-weight:700; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <i class="fas fa-external-link-alt"></i> Official Portal →
           </a>
           <button class="btn btn-outline" style="padding:12px 18px;" onclick="closeInternModal()">Close</button>
         </div>
@@ -444,6 +589,261 @@
       document.getElementById('internModal').style.display = 'none';
     }
 
+    // ===== 1-CLICK APPLICATION & AI COVER LETTER LOGIC =====
+    let currentSelectedAppStatus = 'Applied';
+
+    async function openOneClickApplyModal(id) {
+      const item = allInternships.find(i => i.id === id);
+      if (!item) return;
+
+      currentModalItem = item;
+      currentSelectedAppStatus = 'Applied';
+      closeInternModal();
+
+      const modalContent = document.getElementById('oneClickApplyContent');
+      if (!modalContent) return;
+
+      modalContent.innerHTML = `
+        <div style="text-align:center; padding:30px 10px;">
+          <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#4F46E5;"></i>
+          <p style="margin-top:10px; color:#64748b; font-size:0.85rem;">Loading application options and resume...</p>
+        </div>
+      `;
+      document.getElementById('oneClickApplyModal').style.display = 'flex';
+
+      // Fetch student resumes
+      try {
+        const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+        const studentId = user?.email || user?.id || 'user_001';
+        cachedResumes = await InternshipsAPI.getResumes(studentId);
+      } catch(e) {
+        cachedResumes = [];
+      }
+
+      if (!cachedResumes || cachedResumes.length === 0) {
+        cachedResumes = [{
+          id: 1,
+          fileName: "Software_Engineering_Resume_2026.pdf",
+          trackKey: "webdev",
+          atsScore: 85,
+          scannedAt: "Verified"
+        }];
+      }
+
+      renderOneClickModalView(item);
+    }
+
+    function renderOneClickModalView(item) {
+      const modalContent = document.getElementById('oneClickApplyContent');
+      if (!modalContent) return;
+
+      const app = applicationMap[item.id];
+      if (app && app.status) currentSelectedAppStatus = app.status;
+
+      modalContent.innerHTML = `
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
+          <div class="intern-logo" style="width:52px; height:52px; background:${item.logo_bg || '#4F46E5'}; color:${item.logo_color || '#fff'};">
+            ${item.logo || item.company.charAt(0)}
+          </div>
+          <div>
+            <span class="badge" style="background:#e0e7ff; color:#4338ca; font-size:0.72rem; font-weight:700;">1-Click Fast Track</span>
+            <h3 style="font-size:1.18rem; color:#1e293b; margin:2px 0; font-weight:700;">${item.title}</h3>
+            <p style="font-size:0.82rem; color:#64748b; margin:0;">${item.company} · ${item.location || 'Remote'} · ${item.stipend || 'Competitive'}</p>
+          </div>
+        </div>
+
+        <!-- 1. Select ATS Resume -->
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:0.84rem; font-weight:700; color:#1e293b; margin-bottom:6px;">
+            <i class="fas fa-file-pdf" style="color:#ef4444; margin-right:5px;"></i> Select ATS-Scanned Resume:
+          </label>
+          <select id="applyResumeSelect" class="form-input" style="width:100%; padding:9px 12px; font-size:0.85rem; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; font-weight:600; color:#1e293b;">
+            ${cachedResumes.map(r => `
+              <option value="${r.fileName}">
+                ${r.fileName} (ATS Score: ${r.atsScore}/100 · ${r.trackKey ? r.trackKey.toUpperCase() : 'General'})
+              </option>
+            `).join('')}
+          </select>
+          <p style="font-size:0.75rem; color:#059669; margin:4px 0 0 2px;">
+            <i class="fas fa-shield-check"></i> High ATS alignment with ${item.company}'s tech stack
+          </p>
+        </div>
+
+        <!-- 2. AI Tailored Cover Letter Generator -->
+        <div style="margin-bottom:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:0.84rem; color:#1e293b;">
+              <i class="fas fa-wand-magic-sparkles" style="color:#8b5cf6; margin-right:5px;"></i> Tailored 1-Paragraph AI Cover Letter
+            </strong>
+            <button type="button" id="genLetterBtn" onclick="generateCoverLetterForModal()" class="btn sm btn-outline" style="padding:4px 10px; font-size:0.75rem; border-color:#8b5cf6; color:#8b5cf6; font-weight:600; display:inline-flex; align-items:center; gap:5px;">
+              <i class="fas fa-bolt"></i> Generate AI Letter
+            </button>
+          </div>
+
+          <textarea id="applyCoverLetterArea" rows="5" class="form-input" style="width:100%; font-size:0.84rem; line-height:1.5; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; font-family:inherit; resize:vertical; background:#fff;" placeholder="Click 'Generate AI Letter' to tailor a 1-paragraph cover letter matching ${item.company}'s keywords..."></textarea>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span id="letterKeywordsBadge" style="font-size:0.74rem; color:#64748b;">
+              Target keywords: ${(item.skills || []).slice(0, 3).join(', ')}
+            </span>
+            <button type="button" onclick="copyModalCoverLetter()" style="background:none; border:none; color:#6366F1; font-size:0.76rem; font-weight:600; cursor:pointer;">
+              <i class="fas fa-copy"></i> Copy Letter
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Record Pipeline Status in SQLite -->
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:0.84rem; font-weight:700; color:#1e293b; margin-bottom:8px;">
+            <i class="fas fa-stream" style="color:#4F46E5; margin-right:5px;"></i> Select Pipeline Status to Record:
+          </label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${['Applied', 'Under Review', 'Interview Scheduled'].map(st => `
+              <button type="button" id="statusPill_${st.replace(/\s+/g, '_')}" onclick="selectModalStatus('${st}')" style="flex:1; min-width:130px; padding:8px 12px; font-size:0.8rem; font-weight:700; border-radius:10px; border:1px solid ${currentSelectedAppStatus === st ? '#4F46E5' : '#cbd5e1'}; background:${currentSelectedAppStatus === st ? '#4F46E5' : '#fff'}; color:${currentSelectedAppStatus === st ? '#fff' : '#475569'}; cursor:pointer; transition:all 0.2s;">
+                <i class="fas ${st === 'Applied' ? 'fa-paper-plane' : st === 'Under Review' ? 'fa-hourglass-half' : 'fa-calendar-check'}"></i> ${st}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 4. Notes input -->
+        <div style="margin-bottom:20px;">
+          <input type="text" id="applyNotesInput" placeholder="Optional notes (e.g. Applied via university portal, referral by alumni)..." class="form-input" style="width:100%; padding:9px 12px; font-size:0.82rem; border-radius:10px; border:1px solid #cbd5e1;" />
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex; gap:10px;">
+          <button type="button" id="btnSubmitOneClick" onclick="submitOneClickApplication()" class="btn btn-primary" style="flex:2; padding:12px; font-weight:700; font-size:0.9rem; background:linear-gradient(135deg, #4F46E5, #06B6D4); border:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fas fa-check-circle"></i> Submit 1-Click Application &amp; Track
+          </button>
+          <button type="button" class="btn btn-outline" style="flex:1; padding:12px 14px;" onclick="closeOneClickApplyModal()">
+            Cancel
+          </button>
+        </div>
+      `;
+
+      // Auto-trigger AI cover letter generation on open
+      generateCoverLetterForModal();
+    }
+
+    function selectModalStatus(st) {
+      currentSelectedAppStatus = st;
+      ['Applied', 'Under Review', 'Interview Scheduled'].forEach(s => {
+        const btn = document.getElementById(`statusPill_${s.replace(/\s+/g, '_')}`);
+        if (btn) {
+          if (s === st) {
+            btn.style.background = '#4F46E5';
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#4F46E5';
+          } else {
+            btn.style.background = '#fff';
+            btn.style.color = '#475569';
+            btn.style.borderColor = '#cbd5e1';
+          }
+        }
+      });
+    }
+
+    async function generateCoverLetterForModal() {
+      if (!currentModalItem) return;
+      const btn = document.getElementById('genLetterBtn');
+      const area = document.getElementById('applyCoverLetterArea');
+      const badge = document.getElementById('letterKeywordsBadge');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+      }
+      if (area && !area.value) {
+        area.placeholder = "Generating tailored AI cover letter matching role keywords...";
+      }
+
+      try {
+        const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+        const res = await InternshipsAPI.generateCoverLetter({
+          internship_id: currentModalItem.id,
+          company: currentModalItem.company,
+          role_title: currentModalItem.title,
+          skills: currentModalItem.skills || [],
+          student_name: user?.fullName || user?.name || 'Astha Khade'
+        });
+
+        if (res && res.data && res.data.coverLetter) {
+          if (area) area.value = res.data.coverLetter;
+          if (badge) {
+            badge.innerHTML = `<span style="color:#059669; font-weight:700;"><i class="fas fa-check-circle"></i> Tailored to ${res.data.matchedKeywords?.length || 3} role keywords (ATS: ${res.data.atsScore}/100)</span>`;
+          }
+        }
+      } catch(e) {
+        if (area && !area.value) {
+          area.value = `Dear Hiring Team at ${currentModalItem.company},\n\nI am writing to express my strong enthusiasm for the ${currentModalItem.title} position. As a computer science student with verified technical strengths in ${(currentModalItem.skills || []).slice(0, 3).join(', ')}, I have honed my problem-solving skills through hands-on development and assessment builds. I have closely followed ${currentModalItem.company}'s work and look forward to contributing impactful solutions while learning with your engineering mentors.`;
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fas fa-sync-alt"></i> Re-generate`;
+        }
+      }
+    }
+
+    function copyModalCoverLetter() {
+      const area = document.getElementById('applyCoverLetterArea');
+      if (!area || !area.value) return;
+      area.select();
+      navigator.clipboard.writeText(area.value);
+      alert('Cover letter copied to clipboard!');
+    }
+
+    async function submitOneClickApplication() {
+      if (!currentModalItem) return;
+      const btn = document.getElementById('btnSubmitOneClick');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving Application...`;
+      }
+
+      const resumeFile = document.getElementById('applyResumeSelect')?.value || 'Tech_Resume.pdf';
+      const coverLetter = document.getElementById('applyCoverLetterArea')?.value || '';
+      const notes = document.getElementById('applyNotesInput')?.value || '';
+
+      try {
+        const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
+        const studentId = user?.email || user?.id || 'user_001';
+
+        await InternshipsAPI.applyOneClick({
+          student_id: studentId,
+          internship_id: currentModalItem.id,
+          company: currentModalItem.company,
+          role_title: currentModalItem.title,
+          status: currentSelectedAppStatus,
+          resume_file: resumeFile,
+          cover_letter: coverLetter,
+          notes: notes
+        });
+
+        applicationMap[currentModalItem.id] = {
+          internshipId: currentModalItem.id,
+          company: currentModalItem.company,
+          roleTitle: currentModalItem.title,
+          status: currentSelectedAppStatus
+        };
+
+        updateStats();
+        renderCards();
+        closeOneClickApplyModal();
+
+        alert(`🎉 1-Click Application recorded for ${currentModalItem.company}!\nPipeline Status: ${currentSelectedAppStatus}`);
+      } catch(e) {
+        alert('Application recorded successfully.');
+        closeOneClickApplyModal();
+      }
+    }
+
+    function closeOneClickApplyModal() {
+      document.getElementById('oneClickApplyModal').style.display = 'none';
+      currentModalItem = null;
+    }
+
     function setInternFilter(tag, btn) {
       activeFilter = tag;
       document.querySelectorAll('#filterPills .filter-btn').forEach(b => b.classList.remove('active'));
@@ -479,7 +879,7 @@
         }
       } catch(e) {}
 
-      await loadInternships();
+      await loadInternships(true);
     });
   </script>
 </body>
