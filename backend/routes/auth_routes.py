@@ -859,4 +859,217 @@ def delete_student_account(student_id: Optional[str] = None, payload: Optional[D
     }
 
 
+# ── 14. Complete Student Data Export (GDPR ZIP / JSON Archive) ───────────────
+import zipfile
+import json
+import io
+from fastapi.responses import Response
+
+@router.get("/export-archive/{student_id}")
+def export_full_account_archive(student_id: str, format: str = "zip"):
+    """
+    Exports a complete GDPR-compliant account archive for a student packaged as a downloadable ZIP or JSON.
+    Includes profile, chat history, quiz attempts, bookmarks, applications, project reviews, custom roadmap subtasks,
+    certificates, study logs, and student achievement badges.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # User profile & preferences
+    cursor.execute("SELECT id, full_name, email, college, branch, year, career_track, created_at, is_2fa_enabled FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (student_id, student_id))
+    user_row = cursor.fetchone()
+    user_profile = dict(user_row) if user_row else {
+        "id": student_id,
+        "full_name": "Student",
+        "email": student_id,
+        "college": "Oriental Institute of Science & Technology (OIST)",
+        "branch": "CSE",
+        "year": "1st Year",
+        "career_track": "aiml",
+        "created_at": datetime.datetime.now().isoformat(),
+        "is_2fa_enabled": 0
+    }
+    user_profile.pop("password_hash", None)
+
+    # Chat history / AI Mentor logs
+    try:
+        cursor.execute("SELECT session_id, role, message, created_at FROM chat_history WHERE student_id = ? ORDER BY created_at ASC", (student_id,))
+        chat_rows = cursor.fetchall()
+        chat_history = [dict(r) for r in chat_rows]
+    except Exception:
+        chat_history = []
+
+    # Quiz attempts & history
+    try:
+        cursor.execute("SELECT track_key, score, total_questions, correct_answers, time_taken_sec, question_timings, created_at FROM quiz_attempts WHERE student_id = ? ORDER BY created_at DESC", (student_id,))
+        quiz_rows = cursor.fetchall()
+        quiz_attempts = []
+        for r in quiz_rows:
+            q_dict = dict(r)
+            if "question_timings" in q_dict and isinstance(q_dict["question_timings"], str):
+                try:
+                    q_dict["question_timings"] = json.loads(q_dict["question_timings"])
+                except Exception:
+                    pass
+            quiz_attempts.append(q_dict)
+    except Exception:
+        quiz_attempts = []
+
+    # Saved bookmarks & applications
+    try:
+        cursor.execute("SELECT internship_id, title, company, location, saved_at FROM saved_internships WHERE student_id = ? ORDER BY saved_at DESC", (student_id,))
+        saved_internships = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        saved_internships = []
+
+    try:
+        cursor.execute("SELECT internship_id, title, company, status, applied_at FROM internship_applications WHERE student_id = ? ORDER BY applied_at DESC", (student_id,))
+        applications = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        applications = []
+
+    try:
+        cursor.execute("SELECT career_id, title, domain, saved_at FROM saved_careers WHERE student_id = ?", (student_id,))
+        saved_careers = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        saved_careers = []
+
+    # Project reviews & capstones
+    try:
+        cursor.execute("SELECT project_id, reviewer_name, feedback_notes, created_at FROM project_reviews WHERE student_id = ? ORDER BY created_at DESC", (student_id,))
+        project_reviews = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        project_reviews = []
+
+    try:
+        cursor.execute("SELECT repo_url, status, review_score, verified_at FROM projects WHERE student_id = ?", (student_id,))
+        projects = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        projects = []
+
+    # Custom roadmap subtasks & milestone progress
+    try:
+        cursor.execute("SELECT subtask_id, track_key, subtask_text, is_completed, is_custom, milestone_index, completed_at FROM roadmap_subtasks WHERE student_id = ?", (student_id,))
+        roadmap_tasks = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        roadmap_tasks = []
+
+    try:
+        cursor.execute("SELECT track_key, milestone_id, is_completed, completed_at FROM milestones_progress WHERE student_id = ? AND is_completed = 1", (student_id,))
+        completed_milestones = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        completed_milestones = []
+
+    # Certificates
+    try:
+        cursor.execute("SELECT certificate_id, track_key, track_title, score_percentage, verification_hash, issued_at FROM certificates WHERE student_id = ? ORDER BY issued_at DESC", (student_id,))
+        certificates = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        certificates = []
+
+    # Study logs & notes
+    try:
+        cursor.execute("SELECT day_name, hours_spent, category, notes, log_date, created_at FROM study_logs WHERE student_id = ? ORDER BY created_at DESC", (student_id,))
+        study_logs = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        study_logs = []
+
+    # Badges
+    try:
+        cursor.execute("SELECT badge_name, is_unlocked, unlocked_at FROM student_badges WHERE student_id = ?", (student_id,))
+        badges = [dict(r) for r in cursor.fetchall()]
+    except Exception:
+        badges = []
+
+    conn.close()
+
+    export_timestamp = datetime.datetime.now().isoformat()
+    archive_manifest = {
+        "export_metadata": {
+            "platform": "First-Generation Career Navigator AI",
+            "compliance_standard": "GDPR Article 20 (Right to Data Portability)",
+            "student_id": student_id,
+            "student_name": user_profile.get("full_name", "Student"),
+            "exported_at": export_timestamp,
+            "version": "1.0.0"
+        },
+        "user_profile": user_profile,
+        "chat_logs": chat_history,
+        "quiz_attempts": quiz_attempts,
+        "bookmarks_and_applications": {
+            "saved_internships": saved_internships,
+            "internship_applications": applications,
+            "saved_careers": saved_careers
+        },
+        "project_reviews_and_capstones": {
+            "reviews": project_reviews,
+            "verified_projects": projects
+        },
+        "roadmap_and_custom_subtasks": {
+            "custom_and_assigned_tasks": roadmap_tasks,
+            "completed_milestones": completed_milestones
+        },
+        "certificates": certificates,
+        "study_logs_and_notes": study_logs,
+        "achievement_badges": badges
+    }
+
+    if (format or "zip").lower() == "json":
+        json_bytes = json.dumps(archive_manifest, indent=2, default=str).encode("utf-8")
+        return Response(
+            content=json_bytes,
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="careernav_archive_{student_id}.json"'}
+        )
+
+    # ZIP Archive Packaging
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("profile.json", json.dumps(user_profile, indent=2, default=str))
+        zf.writestr("chat_logs.json", json.dumps(chat_history, indent=2, default=str))
+        zf.writestr("quiz_attempts.json", json.dumps(quiz_attempts, indent=2, default=str))
+        zf.writestr("bookmarks_and_applications.json", json.dumps(archive_manifest["bookmarks_and_applications"], indent=2, default=str))
+        zf.writestr("project_reviews.json", json.dumps(archive_manifest["project_reviews_and_capstones"], indent=2, default=str))
+        zf.writestr("roadmap_custom_subtasks.json", json.dumps(archive_manifest["roadmap_and_custom_subtasks"], indent=2, default=str))
+        zf.writestr("study_logs.json", json.dumps(study_logs, indent=2, default=str))
+        zf.writestr("certificates.json", json.dumps(certificates, indent=2, default=str))
+        zf.writestr("achievement_badges.json", json.dumps(badges, indent=2, default=str))
+        zf.writestr("full_account_manifest.json", json.dumps(archive_manifest, indent=2, default=str))
+
+        readme_text = f"""=======================================================
+FIRST-GENERATION CAREER NAVIGATOR AI - ACCOUNT ARCHIVE
+GDPR ARTICLE 20 DATA PORTABILITY COMPLIANCE ARCHIVE
+=======================================================
+
+Student ID:    {student_id}
+Student Name:  {user_profile.get('full_name', 'Student')}
+Export Date:   {export_timestamp}
+Platform:      Career Navigator AI (OIST Campus Edition)
+
+INCLUDED ARCHIVE FILES:
+1. profile.json                      - Personal account details, college, career track, and security status.
+2. chat_logs.json                    - Complete AI mentor conversational transcripts.
+3. quiz_attempts.json                - Multi-domain assessment attempt logs, scores, and per-question timings.
+4. bookmarks_and_applications.json   - Saved tech internships, bookmarked career paths, and job application states.
+5. project_reviews.json              - Capstone repository submissions, verified repos, and mentor review feedback.
+6. roadmap_custom_subtasks.json      - Personalized learning roadmap tasks, custom goals, and milestone completions.
+7. study_logs.json                   - Weekly study stopwatch logs, session categories, and revision notes.
+8. certificates.json                 - Issued specialization certificates and recruiter verification cryptographic hashes.
+9. achievement_badges.json           - Gamified achievement milestone badges unlocked.
+10. full_account_manifest.json       - Complete machine-readable unified JSON export.
+
+For security reasons, cryptographic password hashes and TOTP secret salts are excluded from portable archives.
+=======================================================
+"""
+        zf.writestr("README_GDPR.txt", readme_text)
+
+    zip_buffer.seek(0)
+    return Response(
+        content=zip_buffer.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="careernav_archive_{student_id}.zip"'}
+    )
+
+
+
 

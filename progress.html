@@ -659,6 +659,9 @@
         <button onclick="exportStudyLogsCSV()" style="padding:8px 16px; border-radius:10px; border:1px solid #10B981; background:rgba(16,185,129,0.08); color:#059669; font-weight:600; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
           <i class="fas fa-file-csv"></i> Export CSV Data
         </button>
+        <button onclick="exportFullAccountArchive()" style="padding:8px 16px; border-radius:10px; border:1px solid #0284c7; background:rgba(2,132,199,0.08); color:#0284c7; font-weight:600; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-file-archive"></i> Full Account Archive (ZIP)
+        </button>
         <button onclick="printProgressReport()" style="padding:8px 20px; border-radius:10px; border:none; background:linear-gradient(135deg, #4F46E5, #6366F1); color:white; font-weight:600; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
           <i class="fas fa-print"></i> Print / Save PDF
         </button>
@@ -1261,6 +1264,18 @@ function printProgressReport() {
 function exportStudyLogsCSV() {
     if (typeof ProgressAPI !== 'undefined' && ProgressAPI.exportStudyData) {
         ProgressAPI.exportStudyData('csv');
+    }
+}
+
+function exportFullAccountArchive(format = 'zip') {
+    if (typeof AuthAPI !== 'undefined' && AuthAPI.downloadAccountArchive) {
+        AuthAPI.downloadAccountArchive(format);
+    } else {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        const user = typeof UserManager !== 'undefined' ? (UserManager.get() || {}) : {};
+        const sid = user.email || user.id || 'user_001';
+        window.open(`${backendUrl}/api/v1/auth/export-archive/${encodeURIComponent(sid)}?format=${encodeURIComponent(format)}`, '_blank');
     }
 }
 

@@ -713,6 +713,27 @@
           </button>
         </div>
 
+        <!-- Data Privacy & Complete Account Archive (GDPR) -->
+        <div style="margin-top:16px; padding-top:14px; border-top:1px solid #e2e8f0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong style="font-size:0.88rem; color:#1e293b;">
+              <i class="fas fa-file-archive" style="color:#0284c7; margin-right:6px;"></i> Complete Data Export (GDPR Archive)
+            </strong>
+            <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.72rem; font-weight:700;">ZIP / JSON</span>
+          </div>
+          <p style="font-size:0.78rem; color:#64748b; margin-bottom:10px; line-height:1.4;">
+            Download a complete portable archive of your profile, mentor chat logs, assessment history, saved bookmarks, project reviews, and custom roadmap goals.
+          </p>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-outline sm" onclick="downloadAccountArchive('json')" style="flex:1; padding:8px 10px; font-size:0.78rem; border-color:#0284c7; color:#0284c7; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <i class="fas fa-file-code"></i> JSON Archive
+            </button>
+            <button type="button" class="btn btn-primary sm" onclick="downloadAccountArchive('zip')" style="flex:1; padding:8px 10px; font-size:0.78rem; background:linear-gradient(135deg, #0284c7, #0369a1); border:none; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <i class="fas fa-file-archive"></i> Download Full ZIP
+            </button>
+          </div>
+        </div>
+
         <!-- Danger Zone Section -->
         <div style="margin-top:16px; padding-top:14px; border-top:1px solid #fee2e2;">
           <strong style="font-size:0.88rem; color:#ef4444; display:block; margin-bottom:4px;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> Danger Zone</strong>
@@ -1830,6 +1851,18 @@ async function handleDeleteAccount() {
   localStorage.clear();
   alert('Your account and all associated data have been permanently deleted.');
   window.location.href = 'login.html';
+}
+
+function downloadAccountArchive(format = 'zip') {
+  if (typeof AuthAPI !== 'undefined' && AuthAPI.downloadAccountArchive) {
+    AuthAPI.downloadAccountArchive(format);
+  } else {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+    const user = typeof UserManager !== 'undefined' ? (UserManager.get() || {}) : {};
+    const sid = user.email || user.id || 'user_001';
+    window.open(`${backendUrl}/api/v1/auth/export-archive/${encodeURIComponent(sid)}?format=${encodeURIComponent(format)}`, '_blank');
+  }
 }
 
 function openSettingsModal() {

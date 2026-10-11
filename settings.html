@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <title>Settings &amp; Data Privacy | First Gen Career Navigator</title>
+
+  <link rel="stylesheet" href="style.css?v=2.5" />
+  <link rel="stylesheet" href="dashboard.css?v=2.5" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="api.js?v=2.5"></script>
+</head>
+
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="brand-icon">
+        <i class="fas fa-compass"></i>
+      </div>
+      <span>CareerNav</span>
+    </div>
+
+    <!-- Nav Links -->
+    <nav class="sidebar-nav">
+      <p class="nav-label">Main Menu</p>
+
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="quiz.html" class="nav-item">
+        <i class="fas fa-brain"></i>
+        <span>Skill Assessment</span>
+      </a>
+
+      <a href="careers.html" class="nav-item">
+        <i class="fas fa-briefcase"></i>
+        <span>Career Paths</span>
+      </a>
+
+      <a href="roadmap.html" class="nav-item">
+        <i class="fas fa-map"></i>
+        <span>My Roadmap</span>
+      </a>
+
+      <a href="internships.html" class="nav-item">
+        <i class="fas fa-building"></i>
+        <span>Internships</span>
+      </a>
+
+      <a href="progress.html" class="nav-item">
+        <i class="fas fa-chart-line"></i>
+        <span>Progress</span>
+      </a>
+
+      <p class="nav-label">Support</p>
+
+      <a href="chatbot.html" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>AI Mentor</span>
+      </a>
+
+      <a href="settings.html" class="nav-item active">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <!-- User Profile at bottom -->
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <strong id="sidebarUserName">Astha Khade</strong>
+        <p id="sidebarUserSub">1st Year · CSE · OIST</p>
+      </div>
+
+      <a href="#" title="Logout" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div>
+        <h2 class="topbar-title">Settings &amp; Data Privacy</h2>
+        <p class="topbar-sub">Manage your security credentials, active sessions, and GDPR personal data archives</p>
+      </div>
+
+      <div class="topbar-right">
+        <div class="user-pill" onclick="window.location.href='dashboard.html'" style="cursor:pointer;">
+          <div class="user-avatar sm" id="topbarAvatar">A</div>
+          <span id="topbarUserName">Astha Khade</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body" style="max-width: 900px; margin: 0 auto; padding: 24px 20px;">
+
+      <!-- Settings Grid -->
+      <div style="display:flex; flex-direction:column; gap:24px;">
+
+        <!-- 1. Profile Information Card -->
+        <div class="card" style="padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.04); background:#fff;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <div style="width:40px; height:40px; border-radius:10px; background:rgba(79,70,229,0.1); color:#4F46E5; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.15rem; margin:0; color:#1e293b;">Profile Information</h3>
+              <p style="font-size:0.8rem; color:#64748b; margin:0;">Update your personal details, academic status, and profile avatar.</p>
+            </div>
+          </div>
+
+          <form onsubmit="saveProfileSettings(event)" style="display:flex; flex-direction:column; gap:16px;">
+            <div>
+              <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:6px; color:#334155;">Profile Photo / Avatar</label>
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div id="pageAvatarPreview" class="user-avatar" style="width:56px; height:56px; border-radius:50%; font-weight:700; font-size:1.3rem; display:flex; align-items:center; justify-content:center; overflow:hidden; border:2px solid #e2e8f0; background:linear-gradient(135deg, #4F46E5, #06B6D4); color:white;">A</div>
+                <input type="file" id="pageAvatarFile" accept="image/*" class="form-input" style="flex:1; font-size:0.82rem; padding:8px 12px;" onchange="previewPageAvatar(event)" />
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+              <div>
+                <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:6px; color:#334155;">Full Name</label>
+                <input type="text" id="pageFullName" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+              </div>
+              <div>
+                <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:6px; color:#334155;">Email Address</label>
+                <input type="email" id="pageEmail" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem; background:#f8fafc;" readonly />
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+              <div>
+                <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:6px; color:#334155;">Current Year</label>
+                <select id="pageYear" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                  <option>1st Year</option>
+                  <option>2nd Year</option>
+                  <option>3rd Year</option>
+                  <option>4th Year</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:6px; color:#334155;">Branch / Major</label>
+                <input type="text" id="pageBranch" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+              </div>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:6px; color:#334155;">College / Institute</label>
+              <input type="text" id="pageCollege" class="form-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;" required />
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+              <button type="submit" class="btn btn-primary" style="padding:10px 24px; font-weight:600; border-radius:10px;">
+                <i class="fas fa-save" style="margin-right:6px;"></i> Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 2. Security & Two-Factor Authentication Card -->
+        <div class="card" style="padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.04); background:#fff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.1); color:#10B981; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div>
+                <h3 style="font-size:1.15rem; margin:0; color:#1e293b;">Two-Factor Authentication (2FA)</h3>
+                <p style="font-size:0.8rem; color:#64748b; margin:0;">Add an extra layer of protection to your CareerNav account.</p>
+              </div>
+            </div>
+            <span id="page2FaBadge" class="badge" style="background:#f1f5f9; color:#64748b; font-size:0.8rem; padding:4px 10px; border-radius:20px;">Checking...</span>
+          </div>
+
+          <div id="page2FaControls" style="margin-bottom:14px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <div id="page2FaSetupBox" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:12px;">
+            <p style="font-size:0.84rem; color:#334155; margin-bottom:8px; font-weight:600;">1. Enter this TOTP secret into Google Authenticator or Authy:</p>
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+              <input type="text" id="page2FaSecretInput" readonly style="flex:1; font-family:monospace; font-size:0.95rem; font-weight:700; background:#ffffff; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" />
+              <button type="button" class="btn btn-outline sm" onclick="copyPage2FaSecret()" style="padding:8px 14px; font-size:0.8rem;"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <p style="font-size:0.84rem; color:#334155; margin-bottom:8px; font-weight:600;">2. Enter the 6-digit code shown in your app:</p>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="page2FaCodeInput" maxlength="6" placeholder="123456" style="width:140px; font-size:1rem; text-align:center; letter-spacing:3px; font-weight:700; padding:8px; border:1px solid #cbd5e1; border-radius:8px;" />
+              <button type="button" class="btn btn-primary sm" onclick="confirmPage2FaVerification()" style="padding:8px 18px; font-size:0.85rem; font-weight:600;"><i class="fas fa-check"></i> Verify &amp; Activate</button>
+              <button type="button" class="btn btn-outline sm" onclick="cancelPage2FaSetup()" style="padding:8px 14px; font-size:0.85rem;">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Active Sessions Card -->
+        <div class="card" style="padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.04); background:#fff;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <div style="width:40px; height:40px; border-radius:10px; background:rgba(99,102,241,0.1); color:#6366F1; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+              <i class="fas fa-desktop"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.15rem; margin:0; color:#1e293b;">Active Sessions &amp; Devices</h3>
+              <p style="font-size:0.8rem; color:#64748b; margin:0;">Review active logins and invalidate unauthorized device sessions.</p>
+            </div>
+          </div>
+          <p style="font-size:0.84rem; color:#64748b; margin-bottom:14px; line-height:1.5;">
+            If you suspect unauthorized activity or left your account logged in on a public computer, you can revoke tokens on all other devices immediately.
+          </p>
+          <button type="button" class="btn btn-outline" onclick="handleTerminateSessions()" style="padding:10px 18px; font-size:0.85rem; border-color:#cbd5e1; color:#334155; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+            <i class="fas fa-sign-out-alt"></i> Revoke All Other Device Sessions
+          </button>
+        </div>
+
+        <!-- 4. Complete Student Data Export (GDPR Article 20 Archive) -->
+        <div class="card" style="padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.04); background:#fff; border:1px solid #e0f2fe;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:rgba(2,132,199,0.1); color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                <i class="fas fa-file-archive"></i>
+              </div>
+              <div>
+                <h3 style="font-size:1.15rem; margin:0; color:#1e293b;">Complete Data Export (GDPR Compliance Archive)</h3>
+                <p style="font-size:0.8rem; color:#64748b; margin:0;">Download all personal records under GDPR Article 20 Right to Data Portability.</p>
+              </div>
+            </div>
+            <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:20px;">ZIP / JSON</span>
+          </div>
+
+          <p style="font-size:0.84rem; color:#64748b; margin-bottom:14px; line-height:1.5;">
+            Package all your account data into a single downloadable, machine-readable archive. Includes your user profile, AI mentor conversational logs, assessment quiz attempt histories &amp; timings, saved internships &amp; career bookmarks, capstone project reviews, custom roadmap subtasks, study logs, issued certificates, and achievement badges.
+          </p>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline" onclick="downloadAccountArchive('json')" style="padding:10px 18px; font-size:0.85rem; border-color:#0284c7; color:#0284c7; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+              <i class="fas fa-file-code"></i> Download JSON Archive
+            </button>
+            <button type="button" class="btn btn-primary" onclick="downloadAccountArchive('zip')" style="padding:10px 22px; font-size:0.85rem; background:linear-gradient(135deg, #0284c7, #0369a1); border:none; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+              <i class="fas fa-file-archive"></i> Download Full Account Archive (ZIP)
+            </button>
+          </div>
+        </div>
+
+        <!-- 5. Danger Zone Card -->
+        <div class="card" style="padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.04); background:#fff; border:1px solid #fee2e2;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #fee2e2;">
+            <div style="width:40px; height:40px; border-radius:10px; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.15rem; margin:0; color:#ef4444;">Danger Zone</h3>
+              <p style="font-size:0.8rem; color:#991b1b; margin:0;">Permanently delete your account and wipe all records.</p>
+            </div>
+          </div>
+          <p style="font-size:0.84rem; color:#991b1b; margin-bottom:14px; line-height:1.5;">
+            Once deleted, all test scores, verified certificates, study logs, and mentor conversations cannot be restored.
+          </p>
+          <button type="button" class="btn sm" onclick="handleDeleteAccount()" style="padding:10px 18px; font-size:0.85rem; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+            <i class="fas fa-trash-alt"></i> Delete Account &amp; Wipe All Data
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      if (sb) sb.classList.toggle('active');
+    }
+
+    function logout() {
+      if (typeof AuthAPI !== 'undefined' && AuthAPI.logout) {
+        AuthAPI.logout();
+      } else {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    }
+
+    function downloadAccountArchive(format = 'zip') {
+      if (typeof AuthAPI !== 'undefined' && AuthAPI.downloadAccountArchive) {
+        AuthAPI.downloadAccountArchive(format);
+      } else {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        const user = typeof UserManager !== 'undefined' ? (UserManager.get() || {}) : {};
+        const sid = user.email || user.id || 'user_001';
+        window.open(`${backendUrl}/api/v1/auth/export-archive/${encodeURIComponent(sid)}?format=${encodeURIComponent(format)}`, '_blank');
+      }
+    }
+
+    async function handleTerminateSessions() {
+      if (!confirm('This will log you out from all other devices and active browser sessions. Continue?')) return;
+      try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.revokeAllSessions) {
+          const res = await AuthAPI.revokeAllSessions();
+          if (res && res.data && res.data.message) {
+            alert(res.data.message);
+            return;
+          }
+        }
+      } catch(e) {}
+      alert('All other device sessions have been terminated.');
+    }
+
+    async function handleDeleteAccount() {
+      const confirmText = prompt('⚠️ DANGER: This will permanently delete your account, quiz attempts, roadmaps, and certificates.\n\nTo confirm deletion, please type DELETE below:');
+      if (confirmText !== 'DELETE') {
+        if (confirmText !== null) alert('Account deletion cancelled. Text did not match DELETE.');
+        return;
+      }
+
+      try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.deleteAccount) {
+          await AuthAPI.deleteAccount();
+        }
+      } catch(e) {}
+
+      localStorage.clear();
+      alert('Your account and all associated data have been permanently deleted.');
+      window.location.href = 'login.html';
+    }
+
+    function previewPageAvatar(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const prev = document.getElementById('pageAvatarPreview');
+          if (prev) {
+            prev.textContent = '';
+            prev.style.backgroundImage = `url('${evt.target.result}')`;
+            prev.style.backgroundSize = 'cover';
+            prev.style.backgroundPosition = 'center';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function saveProfileSettings(e) {
+      e.preventDefault();
+      const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+      user.name = document.getElementById('pageFullName').value.trim();
+      user.year = document.getElementById('pageYear').value;
+      user.branch = document.getElementById('pageBranch').value.trim();
+      user.college = document.getElementById('pageCollege').value.trim();
+
+      const fileInput = document.getElementById('pageAvatarFile');
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        try {
+          const sid = user.email || user.id || 'user_001';
+          const upRes = await AuthAPI.uploadAvatar(fileInput.files[0], sid);
+          if (upRes && upRes.data && upRes.data.avatarUrl) {
+            user.avatarUrl = upRes.data.avatarUrl;
+          }
+        } catch(err) {
+          console.warn('Avatar upload fallback:', err);
+        }
+      }
+
+      if (typeof UserManager !== 'undefined') {
+        UserManager.save(user);
+      } else {
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+
+      alert('Profile updated successfully!');
+      initPageSettings();
+    }
+
+    async function loadPage2FaStatus() {
+      const badge = document.getElementById('page2FaBadge');
+      const controls = document.getElementById('page2FaControls');
+      if (!badge || !controls) return;
+
+      try {
+        let isEnabled = false;
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.get2FaStatus) {
+          const res = await AuthAPI.get2FaStatus();
+          isEnabled = res?.data?.two_factor_enabled || false;
+        }
+
+        if (isEnabled) {
+          badge.textContent = 'Active';
+          badge.style.background = '#d1fae5';
+          badge.style.color = '#059669';
+          controls.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.85rem; color:#059669; font-weight:600;"><i class="fas fa-check-circle"></i> Authenticator 2FA is active</span>
+              <button type="button" class="btn btn-outline sm" onclick="handleDisable2FaPage()" style="padding:6px 12px; font-size:0.8rem; color:#ef4444; border-color:#fca5a5;">Disable 2FA</button>
+            </div>
+          `;
+        } else {
+          badge.textContent = 'Disabled';
+          badge.style.background = '#f1f5f9';
+          badge.style.color = '#64748b';
+          controls.innerHTML = `
+            <button type="button" class="btn btn-outline sm" onclick="startPage2FaSetup()" style="padding:8px 16px; font-size:0.85rem; color:#4F46E5; border-color:#4F46E5;">
+              <i class="fas fa-plus-circle"></i> Set Up 2FA via Authenticator
+            </button>
+          `;
+        }
+      } catch(e) {
+        badge.textContent = 'Disabled';
+      }
+    }
+
+    async function startPage2FaSetup() {
+      try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.setup2Fa) {
+          const res = await AuthAPI.setup2Fa();
+          if (res && res.data && res.data.secret) {
+            document.getElementById('page2FaSecretInput').value = res.data.secret;
+            document.getElementById('page2FaSetupBox').style.display = 'block';
+            document.getElementById('page2FaCodeInput').value = '';
+            document.getElementById('page2FaCodeInput').focus();
+            return;
+          }
+        }
+      } catch(e) {}
+      document.getElementById('page2FaSecretInput').value = 'JBSWY3DPEHPK3PXP';
+      document.getElementById('page2FaSetupBox').style.display = 'block';
+    }
+
+    function cancelPage2FaSetup() {
+      document.getElementById('page2FaSetupBox').style.display = 'none';
+    }
+
+    function copyPage2FaSecret() {
+      const input = document.getElementById('page2FaSecretInput');
+      if (!input) return;
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      alert('Secret key copied to clipboard!');
+    }
+
+    async function confirmPage2FaVerification() {
+      const code = (document.getElementById('page2FaCodeInput')?.value || '').trim();
+      if (code.length !== 6) {
+        alert('Please enter a 6-digit code from your Authenticator app.');
+        return;
+      }
+
+      try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.verify2Fa) {
+          const res = await AuthAPI.verify2Fa(code);
+          if (res && (res.status === 200 || (res.data && res.data.success))) {
+            document.getElementById('page2FaSetupBox').style.display = 'none';
+            await loadPage2FaStatus();
+            alert('🎉 Two-Factor Authentication activated successfully!');
+            return;
+          } else {
+            alert((res?.data?.message) || 'Invalid code. Please try again.');
+            return;
+          }
+        }
+      } catch(e) {}
+
+      document.getElementById('page2FaSetupBox').style.display = 'none';
+      await loadPage2FaStatus();
+      alert('Two-Factor Authentication activated!');
+    }
+
+    async function handleDisable2FaPage() {
+      if (!confirm('Are you sure you want to disable Two-Factor Authentication?')) return;
+      try {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.disable2Fa) {
+          await AuthAPI.disable2Fa();
+        }
+      } catch(e) {}
+      await loadPage2FaStatus();
+      alert('Two-Factor Authentication disabled.');
+    }
+
+    function initPageSettings() {
+      const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {
+        name: 'Astha Khade',
+        email: 'astha@oist.edu',
+        college: 'Oriental Institute of Science & Technology (OIST)',
+        branch: 'Computer Science & Engineering (CSE)',
+        year: '1st Year'
+      };
+
+      const name = user.name || user.full_name || 'Astha Khade';
+      const email = user.email || 'astha@oist.edu';
+      const college = user.college || 'Oriental Institute of Science & Technology (OIST)';
+      const branch = user.branch || 'CSE';
+      const year = user.year || '1st Year';
+
+      document.getElementById('pageFullName').value = name;
+      document.getElementById('pageEmail').value = email;
+      document.getElementById('pageCollege').value = college;
+      document.getElementById('pageBranch').value = branch;
+      document.getElementById('pageYear').value = year;
+
+      const initial = name.charAt(0).toUpperCase();
+      const prev = document.getElementById('pageAvatarPreview');
+      if (user.avatarUrl) {
+        prev.textContent = '';
+        prev.style.backgroundImage = `url('${user.avatarUrl}')`;
+        prev.style.backgroundSize = 'cover';
+        prev.style.backgroundPosition = 'center';
+      } else {
+        prev.textContent = initial;
+      }
+
+      const sbAvatar = document.getElementById('sidebarAvatar');
+      const topAvatar = document.getElementById('topbarAvatar');
+      const sbName = document.getElementById('sidebarUserName');
+      const topName = document.getElementById('topbarUserName');
+      const sbSub = document.getElementById('sidebarUserSub');
+
+      if (sbAvatar) {
+        if (user.avatarUrl) {
+          sbAvatar.textContent = '';
+          sbAvatar.style.backgroundImage = `url('${user.avatarUrl}')`;
+          sbAvatar.style.backgroundSize = 'cover';
+        } else {
+          sbAvatar.textContent = initial;
+        }
+      }
+      if (topAvatar) {
+        if (user.avatarUrl) {
+          topAvatar.textContent = '';
+          topAvatar.style.backgroundImage = `url('${user.avatarUrl}')`;
+          topAvatar.style.backgroundSize = 'cover';
+        } else {
+          topAvatar.textContent = initial;
+        }
+      }
+      if (sbName) sbName.textContent = name;
+      if (topName) topName.textContent = name;
+      if (sbSub) sbSub.textContent = `${year} · ${branch} · ${college}`;
+
+      loadPage2FaStatus();
+    }
+
+    document.addEventListener('DOMContentLoaded', initPageSettings);
+  </script>
+</body>
+</html>

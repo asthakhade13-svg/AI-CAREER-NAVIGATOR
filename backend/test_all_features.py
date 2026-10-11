@@ -1,4 +1,7 @@
 import sys
+import io
+import zipfile
+import json
 from fastapi.testclient import TestClient
 from app import app
 from services.auth_service import get_db_connection
@@ -845,6 +848,63 @@ def run_tests():
     assert res_js.status_code == 200 and res_js.json().get("language") == "javascript"
 
     print("[PASS] 42. Embedded Quick Code Runner / Scratchpad (POST /api/v1/roadmap/run-code with sandboxed stdout, stderr & execution timings)")
+    tests_passed += 1
+
+    # 43. Complete Student Data Export (GDPR ZIP / JSON Archive)
+    total_tests += 1
+    # 43.1 Test JSON format archive
+    res_json = client.get("/api/v1/auth/export-archive/test_student_01?format=json")
+    assert res_json.status_code == 200, f"JSON archive export failed: {res_json.text}"
+    archive_json = res_json.json()
+    assert "export_metadata" in archive_json, "Missing export_metadata in JSON archive"
+    assert archive_json["export_metadata"].get("compliance_standard") == "GDPR Article 20 (Right to Data Portability)"
+    assert archive_json["export_metadata"].get("student_id") == "test_student_01"
+    assert "user_profile" in archive_json
+    assert "chat_logs" in archive_json
+    assert "quiz_attempts" in archive_json
+    assert "bookmarks_and_applications" in archive_json
+    assert "project_reviews_and_capstones" in archive_json
+    assert "roadmap_and_custom_subtasks" in archive_json
+    assert "certificates" in archive_json
+    assert "study_logs_and_notes" in archive_json
+    assert "achievement_badges" in archive_json
+    assert "password_hash" not in archive_json["user_profile"], "Sensitive password hash must not be exported"
+
+    # 43.2 Test ZIP format archive
+    res_zip = client.get("/api/v1/auth/export-archive/test_student_01?format=zip")
+    assert res_zip.status_code == 200, f"ZIP archive export failed: {res_zip.status_code}"
+    assert "application/zip" in res_zip.headers.get("content-type", "")
+    assert 'attachment; filename="careernav_archive_test_student_01.zip"' in res_zip.headers.get("content-disposition", "")
+    
+    zip_bytes = io.BytesIO(res_zip.content)
+    with zipfile.ZipFile(zip_bytes, "r") as zf:
+        namelist = zf.namelist()
+        expected_files = [
+            "profile.json",
+            "chat_logs.json",
+            "quiz_attempts.json",
+            "bookmarks_and_applications.json",
+            "project_reviews.json",
+            "roadmap_custom_subtasks.json",
+            "study_logs.json",
+            "certificates.json",
+            "achievement_badges.json",
+            "full_account_manifest.json",
+            "README_GDPR.txt"
+        ]
+        for ef in expected_files:
+            assert ef in namelist, f"File {ef} missing from ZIP archive namelist: {namelist}"
+
+        # Verify README_GDPR.txt contents
+        readme_content = zf.read("README_GDPR.txt").decode("utf-8")
+        assert "GDPR ARTICLE 20" in readme_content.upper(), "GDPR Article 20 explanation missing in README"
+        assert "test_student_01" in readme_content, "Student ID missing in README"
+
+        # Verify parsed profile inside zip
+        profile_in_zip = json.loads(zf.read("profile.json").decode("utf-8"))
+        assert "password_hash" not in profile_in_zip, "Password hash must not be inside profile.json"
+
+    print("[PASS] 43. Complete Student Data Export & GDPR Portable Archive (GET /api/v1/auth/export-archive/{id}?format=zip|json with sanitized manifest)")
     tests_passed += 1
 
     print("==================================================")

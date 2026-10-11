@@ -488,6 +488,14 @@ const AuthAPI = {
             localStorage.clear();
             return { status: 200, data: { success: true, message: 'Account purged.' } };
         }
+    },
+
+    downloadAccountArchive: (format = 'zip', studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+        window.open(`${backendUrl}/api/v1/auth/export-archive/${encodeURIComponent(sid)}?format=${encodeURIComponent(format)}`, '_blank');
     }
 };
 
