@@ -124,29 +124,41 @@ def serve_index_html():
     """Explicit route so /index.html also gets no-cache headers."""
     return _serve_index()
 
-_PORTFOLIO_CANDIDATES = [
-    os.path.join(_this_dir, "..", "frontend", "portfolio.html"),
-    os.path.join(_repo_root, "frontend", "portfolio.html"),
-    os.path.join(_repo_root, "portfolio.html"),
-    os.path.join(_this_dir, "frontend", "portfolio.html"),
-]
-
-def _serve_portfolio():
-    for cand in _PORTFOLIO_CANDIDATES:
+def _serve_page(filename: str):
+    candidates = [
+        os.path.join(_this_dir, "..", "frontend", filename),
+        os.path.join(_repo_root, "frontend", filename),
+        os.path.join(_repo_root, filename),
+        os.path.join(_this_dir, "frontend", filename),
+    ]
+    for cand in candidates:
         norm = os.path.normpath(cand)
         if os.path.exists(norm):
             return FileResponse(norm, headers=_NO_CACHE_HEADERS)
-    return JSONResponse({"message": "CareerNav Student Portfolio"})
+    return JSONResponse({"message": f"{filename} not found"}, status_code=404)
+
+def _serve_portfolio():
+    return _serve_page("portfolio.html")
 
 @app.get("/portfolio/{student_id}")
 def serve_portfolio_for_student(student_id: str):
     """Serves the public student showcase & recruiter portfolio page."""
     return _serve_portfolio()
 
-@app.get("/portfolio.html")
-def serve_portfolio_html_page():
-    """Serves the public student portfolio page."""
-    return _serve_portfolio()
+@app.get("/{page_name}.html")
+def serve_html_page(page_name: str):
+    """Serves frontend html pages with no-cache headers."""
+    return _serve_page(f"{page_name}.html")
+
+@app.get("/{asset_name}.css")
+def serve_css_file(asset_name: str):
+    """Serves frontend css stylesheets."""
+    return _serve_page(f"{asset_name}.css")
+
+@app.get("/api.js")
+def serve_api_js():
+    """Serves frontend api.js SDK."""
+    return _serve_page("api.js")
 
 # Include API routers
 app.include_router(dashboard_routes.router)

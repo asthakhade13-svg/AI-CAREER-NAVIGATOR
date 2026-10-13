@@ -1063,6 +1063,58 @@ def run_tests():
     print("[PASS] 45. Public Student Showcase & Recruiter Portfolio (GET /api/v1/portfolio/{id}, POST /customize, GET /portfolio/{id} HTML with verified certificates, capstones & badges)")
     tests_passed += 1
 
+    # 46. Universal Dark Mode Theme Toggle & Multi-Device Cloud Sync
+    total_tests += 1
+
+    # 46.1 Check theme switcher markup in served HTML pages
+    res_dash = client.get("/dashboard.html")
+    assert res_dash.status_code == 200, f"Dashboard retrieval failed: {res_dash.status_code}"
+    assert "themeToggleBtn" in res_dash.text or "theme-toggle-btn" in res_dash.text, "themeToggleBtn missing from dashboard.html"
+
+    res_port = client.get("/portfolio.html")
+    assert res_port.status_code == 200, f"Portfolio retrieval failed: {res_port.status_code}"
+    assert "themeToggleBtn" in res_port.text or "theme-toggle-btn" in res_port.text, "themeToggleBtn missing from portfolio.html"
+
+    # 46.2 Check [data-theme="dark"] CSS rules
+    res_css = client.get("/style.css")
+    assert res_css.status_code == 200, f"style.css retrieval failed: {res_css.status_code}"
+    assert '[data-theme="dark"]' in res_css.text, "data-theme=dark CSS rule missing from style.css"
+    assert "--bg:" in res_css.text, "CSS background variables missing from style.css"
+    assert "theme-toggle-btn" in res_css.text, ".theme-toggle-btn class missing from style.css"
+
+    # 46.3 Check UserPreferencesAPI in api.js
+    res_api_js = client.get("/api.js")
+    assert res_api_js.status_code == 200, f"api.js retrieval failed: {res_api_js.status_code}"
+    assert "UserPreferencesAPI" in res_api_js.text, "UserPreferencesAPI missing from api.js"
+    assert "toggleTheme" in res_api_js.text, "toggleTheme method missing from api.js"
+
+    # 46.4 Multi-device dark mode state toggling
+    res_pref_dark = client.put("/api/v1/auth/preferences", json={
+        "student_id": "test_theme_user",
+        "dark_mode": True,
+        "email_digest": True,
+        "streak_reminders": True
+    })
+    assert res_pref_dark.status_code == 200 and res_pref_dark.json()["preferences"]["darkMode"] is True
+
+    res_check_dark = client.get("/api/v1/auth/preferences/test_theme_user")
+    assert res_check_dark.status_code == 200 and res_check_dark.json()["preferences"]["darkMode"] is True
+
+    # Toggle back to light
+    res_pref_light = client.put("/api/v1/auth/preferences", json={
+        "student_id": "test_theme_user",
+        "dark_mode": False,
+        "email_digest": True,
+        "streak_reminders": True
+    })
+    assert res_pref_light.status_code == 200 and res_pref_light.json()["preferences"]["darkMode"] is False
+
+    res_check_light = client.get("/api/v1/auth/preferences/test_theme_user")
+    assert res_check_light.status_code == 200 and res_check_light.json()["preferences"]["darkMode"] is False
+
+    print("[PASS] 46. Universal Dark Mode Theme Toggle & Multi-Device Sync (Sun/Moon switch, [data-theme='dark'] CSS vars & PUT /preferences)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

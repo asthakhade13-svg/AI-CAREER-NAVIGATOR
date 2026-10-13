@@ -3,6 +3,13 @@
 // All API calls go through this file
 // ============================================
 
+// Immediate execution snippet to prevent flash of light theme
+try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+} catch(e) {}
+
 // Spring Boot backend URL (defaults to localhost:8080 or custom configured URL)
 const API_BASE_URL = localStorage.getItem('SPRING_API_BASE_URL') || 'http://localhost:8080/api/v1';
 
@@ -2790,7 +2797,7 @@ function bindSidebarUserClicks() {
 // ============================================
 const UserPreferencesAPI = {
     getPreferences: async (studentId = null) => {
-        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || { email: 'astha.khade@oist.edu' };
         const sid = studentId || user.email || user.id || 'user_001';
         try {
             const res = await mlApiCall(`/auth/preferences/${encodeURIComponent(sid)}`, 'GET');
@@ -2802,7 +2809,7 @@ const UserPreferencesAPI = {
     },
 
     savePreferences: async (prefs) => {
-        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || { email: 'astha.khade@oist.edu' };
         const sid = user.email || user.id || 'user_001';
         try {
             const payload = {
@@ -2822,16 +2829,108 @@ const UserPreferencesAPI = {
         return { success: true, preferences: prefs };
     },
 
+    setTheme: (isDark) => {
+        if (isDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (document.body) document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            if (document.body) document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
+        UserPreferencesAPI.updateThemeButtons(isDark);
+    },
+
+    toggleTheme: async () => {
+        const isCurrentDark = document.documentElement.getAttribute('data-theme') === 'dark' || (document.body && document.body.classList.contains('dark-mode'));
+        const nextDark = !isCurrentDark;
+        UserPreferencesAPI.setTheme(nextDark);
+        try {
+            await UserPreferencesAPI.savePreferences({ darkMode: nextDark });
+        } catch(e) {}
+        return nextDark;
+    },
+
+    updateThemeButtons: (isDark) => {
+        const buttons = document.querySelectorAll('.theme-toggle-btn, #themeToggleBtn');
+        buttons.forEach(btn => {
+            const icon = btn.querySelector('.theme-icon') || btn.querySelector('i');
+            if (icon) {
+                icon.className = isDark ? 'fas fa-sun theme-icon' : 'fas fa-moon theme-icon';
+            }
+            btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+            btn.setAttribute('aria-label', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+        });
+        const switchInput = document.getElementById('settingsDarkModeToggle');
+        if (switchInput) {
+            switchInput.checked = isDark;
+        }
+    },
+
+    initThemeToggle: () => {
+        // Wire existing buttons
+        const buttons = document.querySelectorAll('.theme-toggle-btn, #themeToggleBtn');
+        buttons.forEach(btn => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                UserPreferencesAPI.toggleTheme();
+            };
+        });
+
+        // Dynamic insertion if missing in topbar/nav
+        if (buttons.length === 0) {
+            const topbarRight = document.querySelector('.topbar-right');
+            const navRight = document.querySelector('.portfolio-navbar-inner > div:last-child');
+            const verifyHeader = document.querySelector('header > div:last-child');
+            const target = topbarRight || navRight || verifyHeader;
+
+            if (target) {
+                const btn = document.createElement('button');
+                btn.id = 'themeToggleBtn';
+                btn.className = 'theme-toggle-btn';
+                btn.title = 'Toggle theme (Light / Dark)';
+                btn.setAttribute('aria-label', 'Toggle theme');
+                btn.innerHTML = '<i class="fas fa-moon theme-icon"></i>';
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    UserPreferencesAPI.toggleTheme();
+                };
+                target.insertBefore(btn, target.firstChild);
+            }
+        }
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || (document.body && document.body.classList.contains('dark-mode'));
+        UserPreferencesAPI.updateThemeButtons(isDark);
+    },
+
     applyThemeOnLoad: async () => {
         try {
-            const prefs = await UserPreferencesAPI.getPreferences();
-            if (prefs && prefs.darkMode) {
-                document.body.classList.add('dark-mode');
-                document.documentElement.setAttribute('data-theme', 'dark');
+            const cachedTheme = localStorage.getItem('theme');
+            if (cachedTheme === 'dark') {
+                UserPreferencesAPI.setTheme(true);
+            } else if (cachedTheme === 'light') {
+                UserPreferencesAPI.setTheme(false);
             }
-        } catch(e) {}
+
+            UserPreferencesAPI.initThemeToggle();
+
+            // Multi-device cloud sync
+            const prefs = await UserPreferencesAPI.getPreferences();
+            if (prefs && typeof prefs.darkMode === 'boolean') {
+                if (prefs.darkMode && cachedTheme !== 'dark') {
+                    UserPreferencesAPI.setTheme(true);
+                } else if (!prefs.darkMode && cachedTheme === 'dark' && !localStorage.getItem('theme')) {
+                    UserPreferencesAPI.setTheme(false);
+                }
+            }
+        } catch(e) {
+            UserPreferencesAPI.initThemeToggle();
+        }
     }
 };
+
+window.toggleTheme = () => UserPreferencesAPI.toggleTheme();
 
 // ============================================
 // PUBLIC PORTFOLIO & RECRUITER SHOWCASE API
