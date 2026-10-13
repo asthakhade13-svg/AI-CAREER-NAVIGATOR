@@ -163,6 +163,9 @@
 
       <!-- Action Buttons -->
       <div style="margin-top: 22px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+        <a id="btnViewStudentPortfolio" href="portfolio.html" class="btn btn-outline sm" style="padding: 9px 18px; border-radius: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: #4F46E5; border-color: #4F46E5;">
+          <i class="fas fa-id-badge"></i> View Candidate Portfolio
+        </a>
         <button class="btn btn-outline sm" onclick="downloadCertificatePDF()" style="padding: 9px 18px; border-radius: 12px; font-weight: 600;">
           <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 6px;"></i> Download PDF Certificate
         </button>
@@ -246,6 +249,12 @@
           const skillsContainer = document.getElementById('resSkillsContainer');
           if (skillsContainer && certData.skillsAcquired && certData.skillsAcquired.length > 0) {
             skillsContainer.innerHTML = certData.skillsAcquired.map(s => `<span class="badge-tag">${s}</span>`).join('');
+          }
+
+          const portBtn = document.getElementById('btnViewStudentPortfolio');
+          if (portBtn) {
+            const sid = certData.studentId || certData.student_id || 'user_001';
+            portBtn.href = `portfolio.html?studentId=${encodeURIComponent(sid)}`;
           }
 
           document.getElementById('verifyResult').style.display = 'block';

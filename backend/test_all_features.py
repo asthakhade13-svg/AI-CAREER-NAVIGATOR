@@ -990,6 +990,79 @@ def run_tests():
     print("[PASS] 44. Internships Portal: Location & Salary Filters, AI Cover Letter & 1-Click Application Modal (GET /listings?remote&min_stipend&location, POST /generate-cover-letter, POST /apply-one-click)")
     tests_passed += 1
 
+    # 45. Public Student Showcase & Recruiter Portfolio (portfolio.html & /api/v1/portfolio/{id})
+    total_tests += 1
+
+    # 45.1 Portfolio Bundle Data Retrieval
+    res_port = client.get("/api/v1/portfolio/test_student_01")
+    assert res_port.status_code == 200, f"Portfolio fetch failed: {res_port.text}"
+    port_data = res_port.json()
+    assert port_data.get("success") is True, "Portfolio API response success is not True"
+    assert "profile" in port_data, "Profile missing in portfolio data"
+    assert "stats" in port_data, "Stats missing in portfolio data"
+    assert "certificates" in port_data, "Certificates missing in portfolio data"
+    assert "capstones" in port_data, "Capstones missing in portfolio data"
+    assert "badges" in port_data, "Badges missing in portfolio data"
+
+    # Verify Stats & Streaks
+    stats = port_data["stats"]
+    assert stats.get("streakDays", 0) >= 1, "Streak days must be at least 1"
+    assert "roadmapCompletionPercentage" in stats, "Roadmap completion percentage missing"
+    assert "atsScore" in stats, "ATS score missing"
+
+    # Verify Certificates & Percentile
+    certs = port_data["certificates"]
+    assert len(certs) > 0, "Expected at least 1 verified certificate"
+    assert "certificateId" in certs[0], "Certificate ID missing"
+    assert "scorePercentage" in certs[0], "Score percentage missing"
+    assert "percentileRank" in certs[0], "Percentile rank missing"
+    assert "verificationHash" in certs[0], "Cryptographic hash missing"
+
+    # Verify Mentor-Reviewed Capstones
+    capstones = port_data["capstones"]
+    assert len(capstones) > 0, "Expected at least 1 reviewed capstone project"
+    assert "codeQualityGrade" in capstones[0], "Code quality grade missing"
+    assert "reviewerName" in capstones[0], "Reviewer name missing"
+    assert "feedbackNotes" in capstones[0], "Mentor feedback notes missing"
+
+    # Verify Badges
+    badges = port_data["badges"]
+    badge_names = [b.get("name") for b in badges]
+    assert "Consistency King" in badge_names, "Consistency King badge missing"
+    assert "ATS Pro" in badge_names, "ATS Pro badge missing"
+    assert "Capstone Finisher" in badge_names, "Capstone Finisher badge missing"
+    assert "Certified Specialist" in badge_names, "Certified Specialist badge missing"
+
+    # 45.2 Portfolio Customization
+    res_cust = client.post("/api/v1/portfolio/customize", json={
+        "student_id": "test_student_01",
+        "headline": "Lead AI / ML Developer · OIST 2026",
+        "bio": "Full-stack ML engineer passionate about neural vision and edge AI.",
+        "github_url": "https://github.com/asthakhade13-svg",
+        "linkedin_url": "https://linkedin.com/in/asthakhade",
+        "contact_email": "astha@oist.edu"
+    })
+    assert res_cust.status_code == 200, f"Portfolio customization failed: {res_cust.text}"
+    assert res_cust.json().get("success") is True
+
+    # Check updated customization persists
+    res_updated_port = client.get("/api/v1/portfolio/test_student_01")
+    assert res_updated_port.status_code == 200
+    up_prof = res_updated_port.json()["profile"]
+    assert "Lead AI / ML Developer" in up_prof.get("headline", "")
+    assert "Full-stack ML engineer" in up_prof.get("bio", "")
+
+    # 45.3 HTML Routes
+    res_html = client.get("/portfolio/test_student_01")
+    assert res_html.status_code == 200
+    assert "CareerNav" in res_html.text or "Portfolio" in res_html.text
+
+    res_page = client.get("/portfolio.html")
+    assert res_page.status_code == 200
+
+    print("[PASS] 45. Public Student Showcase & Recruiter Portfolio (GET /api/v1/portfolio/{id}, POST /customize, GET /portfolio/{id} HTML with verified certificates, capstones & badges)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

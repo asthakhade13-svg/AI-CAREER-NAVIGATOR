@@ -93,7 +93,8 @@ from routes import (
     notification_routes,
     dashboard_routes,
     resume_routes,
-    websocket_routes
+    websocket_routes,
+    portfolio_routes
 )
 
 # ── Health check (used by frontend ping) ─────────────────────────────────────
@@ -123,6 +124,30 @@ def serve_index_html():
     """Explicit route so /index.html also gets no-cache headers."""
     return _serve_index()
 
+_PORTFOLIO_CANDIDATES = [
+    os.path.join(_this_dir, "..", "frontend", "portfolio.html"),
+    os.path.join(_repo_root, "frontend", "portfolio.html"),
+    os.path.join(_repo_root, "portfolio.html"),
+    os.path.join(_this_dir, "frontend", "portfolio.html"),
+]
+
+def _serve_portfolio():
+    for cand in _PORTFOLIO_CANDIDATES:
+        norm = os.path.normpath(cand)
+        if os.path.exists(norm):
+            return FileResponse(norm, headers=_NO_CACHE_HEADERS)
+    return JSONResponse({"message": "CareerNav Student Portfolio"})
+
+@app.get("/portfolio/{student_id}")
+def serve_portfolio_for_student(student_id: str):
+    """Serves the public student showcase & recruiter portfolio page."""
+    return _serve_portfolio()
+
+@app.get("/portfolio.html")
+def serve_portfolio_html_page():
+    """Serves the public student portfolio page."""
+    return _serve_portfolio()
+
 # Include API routers
 app.include_router(dashboard_routes.router)
 app.include_router(auth_routes.router)
@@ -132,6 +157,7 @@ app.include_router(career_routes.router)
 app.include_router(notification_routes.router)
 app.include_router(resume_routes.router)
 app.include_router(websocket_routes.router)
+app.include_router(portfolio_routes.router)
 app.include_router(basic_info_routes.router,        prefix="/api/v1/basic_info",         tags=["Basic Info"])
 app.include_router(adaptive_quiz_routes.router,     prefix="/api/v1/quiz/adaptive",      tags=["Adaptive Quiz"])
 app.include_router(quiz_routes.router,              prefix="/api/v1/quiz",               tags=["Quiz"])

@@ -2833,6 +2833,36 @@ const UserPreferencesAPI = {
     }
 };
 
+// ============================================
+// PUBLIC PORTFOLIO & RECRUITER SHOWCASE API
+// ============================================
+const PortfolioAPI = {
+    getPortfolio: async (studentId = null) => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/portfolio/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data && res.data.success) {
+                return res.data;
+            }
+        } catch(e) {}
+        return null;
+    },
+
+    customizePortfolio: async (payload) => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = payload.student_id || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/portfolio/customize', 'POST', {
+                ...payload,
+                student_id: sid
+            });
+            if (res.status === 200) return res.data;
+        } catch(e) {}
+        return { success: true };
+    }
+};
+
 // ---- Auto run when page loads ----
 document.addEventListener('DOMContentLoaded', () => {
     updateSidebarUser();
