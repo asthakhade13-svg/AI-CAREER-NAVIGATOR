@@ -349,6 +349,19 @@ def init_sqlite_db():
         except Exception:
             pass
 
+        # 19b. Roadmap Milestone Notes Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS roadmap_milestone_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL,
+            track_key TEXT NOT NULL,
+            milestone_index INTEGER NOT NULL,
+            note_text TEXT DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, track_key, milestone_index)
+        )
+        """)
+
         # 20. Assessment Multi-Attempt History Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS assessment_history (

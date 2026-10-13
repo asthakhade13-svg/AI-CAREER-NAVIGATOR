@@ -1115,12 +1115,88 @@ def run_tests():
     print("[PASS] 46. Universal Dark Mode Theme Toggle & Multi-Device Sync (Sun/Moon switch, [data-theme='dark'] CSS vars & PUT /preferences)")
     tests_passed += 1
 
+    # 47. Milestone Notes & Direct Roadmap Certificate Claim (roadmap.html)
+    total_tests += 1
+
+    # 47.1 Check HTML elements for banner, scratchpad, and claim modal in roadmap.html
+    res_road = client.get("/roadmap.html")
+    assert res_road.status_code == 200, f"roadmap.html retrieval failed: {res_road.status_code}"
+    assert "roadmapCompletionBanner" in res_road.text, "roadmapCompletionBanner missing from roadmap.html"
+    assert "milestoneNoteInput" in res_road.text, "milestoneNoteInput missing from roadmap.html"
+    assert "claimCertModal" in res_road.text, "claimCertModal missing from roadmap.html"
+    assert "claimCertificate" in res_road.text, "claimCertificate handler missing from roadmap.html"
+
+    # 47.2 Save Milestone Note (POST /api/v1/roadmap/milestone-note)
+    res_note_save = client.post("/api/v1/roadmap/milestone-note", json={
+        "student_id": "test_milestone_user",
+        "track_key": "webdev",
+        "milestone_index": 0,
+        "note_text": "# Week 1 Notes\n- Completed HTML/CSS responsive grid\n- Built Flexbox navigation"
+    })
+    assert res_note_save.status_code == 200, f"Save note failed: {res_note_save.text}"
+    note_data = res_note_save.json()
+    assert note_data.get("success") is True or note_data.get("status") in (200, "success")
+    assert note_data["note"]["trackKey"] == "webdev"
+    assert "HTML/CSS responsive grid" in note_data["note"]["noteText"]
+
+    # 47.3 Update existing Milestone Note (Upsert check)
+    res_note_update = client.post("/api/v1/roadmap/milestone-note", json={
+        "student_id": "test_milestone_user",
+        "track_key": "webdev",
+        "milestone_index": 0,
+        "note_text": "# Week 1 Notes (Updated)\n- Completed HTML/CSS responsive grid\n- Built Flexbox navigation & dark theme"
+    })
+    assert res_note_update.status_code == 200
+    assert "dark theme" in res_note_update.json()["note"]["noteText"]
+
+    # 47.4 Save second milestone note
+    client.post("/api/v1/roadmap/milestone-note", json={
+        "student_id": "test_milestone_user",
+        "track_key": "webdev",
+        "milestone_index": 1,
+        "note_text": "# Week 2 JavaScript\n- Practiced async/await and Fetch API"
+    })
+
+    # 47.5 Retrieve Milestone Notes (GET /api/v1/roadmap/milestone-notes/{student_id})
+    res_get_notes = client.get("/api/v1/roadmap/milestone-notes/test_milestone_user?track_key=webdev")
+    assert res_get_notes.status_code == 200, f"Get notes failed: {res_get_notes.text}"
+    notes_dict = res_get_notes.json().get("notes", {})
+    assert len(notes_dict) >= 2, f"Expected at least 2 notes, got {len(notes_dict)}"
+    assert "0" in notes_dict or 0 in notes_dict
+    assert "1" in notes_dict or 1 in notes_dict
+
+    # 47.6 Direct Roadmap Certificate Claim (POST /api/v1/roadmap/claim-certificate)
+    res_claim = client.post("/api/v1/roadmap/claim-certificate", json={
+        "student_id": "test_milestone_user",
+        "student_name": "Test Milestone Student",
+        "track_key": "webdev"
+    })
+    assert res_claim.status_code == 200, f"Claim certificate failed: {res_claim.text}"
+    claim_data = res_claim.json()
+    assert claim_data.get("success") is True or claim_data.get("status") in (200, "success")
+    cert = claim_data["certificate"]
+    assert cert["trackKey"] == "webdev"
+    assert cert["scorePercentage"] == 100
+    assert cert["certificateId"].startswith("CN-")
+    assert len(cert["verificationHash"]) >= 16
+
+    # 47.7 Verify claimed certificate via public verification API
+    res_verify = client.get(f"/api/v1/certificates/verify/{cert['certificateId']}")
+    assert res_verify.status_code == 200, f"Verification failed: {res_verify.text}"
+    verified_cert = res_verify.json().get("verification") or res_verify.json().get("certificate", {})
+    assert verified_cert.get("isValid") is True or verified_cert.get("is_valid") is True
+    assert verified_cert.get("scorePercentage") == 100 or verified_cert.get("score_percentage") == 100
+
+    print("[PASS] 47. Milestone Notes & Direct Roadmap Certificate Claim (POST/GET milestone notes, 100% completion banner, POST /claim-certificate)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
 
 if __name__ == "__main__":
     run_tests()
+
 
 
 

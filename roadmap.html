@@ -96,6 +96,9 @@
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
             <h4 style="margin:0;">🎯 Your Career Path</h4>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-outline sm" style="font-size:0.78rem; padding:6px 12px; border-radius:12px; border-color:#f59e0b; color:#d97706; background:rgba(245,158,11,0.06); cursor:pointer; font-weight:600;" onclick="completeAllMilestonesForTrack()" title="Quick-complete all steps to test 100% completion & certificate claiming">
+                <i class="fas fa-check-double"></i> Complete All (100%)
+              </button>
               <button class="btn btn-outline sm" style="font-size:0.78rem; padding:6px 12px; border-radius:12px; border-color:#059669; color:#059669; background:rgba(16,185,129,0.06); cursor:pointer; font-weight:600;" onclick="openCodeRunnerModal()">
                 <i class="fas fa-terminal"></i> Quick Code Scratchpad
               </button>
@@ -231,6 +234,34 @@
         </div>
       </div>
 
+      <!-- 100% Roadmap Completion & Specialization Certificate Claim Banner -->
+      <div id="roadmapCompletionBanner" class="card" style="display:none; background:linear-gradient(135deg, #064E3B 0%, #065F46 50%, #047857 100%); color:white; border:2px solid #10B981; border-radius:18px; padding:24px; margin-bottom:24px; box-shadow:0 10px 30px rgba(16,185,129,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div style="display:flex; align-items:center; gap:18px;">
+            <div style="width:58px; height:58px; border-radius:16px; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:#FDE047; box-shadow:0 4px 12px rgba(0,0,0,0.2); flex-shrink:0;">
+              🏆
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="background:#FDE047; color:#14532D; font-size:0.72rem; font-weight:800; padding:2px 10px; border-radius:12px; text-transform:uppercase; letter-spacing:0.5px;">Curriculum 100% Mastered</span>
+                <span style="font-size:0.8rem; opacity:0.85;">All Stages Completed</span>
+              </div>
+              <h3 style="font-size:1.35rem; font-weight:800; color:white; margin:4px 0 2px 0;" id="completionBannerTitle">
+                🎉 Congratulations! You have mastered the entire Web Development Track!
+              </h3>
+              <p style="font-size:0.88rem; color:#A7F3D0; margin:0; line-height:1.4;">
+                All milestones, subtasks, and hands-on capstone prerequisites are 100% complete. Claim your official verified specialization credential now.
+              </p>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="btn" onclick="openClaimCertificateModal()" style="background:#FDE047; color:#14532D; font-weight:800; font-size:0.95rem; padding:12px 24px; border-radius:12px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(253,224,71,0.4); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+              <i class="fas fa-award" style="font-size:1.1rem;"></i> Claim Specialization Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- ===== MAIN GRID ===== -->
       <div class="roadmap-main-grid">
 
@@ -314,6 +345,36 @@
               <i class="fas fa-terminal"></i>
               Practice Milestone Code in Scratchpad
             </button>
+
+            <!-- Personal Notes & Reflections Scratchpad -->
+            <div class="milestone-notes-container mt-3" style="border-top:1px solid var(--gray-200); padding-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h5 style="margin:0; font-size:0.95rem; font-weight:700; color:var(--dark); display:flex; align-items:center; gap:6px;">
+                  <i class="fas fa-edit" style="color:var(--primary);"></i>
+                  <span>Milestone Notes &amp; Reflections</span>
+                </h5>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <button type="button" class="btn sm" id="notePreviewToggleBtn" onclick="toggleMilestoneNotePreview()" style="font-size:0.75rem; padding:3px 8px; background:var(--gray-100); border:1px solid var(--gray-200); color:var(--gray-600); border-radius:6px; cursor:pointer;">
+                    <i class="fas fa-eye"></i> Preview
+                  </button>
+                  <span id="noteSaveStatus" style="font-size:0.75rem; color:#10B981; font-weight:700; display:none;"><i class="fas fa-check"></i> Saved ✓</span>
+                </div>
+              </div>
+              <p style="font-size:0.8rem; color:var(--gray-400); margin-bottom:8px;">
+                Record reference links, syntax snippets, and personal reflections for this stage (Markdown supported).
+              </p>
+              <div id="noteEditorWrapper">
+                <textarea id="milestoneNoteInput" placeholder="Write your notes here... e.g.&#10;- Key concept: Closures &amp; Lexical Scope&#10;- Reference: https://developer.mozilla.org&#10;- Reflection: Solved 5 practice exercises on array manipulation." style="width:100%; min-height:85px; padding:10px; border-radius:8px; border:1px solid var(--gray-200); font-family:inherit; font-size:0.85rem; line-height:1.5; resize:vertical; background:var(--gray-100); color:var(--dark); outline:none;" oninput="onMilestoneNoteInput()"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                  <span id="noteCharCount" style="font-size:0.74rem; color:var(--gray-400);">0 characters</span>
+                  <button type="button" class="btn btn-primary sm" onclick="saveCurrentMilestoneNote()" style="font-size:0.8rem; padding:6px 14px; border-radius:8px;">
+                    <i class="fas fa-save"></i> Save Notes
+                  </button>
+                </div>
+              </div>
+              <div id="notePreviewWrapper" style="display:none; min-height:85px; padding:10px; border-radius:8px; border:1px solid var(--gray-200); background:var(--white); font-size:0.85rem; line-height:1.6; color:var(--dark);">
+              </div>
+            </div>
 
           </div>
 
@@ -1203,6 +1264,7 @@ requireAuth();
   let currentStepIdx     = 0;
   let persistedSubtasks  = {};
   let customSubtasksList = [];
+  let persistedMilestoneNotes = {};
 
   async function loadPersistedSubtasks(pathKey) {
     try {
@@ -1215,6 +1277,16 @@ requireAuth();
           if (res.customTasks) {
             customSubtasksList = res.customTasks;
           }
+        }
+      }
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.getMilestoneNotes) {
+        const notesObj = await RoadmapAPI.getMilestoneNotes(pathKey);
+        if (notesObj) {
+          Object.keys(notesObj).forEach(mIdx => {
+            const item = notesObj[mIdx];
+            const text = (item && typeof item === 'object') ? item.noteText : item;
+            persistedMilestoneNotes[`${pathKey}_${mIdx}`] = text || '';
+          });
         }
       }
     } catch(e) {}
@@ -1339,6 +1411,18 @@ requireAuth();
       pct + '% Complete';
     document.getElementById('opFill').style.width =
       pct + '%';
+
+    // 100% Roadmap Completion Banner
+    const compBanner = document.getElementById('roadmapCompletionBanner');
+    if (compBanner) {
+      if (pct >= 100) {
+        compBanner.style.display = 'block';
+        const bTitle = document.getElementById('completionBannerTitle');
+        if (bTitle) bTitle.textContent = `🎉 Congratulations! You have mastered the entire ${path.title}!`;
+      } else {
+        compBanner.style.display = 'none';
+      }
+    }
 
     // Build timeline
     const timeline = document.getElementById('timeline');
@@ -1497,6 +1581,24 @@ requireAuth();
             .forEach((el, i) => {
       el.classList.toggle('is-active', i === idx);
     });
+
+    // Milestone Personal Notes & Reflections
+    const noteKey = `${pathKey}_${idx}`;
+    const existingNote = (persistedMilestoneNotes && persistedMilestoneNotes[noteKey]) || localStorage.getItem('roadmap_notes_' + noteKey) || '';
+    const noteInput = document.getElementById('milestoneNoteInput');
+    if (noteInput) {
+      noteInput.value = existingNote;
+      updateMilestoneNoteCharCount();
+    }
+    const noteStatus = document.getElementById('noteSaveStatus');
+    if (noteStatus) noteStatus.style.display = 'none';
+
+    // If preview wrapper is active, re-render markdown preview
+    const previewWrapper = document.getElementById('notePreviewWrapper');
+    const editorWrapper = document.getElementById('noteEditorWrapper');
+    if (previewWrapper && editorWrapper && previewWrapper.style.display !== 'none') {
+      previewWrapper.innerHTML = renderMarkdownSimple(existingNote || '*No notes recorded for this milestone stage yet.*');
+    }
   }
 
   // ========================================
@@ -2075,6 +2177,217 @@ console.log("Hello from CareerNav Scratchpad! 🚀");`
   }
 
   // ========================================
+  // MILESTONE STUDY NOTES & REFLECTIONS
+  // ========================================
+  function updateMilestoneNoteCharCount() {
+    const input = document.getElementById('milestoneNoteInput');
+    const countEl = document.getElementById('noteCharCount');
+    if (input && countEl) {
+      const len = input.value.length;
+      countEl.textContent = `${len} character${len === 1 ? '' : 's'}`;
+    }
+  }
+
+  function onMilestoneNoteInput() {
+    updateMilestoneNoteCharCount();
+    const statusEl = document.getElementById('noteSaveStatus');
+    if (statusEl) statusEl.style.display = 'none';
+  }
+
+  async function saveCurrentMilestoneNote() {
+    const noteInput = document.getElementById('milestoneNoteInput');
+    if (!noteInput) return;
+    const noteText = noteInput.value.trim();
+    const noteKey = `${currentPath}_${currentStepIdx}`;
+    if (!persistedMilestoneNotes) persistedMilestoneNotes = {};
+    persistedMilestoneNotes[noteKey] = noteText;
+    localStorage.setItem('roadmap_notes_' + noteKey, noteText);
+
+    const noteStatus = document.getElementById('noteSaveStatus');
+    if (noteStatus) {
+      noteStatus.style.display = 'inline-block';
+      noteStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+
+    try {
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.saveMilestoneNote) {
+        await RoadmapAPI.saveMilestoneNote(currentPath, currentStepIdx, noteText);
+      }
+    } catch(e) {}
+
+    if (noteStatus) {
+      noteStatus.innerHTML = '<i class="fas fa-check"></i> Saved ✓';
+      setTimeout(() => {
+        if (noteStatus) noteStatus.style.display = 'none';
+      }, 3500);
+    }
+  }
+
+  function toggleMilestoneNotePreview() {
+    const editorWrapper = document.getElementById('noteEditorWrapper');
+    const previewWrapper = document.getElementById('notePreviewWrapper');
+    const btn = document.getElementById('notePreviewToggleBtn');
+    if (!editorWrapper || !previewWrapper || !btn) return;
+
+    const isPreview = previewWrapper.style.display !== 'none';
+    if (isPreview) {
+      previewWrapper.style.display = 'none';
+      editorWrapper.style.display = 'block';
+      btn.innerHTML = '<i class="fas fa-eye"></i> Preview';
+    } else {
+      const input = document.getElementById('milestoneNoteInput');
+      const text = input ? input.value : '';
+      previewWrapper.innerHTML = renderMarkdownSimple(text);
+      editorWrapper.style.display = 'none';
+      previewWrapper.style.display = 'block';
+      btn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+    }
+  }
+
+  function renderMarkdownSimple(text) {
+    if (!text || !text.trim()) {
+      return '<p style="color:var(--gray-400); font-style:italic; margin:0;">No study notes recorded for this milestone stage yet.</p>';
+    }
+    let html = escapeHtml(text);
+
+    // Headers
+    html = html.replace(/^### (.*$)/gim, '<h5 style="margin:8px 0 4px; font-weight:700; color:var(--dark);">$1</h5>');
+    html = html.replace(/^## (.*$)/gim, '<h4 style="margin:10px 0 4px; font-weight:700; color:var(--dark);">$1</h4>');
+    html = html.replace(/^# (.*$)/gim, '<h3 style="margin:12px 0 6px; font-weight:800; color:var(--dark);">$1</h3>');
+
+    // Bold & Italics
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code style="background:rgba(99,102,241,0.1); color:#4F46E5; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:0.85em;">$1</code>');
+
+    // Markdown Links [text](url)
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--primary); text-decoration:underline; font-weight:600;">$1 <i class="fas fa-external-link-alt" style="font-size:0.75em;"></i></a>');
+
+    // Raw URLs (not already inside href)
+    html = html.replace(/(^|[^"])((https?:\/\/[^\s<]+))/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--primary); text-decoration:underline;">$2 <i class="fas fa-external-link-alt" style="font-size:0.75em;"></i></a>');
+
+    // Bullet points
+    html = html.replace(/^\- (.*$)/gim, '<li style="margin-left:18px; margin-bottom:4px;">$1</li>');
+
+    // Line breaks
+    html = html.replace(/\n/g, '<br/>');
+
+    return `<div style="line-height:1.6; word-break:break-word;">${html}</div>`;
+  }
+
+  // ========================================
+  // COMPLETE ALL MILESTONES (TEST 100% TRIGGER)
+  // ========================================
+  async function completeAllMilestonesForTrack() {
+    const path = roadmaps[currentPath];
+    if (!path) return;
+    path.steps.forEach(s => s.status = 'done');
+    path.weekly.forEach(w => w.done = true);
+    await renderRoadmap(currentPath);
+    showStepDetail(currentPath, currentStepIdx || 0);
+
+    const banner = document.getElementById('roadmapCompletionBanner');
+    if (banner) {
+      banner.style.display = 'block';
+      banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (typeof showSuccess === 'function') {
+      showSuccess(`🎉 Congratulations! All milestones completed for ${path.title}. Claim your Specialization Certificate now!`);
+    }
+  }
+
+  // ========================================
+  // SPECIALIZATION CERTIFICATE CLAIM HANDLERS
+  // ========================================
+  let _lastIssuedCertId = null;
+
+  function openClaimCertificateModal() {
+    const modal = document.getElementById('claimCertModal');
+    if (!modal) return;
+    const path = roadmaps[currentPath] || { title: 'Specialization Track' };
+    const trackTitleEl = document.getElementById('modalTrackTitle');
+    if (trackTitleEl) trackTitleEl.textContent = path.title;
+
+    const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+    const nameInput = document.getElementById('claimStudentNameInput');
+    if (nameInput) nameInput.value = user.fullName || user.name || 'Astha Khade';
+
+    document.getElementById('claimCertFormSection').style.display = 'block';
+    document.getElementById('claimCertSuccessSection').style.display = 'none';
+
+    modal.style.display = 'flex';
+  }
+
+  function closeClaimCertificateModal() {
+    const modal = document.getElementById('claimCertModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function submitCertificateClaim() {
+    const nameInput = document.getElementById('claimStudentNameInput');
+    const studentName = (nameInput ? nameInput.value.trim() : '') || 'Astha Khade';
+    const confirmBtn = document.getElementById('confirmClaimBtn');
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Cryptographic Credential...';
+    }
+
+    try {
+      const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+      const sid = user.email || user.id || 'user_001';
+      let certRes = null;
+
+      if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.claimCertificate) {
+        certRes = await RoadmapAPI.claimCertificate(currentPath, studentName, sid);
+      } else if (typeof CertificateAPI !== 'undefined' && CertificateAPI.generate) {
+        certRes = await CertificateAPI.generate({
+          student_id: sid,
+          student_name: studentName,
+          track_key: currentPath,
+          score_percentage: 100
+        });
+      }
+
+      const cert = (certRes && certRes.certificate) ? certRes.certificate : (certRes && certRes.data ? certRes.data.certificate : null);
+      if (cert) {
+        _lastIssuedCertId = cert.certificateId;
+        document.getElementById('issuedCertId').textContent = cert.certificateId;
+        document.getElementById('issuedCertHash').textContent = cert.verificationHash || 'SHA-256 Validated';
+        document.getElementById('claimCertFormSection').style.display = 'none';
+        document.getElementById('claimCertSuccessSection').style.display = 'block';
+      } else {
+        alert('Certificate issued! Your certificate is now available on your portfolio.');
+        closeClaimCertificateModal();
+      }
+    } catch(err) {
+      alert('Error claiming certificate: ' + (err.message || 'Please try again.'));
+    } finally {
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-certificate"></i> Generate &amp; Cryptographically Sign Credential';
+      }
+    }
+  }
+
+  function openIssuedCertificateView() {
+    if (_lastIssuedCertId) {
+      window.open('verify.html?certId=' + encodeURIComponent(_lastIssuedCertId), '_blank');
+    } else {
+      window.open('verify.html', '_blank');
+    }
+  }
+
+  function downloadIssuedCertificatePdf() {
+    if (_lastIssuedCertId) {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const backendUrl = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
+      window.open(`${backendUrl}/api/v1/certificates/pdf/${encodeURIComponent(_lastIssuedCertId)}`, '_blank');
+    }
+  }
+
+  // ========================================
   // INIT
   // ========================================
   updateSidebarUser();
@@ -2095,6 +2408,72 @@ console.log("Hello from CareerNav Scratchpad! 🚀");`
 
   renderRoadmap(initialPath);
   </script>
+
+  <!-- ===== SPECIALIZATION CERTIFICATE CLAIM MODAL ===== -->
+  <div id="claimCertModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:16px;">
+    <div class="card" style="max-width:540px; width:100%; background:var(--white); border-radius:22px; padding:32px; box-shadow:0 25px 60px rgba(0,0,0,0.3); border:1px solid var(--gray-200); position:relative; text-align:center;">
+      <button type="button" onclick="closeClaimCertificateModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; color:var(--gray-400); font-size:1.2rem; cursor:pointer;">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div style="width:72px; height:72px; border-radius:20px; background:linear-gradient(135deg, #10B981, #06B6D4); color:white; display:flex; align-items:center; justify-content:center; font-size:2.2rem; margin:0 auto 16px auto; box-shadow:0 8px 24px rgba(16,185,129,0.35);">
+        🏆
+      </div>
+
+      <span class="badge" style="background:#D1FAE5; color:#065F46; font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:20px; margin-bottom:8px; display:inline-block;">
+        Curriculum 100% Completed
+      </span>
+
+      <h3 style="font-size:1.45rem; font-weight:800; color:var(--dark); margin:8px 0 6px 0;">
+        Claim Specialization Certificate
+      </h3>
+      <p style="font-size:0.88rem; color:var(--gray-600); margin-bottom:20px; line-height:1.5;">
+        You have successfully completed every single milestone in the <strong id="modalTrackTitle" style="color:var(--primary);">Web Development</strong> specialization track.
+      </p>
+
+      <div id="claimCertFormSection">
+        <div style="text-align:left; margin-bottom:16px;">
+          <label style="display:block; font-size:0.82rem; font-weight:600; color:var(--dark); margin-bottom:6px;">Full Name on Certificate</label>
+          <input type="text" id="claimStudentNameInput" value="Astha Khade" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--gray-200); font-size:0.9rem; background:var(--gray-100); color:var(--dark); outline:none;" />
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full" id="confirmClaimBtn" onclick="submitCertificateClaim()" style="padding:12px; font-weight:700; font-size:0.95rem; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <i class="fas fa-certificate"></i> Generate &amp; Cryptographically Sign Credential
+        </button>
+      </div>
+
+      <!-- Success Result Box (Hidden until issued) -->
+      <div id="claimCertSuccessSection" style="display:none; text-align:center;">
+        <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:14px; padding:16px; margin-bottom:18px; text-align:left;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:#166534; font-size:0.9rem;"><i class="fas fa-check-circle" style="color:#16A34A;"></i> Credential Issued Successfully</strong>
+            <span class="badge" style="background:#DCFCE7; color:#15803D; font-size:0.75rem;">100% Score</span>
+          </div>
+          <div style="font-size:0.82rem; color:#374151; font-family:monospace; margin-bottom:4px;">
+            <strong>ID:</strong> <span id="issuedCertId">CN-2026-WEBD-XXXXXX</span>
+          </div>
+          <div style="font-size:0.78rem; color:#6B7280; word-break:break-all;">
+            <strong>Hash:</strong> <span id="issuedCertHash">SHA-256 Verified</span>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button type="button" class="btn btn-primary" id="viewIssuedCertBtn" onclick="openIssuedCertificateView()" style="width:100%; padding:10px; font-weight:700; font-size:0.9rem; border-radius:10px;">
+            <i class="fas fa-external-link-alt"></i> View &amp; Verify Credential
+          </button>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-outline" id="downloadIssuedPdfBtn" onclick="downloadIssuedCertificatePdf()" style="flex:1; padding:9px; font-size:0.82rem; font-weight:600; border-radius:10px;">
+              <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+            <button type="button" class="btn btn-outline" id="portfolioBtn" onclick="window.location.href='portfolio.html'" style="flex:1; padding:9px; font-size:0.82rem; font-weight:600; border-radius:10px;">
+              <i class="fas fa-user-astronaut"></i> Portfolio
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
 </body>
 </html>

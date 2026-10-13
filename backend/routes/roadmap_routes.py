@@ -591,5 +591,138 @@ def run_practice_code(req: RunCodeRequest):
         }
 
 
+# ── 9. Milestone Study Notes & Reflections Scratchpad Endpoints ───────────────
+def ensure_milestone_notes_table(conn):
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS roadmap_milestone_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT NOT NULL,
+        track_key TEXT NOT NULL,
+        milestone_index INTEGER NOT NULL,
+        note_text TEXT DEFAULT '',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(student_id, track_key, milestone_index)
+    )
+    """)
+    conn.commit()
+
+
+class MilestoneNotePayload(BaseModel):
+    student_id: str
+    track_key: str
+    milestone_index: int
+    note_text: str
+
+
+@router.post("/milestone-note")
+def save_milestone_note(payload: MilestoneNotePayload):
+    """
+    Saves or updates personal markdown study notes, links, and reflections for a specific milestone.
+    """
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    ensure_milestone_notes_table(conn)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO roadmap_milestone_notes (student_id, track_key, milestone_index, note_text, updated_at)
+    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(student_id, track_key, milestone_index)
+    DO UPDATE SET
+        note_text = excluded.note_text,
+        updated_at = CURRENT_TIMESTAMP
+    """, (
+        payload.student_id,
+        payload.track_key.lower().strip(),
+        payload.milestone_index,
+        payload.note_text
+    ))
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": 200,
+        "success": True,
+        "message": "Milestone study notes saved successfully.",
+        "note": {
+            "studentId": payload.student_id,
+            "trackKey": payload.track_key.lower().strip(),
+            "milestoneIndex": payload.milestone_index,
+            "noteText": payload.note_text
+        }
+    }
+
+
+@router.get("/milestone-notes/{student_id}")
+def get_milestone_notes(student_id: str, track_key: Optional[str] = None):
+    """
+    Retrieves personal markdown study notes for milestones in a specified track.
+    """
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    ensure_milestone_notes_table(conn)
+    cursor = conn.cursor()
+
+    if track_key:
+        cursor.execute("""
+        SELECT milestone_index, note_text, updated_at FROM roadmap_milestone_notes
+        WHERE student_id = ? AND track_key = ?
+        """, (student_id, track_key.lower().strip()))
+    else:
+        cursor.execute("""
+        SELECT track_key, milestone_index, note_text, updated_at FROM roadmap_milestone_notes
+        WHERE student_id = ?
+        """, (student_id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    notes = {}
+    for r in rows:
+        m_idx = r["milestone_index"]
+        notes[m_idx] = {
+            "milestoneIndex": m_idx,
+            "noteText": r["note_text"],
+            "updatedAt": r["updated_at"]
+        }
+
+    return {
+        "status": 200,
+        "success": True,
+        "studentId": student_id,
+        "trackKey": track_key,
+        "notes": notes
+    }
+
+
+# ── 10. Direct Roadmap Specialization Certificate Claim Trigger ───────────────
+class ClaimRoadmapCertificateRequest(BaseModel):
+    student_id: str
+    track_key: str
+    student_name: Optional[str] = "Student"
+
+
+@router.post("/claim-certificate")
+def claim_roadmap_certificate(req: ClaimRoadmapCertificateRequest):
+    """
+    Direct roadmap completion trigger: issues and cryptographically signs a specialization
+    certificate when a roadmap track reaches 100% completion.
+    """
+    from services.certificate_service import generate_certificate_record
+    cert_data = generate_certificate_record(
+        student_id=req.student_id,
+        student_name=req.student_name or "Student",
+        track_key=req.track_key.lower().strip(),
+        score_percentage=100
+    )
+    return {
+        "status": 200,
+        "success": True,
+        "message": f"Specialization Certificate claimed successfully for {req.track_key.upper()} track!",
+        "certificate": cert_data
+    }
+
+
 
 

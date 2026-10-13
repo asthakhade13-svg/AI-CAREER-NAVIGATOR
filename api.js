@@ -1047,6 +1047,50 @@ const RoadmapAPI = {
         return null;
     },
 
+    getMilestoneNotes: async (trackKey = null, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        const url = trackKey ? `/roadmap/milestone-notes/${encodeURIComponent(sid)}?track_key=${encodeURIComponent(trackKey)}` : `/roadmap/milestone-notes/${encodeURIComponent(sid)}`;
+        try {
+            const res = await mlApiCall(url, 'GET');
+            if (res.status === 200 && res.data && res.data.notes) {
+                return res.data.notes;
+            }
+        } catch(e) {}
+        return {};
+    },
+
+    saveMilestoneNote: async (trackKey, milestoneIndex, noteText, studentId = null) => {
+        const user = UserManager.get() || { email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall('/roadmap/milestone-note', 'POST', {
+                student_id: sid,
+                track_key: trackKey,
+                milestone_index: milestoneIndex,
+                note_text: noteText
+            });
+            return res.data;
+        } catch(e) {
+            return { success: false };
+        }
+    },
+
+    claimCertificate: async (trackKey, studentName = null, studentId = null) => {
+        const user = UserManager.get() || { name: 'Astha Khade', email: 'user_001' };
+        const sid = studentId || user.email || user.id || 'user_001';
+        const sName = studentName || user.fullName || user.name || 'Astha Khade';
+        try {
+            const res = await mlApiCall('/roadmap/claim-certificate', 'POST', {
+                student_id: sid,
+                track_key: trackKey,
+                student_name: sName
+            });
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
     completeMilestone: (milestoneId) =>
         apiCall('/roadmap/complete/' + milestoneId, 'PUT')
 };
