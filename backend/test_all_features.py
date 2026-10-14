@@ -1241,6 +1241,77 @@ def run_tests():
     print("[PASS] 48. AI Mentor Chatbot (Audio Voice TTS, Context-Aware Roadmap Memory & Code Sandbox Runner)")
     tests_passed += 1
 
+    # 49. Frontend Google One-Tap / OAuth & Interactive Forgot Password Modal (login.html)
+    total_tests += 1
+
+    # 49.1 Verify login.html markup for Google One-Tap and Forgot Password modal
+    res_login_html = client.get("/login.html")
+    assert res_login_html.status_code == 200, f"login.html retrieval failed: {res_login_html.status_code}"
+    assert "googleLoginBtn" in res_login_html.text, "googleLoginBtn missing from login.html"
+    assert "googleOneTapModal" in res_login_html.text, "googleOneTapModal missing from login.html"
+    assert "continueWithGoogle" in res_login_html.text, "continueWithGoogle handler missing from login.html"
+    assert "forgotModal" in res_login_html.text, "forgotModal missing from login.html"
+    assert "handleSendOtp" in res_login_html.text, "handleSendOtp handler missing from login.html"
+    assert "handleResetPassword" in res_login_html.text, "handleResetPassword handler missing from login.html"
+
+    # 49.2 Google OAuth Consent URL (GET /api/v1/auth/google/url)
+    res_gurl = client.get("/api/v1/auth/google/url")
+    assert res_gurl.status_code == 200, f"Google URL failed: {res_gurl.text}"
+    gurl_data = res_gurl.json()
+    assert gurl_data.get("success") is True
+    assert "accounts.google.com" in gurl_data.get("authUrl", "")
+    assert "clientId" in gurl_data
+
+    # 49.3 Google Callback / One-Tap Authentication (POST /api/v1/auth/google/callback)
+    res_gcb = client.post("/api/v1/auth/google/callback", json={
+        "email": "student.onetap@oist.edu",
+        "name": "OneTap Student",
+        "avatar_url": "https://example.com/avatar.png"
+    })
+    assert res_gcb.status_code == 200, f"Google callback failed: {res_gcb.text}"
+    gcb_data = res_gcb.json()
+    assert gcb_data.get("token") is not None
+    assert gcb_data["user"]["email"] == "student.onetap@oist.edu"
+
+    # 49.4 Interactive Forgot Password & OTP Flow via SMTP
+    # Register test user for password reset
+    client.post("/api/v1/auth/register", json={
+        "full_name": "Reset Student User",
+        "email": "reset.student.test@oist.edu",
+        "password": "initial_password_123"
+    })
+
+    # Dispatch OTP via SMTP / simulated delivery
+    res_forgot = client.post("/api/v1/auth/forgot-password", json={
+        "email": "reset.student.test@oist.edu"
+    })
+    assert res_forgot.status_code == 200, f"Forgot password failed: {res_forgot.text}"
+    forgot_data = res_forgot.json()
+    assert forgot_data.get("success") is True
+    otp_code = forgot_data.get("otp")
+    assert otp_code is not None and len(otp_code) == 6
+
+    # Reset password with OTP
+    res_reset = client.post("/api/v1/auth/reset-password", json={
+        "email": "reset.student.test@oist.edu",
+        "otp": otp_code,
+        "new_password": "updated_new_password_789"
+    })
+    assert res_reset.status_code == 200, f"Reset password failed: {res_reset.text}"
+    reset_data = res_reset.json()
+    assert reset_data.get("success") is True
+
+    # Verify updated password logs in successfully
+    res_relogin = client.post("/api/v1/auth/login", json={
+        "email": "reset.student.test@oist.edu",
+        "password": "updated_new_password_789"
+    })
+    assert res_relogin.status_code == 200, f"Login with updated password failed: {res_relogin.text}"
+    assert res_relogin.json().get("token") is not None
+
+    print("[PASS] 49. Frontend Google One-Tap / OAuth & Interactive Forgot Password Modal (login.html, GET /google/url, POST /forgot-password SMTP OTP)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
