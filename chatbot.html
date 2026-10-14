@@ -109,13 +109,50 @@
                 <p>AI Career Mentor · Always Online</p>
               </div>
             </div>
-            <button
-              class="clear-btn"
-              onclick="clearChat()"
-              title="Clear chat"
-            >
-              <i class="fas fa-trash"></i>
-            </button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button
+                class="chat-tool-btn"
+                id="ttsToggleGlobal"
+                onclick="toggleAutoRead()"
+                title="Auto-read mentor replies out loud (Text-to-Speech)"
+                type="button"
+              >
+                <i class="fas fa-volume-up"></i>
+              </button>
+              <button
+                class="clear-btn"
+                onclick="clearChat()"
+                title="Clear chat"
+                type="button"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ===== CONTEXT-AWARE ROADMAP MEMORY BANNER ===== -->
+          <div class="roadmap-context-banner" id="roadmapContextBanner" style="display:none;">
+            <div class="rc-left">
+              <div class="rc-icon">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+              <div class="rc-details">
+                <div class="rc-meta">
+                  <span class="rc-track-badge" id="rcTrackBadge">Web Development</span>
+                  <span class="rc-progress" id="rcProgress">25% complete</span>
+                </div>
+                <h4 class="rc-title" id="rcMilestoneTitle">Milestone 2: JavaScript Fundamentals &amp; DOM</h4>
+                <p class="rc-topics" id="rcTopics">Focus: Higher-order array methods · Async/await · DOM manipulation</p>
+              </div>
+            </div>
+            <div class="rc-actions">
+              <button type="button" class="rc-btn rc-btn-primary" onclick="askMilestonePractice()" title="Ask AI Mentor for a tailored practice challenge">
+                <i class="fas fa-code"></i> <span>Practice Challenge</span>
+              </button>
+              <button type="button" class="rc-btn rc-btn-outline" onclick="askMilestoneHelp()" title="Ask AI Mentor to explain current milestone concepts">
+                <i class="fas fa-lightbulb"></i> <span>Explain Concepts</span>
+              </button>
+            </div>
           </div>
 
           <!-- Messages Area -->
@@ -577,59 +614,394 @@ async function loadChatHistory() {
     }
 }
 
-// Add message to chat
+// ============================================
+// FORMATTING, CODE SANDBOX & AUDIO TTS ENGINE
+// ============================================
+let autoReadEnabled = false;
+let currentlySpeakingBtn = null;
+let currentRoadmapContext = null;
+
+function escapeHtml(str) {
+    return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(str) {
+    return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function cleanTextForSpeech(raw) {
+    return (raw || '')
+        .replace(/```[\s\S]*?```/g, ' [Code challenge provided in the sandbox below] ')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/[#*_~>]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function toggleAutoRead() {
+    autoReadEnabled = !autoReadEnabled;
+    const btn = document.getElementById('ttsToggleGlobal');
+    if (btn) {
+        btn.classList.toggle('active', autoReadEnabled);
+        btn.title = autoReadEnabled ? 'Auto-Read is ON (Click to disable)' : 'Auto-Read is OFF (Click to enable)';
+        btn.innerHTML = autoReadEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
+    }
+}
+
+function speakText(text, btnEl = null) {
+    if (!window.speechSynthesis) {
+        alert('Web Speech Synthesis is not supported in this browser.');
+        return;
+    }
+
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        if (currentlySpeakingBtn) {
+            currentlySpeakingBtn.classList.remove('speaking');
+            currentlySpeakingBtn.innerHTML = '<i class="fas fa-volume-up"></i> <span>Listen</span>';
+        }
+        if (currentlySpeakingBtn === btnEl) {
+            currentlySpeakingBtn = null;
+            return;
+        }
+    }
+
+    const clean = cleanTextForSpeech(text);
+    if (!clean) return;
+
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.lang = 'en-US';
+
+    const voices = window.speechSynthesis.getVoices();
+    const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('David')));
+    if (naturalVoice) utterance.voice = naturalVoice;
+
+    if (btnEl) {
+        currentlySpeakingBtn = btnEl;
+        btnEl.classList.add('speaking');
+        btnEl.innerHTML = '<i class="fas fa-volume-high fa-beat"></i> <span>Stop</span>';
+    }
+
+    utterance.onend = () => {
+        if (btnEl) {
+            btnEl.classList.remove('speaking');
+            btnEl.innerHTML = '<i class="fas fa-volume-up"></i> <span>Listen</span>';
+        }
+        currentlySpeakingBtn = null;
+    };
+
+    utterance.onerror = () => {
+        if (btnEl) {
+            btnEl.classList.remove('speaking');
+            btnEl.innerHTML = '<i class="fas fa-volume-up"></i> <span>Listen</span>';
+        }
+        currentlySpeakingBtn = null;
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function toggleSpeakMessage(btn) {
+    const bubble = btn.closest('.msg-bubble');
+    if (!bubble) return;
+    const text = bubble.getAttribute('data-raw-text') || bubble.innerText || '';
+    speakText(text, btn);
+}
+
+function formatMessageContent(rawText, msgId) {
+    if (!rawText) return '';
+    let text = rawText;
+
+    // Extract triple backtick code blocks into interactive code sandboxes
+    const codeBlocks = [];
+    text = text.replace(/```([a-zA-Z0-9_\-\+]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        const cleanLang = (lang || 'python').toLowerCase().trim();
+        const blockId = 'sb_' + msgId + '_' + codeBlocks.length;
+        codeBlocks.push({ id: blockId, lang: cleanLang, code: code.trim() });
+        return `___CODE_BLOCK_${codeBlocks.length - 1}___`;
+    });
+
+    // Format markdown elements
+    text = text
+        .replace(/### (.*?)(?:\n|$)/g, '<h5 style="margin:8px 0 4px 0; font-size:0.92rem; font-weight:700; color:var(--dark);">$1</h5>')
+        .replace(/## (.*?)(?:\n|$)/g, '<h4 style="margin:10px 0 6px 0; font-size:0.98rem; font-weight:700; color:var(--dark);">$1</h4>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06); padding:2px 5px; border-radius:4px; font-size:0.84em; font-family:monospace;">$1</code>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--primary); text-decoration:underline; font-weight:600;">$1</a>')
+        .replace(/\n/g, '<br/>');
+
+    // Reinsert interactive code sandboxes
+    codeBlocks.forEach((cb, idx) => {
+        const escapedCode = escapeHtml(cb.code);
+        const langIcon = cb.lang.includes('js') || cb.lang.includes('javascript') ? 'fab fa-js' : (cb.lang.includes('py') ? 'fab fa-python' : 'fas fa-terminal');
+        const sandboxHtml = `
+        <div class="chat-code-sandbox" id="${cb.id}">
+          <div class="sandbox-header">
+            <div class="sandbox-lang">
+              <i class="${langIcon}"></i>
+              <span>${cb.lang.toUpperCase()} SANDBOX</span>
+            </div>
+            <div class="sandbox-btns">
+              <button type="button" class="sandbox-btn" onclick="copySandboxCode('${cb.id}')" title="Copy code snippet">
+                <i class="fas fa-copy"></i> <span>Copy</span>
+              </button>
+              <button type="button" class="sandbox-btn run-btn" id="runBtn_${cb.id}" onclick="runSandboxSnippet('${cb.id}', '${cb.lang}')" title="Execute this code directly">
+                <i class="fas fa-play"></i> <span>Run Code</span>
+              </button>
+            </div>
+          </div>
+          <pre class="sandbox-pre"><code id="code_${cb.id}" contenteditable="true" spellcheck="false">${escapedCode}</code></pre>
+          <div class="sandbox-console" id="console_${cb.id}" style="display:none;">
+            <div class="console-top">
+              <span class="console-label"><i class="fas fa-terminal"></i> Output</span>
+              <span class="console-timing" id="time_${cb.id}"></span>
+              <button type="button" class="console-clear" onclick="closeSandboxConsole('${cb.id}')" title="Close console">&times;</button>
+            </div>
+            <pre class="console-body" id="output_${cb.id}"></pre>
+          </div>
+        </div>`;
+        text = text.replace(`___CODE_BLOCK_${idx}___`, sandboxHtml);
+    });
+
+    return text;
+}
+
+// Sandbox execution handler
+async function runSandboxSnippet(sandboxId, lang) {
+    const codeEl = document.getElementById(`code_${sandboxId}`);
+    const runBtn = document.getElementById(`runBtn_${sandboxId}`);
+    const consoleEl = document.getElementById(`console_${sandboxId}`);
+    const outputEl = document.getElementById(`output_${sandboxId}`);
+    const timeEl = document.getElementById(`time_${sandboxId}`);
+
+    if (!codeEl) return;
+    const code = codeEl.innerText || codeEl.textContent || '';
+    const cleanLang = (lang || 'python').toLowerCase();
+
+    if (runBtn) {
+        runBtn.disabled = true;
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+    }
+
+    if (consoleEl) consoleEl.style.display = 'block';
+    if (outputEl) {
+        outputEl.className = 'console-body';
+        outputEl.textContent = 'Executing snippet in sandbox...';
+    }
+
+    const startTime = performance.now();
+
+    try {
+        let res = null;
+        if (cleanLang.includes('js') || cleanLang.includes('javascript')) {
+            const logs = [];
+            const originalLog = console.log;
+            const originalError = console.error;
+            try {
+                console.log = (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+                console.error = (...args) => logs.push('[ERROR] ' + args.join(' '));
+                const fn = new Function(code);
+                fn();
+                const duration = (performance.now() - startTime).toFixed(1);
+                res = {
+                    success: true,
+                    stdout: logs.join('\n') || 'Code executed successfully (no stdout returned).',
+                    executionTimeMs: duration
+                };
+            } catch(evalErr) {
+                const duration = (performance.now() - startTime).toFixed(1);
+                res = {
+                    success: false,
+                    stderr: String(evalErr.message || evalErr),
+                    executionTimeMs: duration
+                };
+            } finally {
+                console.log = originalLog;
+                console.error = originalError;
+            }
+        } else {
+            if (typeof ChatAPI !== 'undefined' && ChatAPI.runCode) {
+                res = await ChatAPI.runCode(code, cleanLang);
+            } else if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.runCode) {
+                res = await RoadmapAPI.runCode(code, cleanLang);
+            }
+        }
+
+        if (res) {
+            const elapsed = res.executionTimeMs ? `${res.executionTimeMs}ms` : `${(performance.now() - startTime).toFixed(1)}ms`;
+            if (timeEl) timeEl.textContent = `⚡ ${elapsed}`;
+
+            if (res.success && res.stdout) {
+                outputEl.textContent = res.stdout;
+                outputEl.classList.remove('has-error');
+            } else if (!res.success && res.stderr) {
+                outputEl.textContent = res.stderr;
+                outputEl.classList.add('has-error');
+            } else {
+                outputEl.textContent = res.stdout || res.message || 'Execution completed with no output.';
+                outputEl.classList.remove('has-error');
+            }
+        }
+    } catch(err) {
+        if (outputEl) {
+            outputEl.textContent = 'Execution error: ' + (err.message || 'Sandbox runner failed.');
+            outputEl.classList.add('has-error');
+        }
+    } finally {
+        if (runBtn) {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+        }
+    }
+}
+
+function copySandboxCode(sandboxId) {
+    const codeEl = document.getElementById(`code_${sandboxId}`);
+    if (!codeEl) return;
+    const text = codeEl.innerText || codeEl.textContent || '';
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector(`#${sandboxId} .sandbox-btn`);
+        if (btn) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check" style="color:#10B981;"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = orig; }, 1800);
+        }
+    }).catch(() => {
+        alert('Code copied to clipboard!');
+    });
+}
+
+function closeSandboxConsole(sandboxId) {
+    const consoleEl = document.getElementById(`console_${sandboxId}`);
+    if (consoleEl) consoleEl.style.display = 'none';
+}
+
+// Add message to chat with Code Sandbox & Audio TTS
 function addMessage(text, sender, autoScroll = true) {
-    const container =
-        document.getElementById('chatMessages');
+    const container = document.getElementById('chatMessages');
     const now = new Date();
     const time = now.toLocaleTimeString([], {
         hour: '2-digit', minute: '2-digit'
     });
 
     const wrapper = document.createElement('div');
-    wrapper.className =
-        `msg ${sender === 'user'
-               ? 'user-msg' : 'bot-msg'}`;
-
-    const formatted = text
-        .replace(/\*\*(.*?)\*\*/g,
-            '<strong>$1</strong>')
-        .replace(/\n/g, '<br/>');
+    wrapper.className = `msg ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
 
     if (sender === 'user') {
+        const formatted = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br/>');
         wrapper.innerHTML = `
             <div class="msg-bubble user-bubble">
                 <p>${formatted}</p>
                 <span class="msg-time">${time}</span>
             </div>
             <div class="msg-avatar user-av">
-                ${user ? user.fullName.charAt(0) : 'U'}
+                ${user ? (user.fullName || 'Astha').charAt(0) : 'U'}
             </div>
         `;
     } else {
+        const formatted = formatMessageContent(text, messageCount);
         wrapper.innerHTML = `
             <div class="msg-avatar">
                 <i class="fas fa-robot"></i>
             </div>
-            <div class="msg-bubble">
-                <p>${formatted}</p>
-                <span class="msg-time">${time}</span>
+            <div class="msg-bubble" data-raw-text="${escapeAttr(text)}">
+                <div class="msg-content">${formatted}</div>
+                <div class="msg-footer">
+                    <span class="msg-time">${time}</span>
+                    <button type="button" class="speak-btn" onclick="toggleSpeakMessage(this)" title="Read mentor advice out loud (Text-to-Speech)">
+                        <i class="fas fa-volume-up"></i> <span>Listen</span>
+                    </button>
+                </div>
             </div>
         `;
+
+        if (autoReadEnabled && autoScroll) {
+            setTimeout(() => {
+                const speakBtn = wrapper.querySelector('.speak-btn');
+                speakText(text, speakBtn);
+            }, 300);
+        }
     }
 
     container.appendChild(wrapper);
     if (autoScroll) scrollToBottom();
 }
 
+// Context-Aware Roadmap Memory loader
+async function loadRoadmapContext() {
+    try {
+        const userObj = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = localStorage.getItem('user_id') || userObj.id || userObj.email || 'user_001';
+        let ctx = null;
+        if (typeof ChatAPI !== 'undefined' && ChatAPI.getRoadmapContext) {
+            ctx = await ChatAPI.getRoadmapContext(sid);
+        }
+
+        if (ctx) {
+            currentRoadmapContext = ctx;
+            const banner = document.getElementById('roadmapContextBanner');
+            if (banner) {
+                banner.style.display = 'flex';
+                const trackBadge = document.getElementById('rcTrackBadge');
+                if (trackBadge) trackBadge.textContent = ctx.trackTitle || ctx.trackKey.toUpperCase();
+                const prog = document.getElementById('rcProgress');
+                if (prog) prog.textContent = `${Math.round(ctx.percentComplete)}% complete`;
+                const titleEl = document.getElementById('rcMilestoneTitle');
+                if (titleEl) titleEl.textContent = `Milestone ${ctx.milestoneNumber}: ${ctx.milestoneTitle}`;
+                const topicsEl = document.getElementById('rcTopics');
+                if (topicsEl && ctx.pendingTopics && ctx.pendingTopics.length > 0) {
+                    topicsEl.textContent = `Focus: ${ctx.pendingTopics.slice(0, 3).join(' · ')}`;
+                }
+            }
+        }
+    } catch(err) {
+        console.warn('Roadmap context load notice:', err);
+    }
+}
+
+function askMilestonePractice() {
+    if (currentRoadmapContext && currentRoadmapContext.suggestedPracticePrompt) {
+        fillPrompt(currentRoadmapContext.suggestedPracticePrompt);
+        sendMessage();
+    } else {
+        fillPrompt("Give me a practice coding problem tailored to my current roadmap milestone with starter code!");
+        sendMessage();
+    }
+}
+
+function askMilestoneHelp() {
+    if (currentRoadmapContext && currentRoadmapContext.suggestedExplanationPrompt) {
+        fillPrompt(currentRoadmapContext.suggestedExplanationPrompt);
+        sendMessage();
+    } else {
+        fillPrompt("Can you explain the key concepts of my current roadmap milestone with clean code examples?");
+        sendMessage();
+    }
+}
+
 // Typing indicator
 function showTyping() {
     isTyping = true;
-    document.getElementById('sendBtn')
-        .disabled = true;
+    document.getElementById('sendBtn').disabled = true;
 
-    const container =
-        document.getElementById('chatMessages');
+    const container = document.getElementById('chatMessages');
     const typing = document.createElement('div');
     typing.className = 'msg bot-msg';
     typing.id = 'typingIndicator';
@@ -651,10 +1023,8 @@ function showTyping() {
 
 function removeTyping() {
     isTyping = false;
-    document.getElementById('sendBtn')
-        .disabled = false;
-    const indicator =
-        document.getElementById('typingIndicator');
+    document.getElementById('sendBtn').disabled = false;
+    const indicator = document.getElementById('typingIndicator');
     if (indicator) indicator.remove();
 }
 
@@ -672,19 +1042,16 @@ function handleKey(e) {
 
 function autoResize(el) {
     el.style.height = 'auto';
-    el.style.height =
-        Math.min(el.scrollHeight, 120) + 'px';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
 function sendQuick(btn) {
-    document.getElementById('userInput').value =
-        btn.textContent.trim();
+    document.getElementById('userInput').value = btn.textContent.trim();
     sendMessage();
 }
 
 function fillPrompt(text) {
-    const input =
-        document.getElementById('userInput');
+    const input = document.getElementById('userInput');
     input.value = text;
     input.focus();
     autoResize(input);
@@ -692,35 +1059,29 @@ function fillPrompt(text) {
 
 async function clearChat() {
     if (!confirm('Clear chat history?')) return;
-    const container =
-        document.getElementById('chatMessages');
+    const container = document.getElementById('chatMessages');
     container.innerHTML = '';
-    const qp =
-        document.getElementById('quickPrompts');
+    const qp = document.getElementById('quickPrompts');
     if (qp) qp.style.display = 'block';
-    
+
     try {
         if (typeof ChatAPI !== 'undefined' && ChatAPI.clearHistory) {
             await ChatAPI.clearHistory();
         }
     } catch(e) {}
 
-    addMessage(
-        'Chat cleared! 👋 How can I help you?',
-        'bot'
-    );
+    addMessage('Chat cleared! 👋 How can I help you?', 'bot');
     messageCount = 0;
-    document.getElementById('msgCount')
-        .textContent = '0';
+    document.getElementById('msgCount').textContent = '0';
 }
 
 function toggleSidebar() {
-    document.getElementById('sidebar')
-        .classList.toggle('open');
+    document.getElementById('sidebar').classList.toggle('open');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     loadChatHistory();
+    loadRoadmapContext();
 });
 </script>
 

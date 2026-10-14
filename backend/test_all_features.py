@@ -1190,6 +1190,57 @@ def run_tests():
     print("[PASS] 47. Milestone Notes & Direct Roadmap Certificate Claim (POST/GET milestone notes, 100% completion banner, POST /claim-certificate)")
     tests_passed += 1
 
+    # 48. AI Mentor Chatbot (Audio TTS, Context-Aware Roadmap Memory & Code Sandbox Runner)
+    total_tests += 1
+
+    # 48.1 Check HTML elements in chatbot.html
+    res_chat = client.get("/chatbot.html")
+    assert res_chat.status_code == 200, f"chatbot.html retrieval failed: {res_chat.status_code}"
+    assert "ttsToggleGlobal" in res_chat.text, "ttsToggleGlobal missing from chatbot.html"
+    assert "roadmapContextBanner" in res_chat.text, "roadmapContextBanner missing from chatbot.html"
+    assert "formatMessageContent" in res_chat.text, "formatMessageContent renderer missing from chatbot.html"
+    assert "runSandboxSnippet" in res_chat.text, "runSandboxSnippet handler missing from chatbot.html"
+    assert "speakText" in res_chat.text, "speakText Web Speech Synthesis missing from chatbot.html"
+
+    # 48.2 Context-Aware Roadmap Memory Endpoint (GET /api/v1/chatbot/roadmap-context/{student_id})
+    res_ctx = client.get("/api/v1/chatbot/roadmap-context/test_student_01")
+    assert res_ctx.status_code == 200, f"Roadmap context failed: {res_ctx.text}"
+    ctx_data = res_ctx.json()
+    assert ctx_data.get("success") is True
+    ctx = ctx_data.get("context", {})
+    assert "trackKey" in ctx and ctx["trackKey"] in ["webdev", "aiml", "cybersecurity", "datascience", "uiux", "cloud"]
+    assert "milestoneTitle" in ctx
+    assert "practiceProblem" in ctx
+    assert "starterCode" in ctx["practiceProblem"]
+    assert len(ctx["pendingTopics"]) > 0
+
+    # 48.3 Chat with Context-Aware Roadmap Practice Prompt (POST /api/v1/chatbot/chat)
+    res_chat_msg = client.post("/api/v1/chatbot/chat", json={
+        "student_id": "test_student_01",
+        "message": "Give me a practice problem for my roadmap"
+    })
+    assert res_chat_msg.status_code == 200, f"Chat message failed: {res_chat_msg.text}"
+    chat_resp = res_chat_msg.json()
+    assert chat_resp.get("success") is True
+    reply_text = chat_resp.get("response") or chat_resp.get("reply") or ""
+    assert "```" in reply_text or "Milestone" in reply_text or "Challenge" in reply_text
+
+    # 48.4 Code Sandbox Runner Endpoint (POST /api/v1/chatbot/run-code)
+    res_code = client.post("/api/v1/chatbot/run-code", json={
+        "student_id": "test_student_01",
+        "code": "print('CareerNav Chat Sandbox: PASS')\nresult = [x**2 for x in [1, 2, 3, 4]]\nprint('Squares:', result)",
+        "language": "python"
+    })
+    assert res_code.status_code == 200, f"Run code failed: {res_code.text}"
+    run_data = res_code.json()
+    assert run_data.get("success") is True
+    assert "CareerNav Chat Sandbox: PASS" in run_data.get("stdout", "")
+    assert "Squares: [1, 4, 9, 16]" in run_data.get("stdout", "")
+    assert run_data.get("executionTimeMs", 0) >= 0
+
+    print("[PASS] 48. AI Mentor Chatbot (Audio Voice TTS, Context-Aware Roadmap Memory & Code Sandbox Runner)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

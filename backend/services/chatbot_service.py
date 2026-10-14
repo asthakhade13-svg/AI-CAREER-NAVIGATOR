@@ -1,6 +1,6 @@
 import logging
 import requests
-from typing import Optional
+from typing import Optional, Dict, Any, List
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -14,6 +14,464 @@ Your mission is to provide clear, actionable, friendly, and structured guidance 
 
 Format your responses with clear markdown, bullet points, and actionable next steps."""
 
+# ── Dynamic Track Roadmap Metadata & Tailored Practice Challenges ───────────
+TRACK_ROADMAP_METADATA = {
+    "webdev": {
+        "title": "Full-Stack Web Engineering",
+        "milestones": [
+            {
+                "index": 0,
+                "title": "HTML5 & CSS Responsive Grid",
+                "week": "Week 1 – 2",
+                "topics": ["Semantic HTML", "CSS Flexbox & Grid", "Media Queries", "Responsive Layouts"],
+                "challenge": "Implement a viewport breakpoint analyzer that maps screen pixel widths to responsive grid column configurations.",
+                "lang": "javascript",
+                "starterCode": """// Milestone 1 Challenge: Responsive Grid Breakpoint Helper
+function getActiveBreakpoint(viewportWidth) {
+    if (viewportWidth >= 1200) return { breakpoint: "xl", columns: 12, label: "Desktop Wide" };
+    if (viewportWidth >= 992)  return { breakpoint: "lg", columns: 8,  label: "Laptop" };
+    if (viewportWidth >= 768)  return { breakpoint: "md", columns: 6,  label: "Tablet" };
+    return { breakpoint: "sm", columns: 2, label: "Mobile" };
+}
+
+console.log("Viewport 1440px ->", getActiveBreakpoint(1440));
+console.log("Viewport 820px  ->", getActiveBreakpoint(820));
+console.log("Viewport 390px  ->", getActiveBreakpoint(390));"""
+            },
+            {
+                "index": 1,
+                "title": "JavaScript Fundamentals & DOM",
+                "week": "Week 3 – 4",
+                "topics": ["Variables & scoping", "Higher-order array methods", "Async/await & Promises", "DOM event listeners"],
+                "challenge": "Build an async task filtering function using map, filter, and reduce to calculate study completion metrics.",
+                "lang": "javascript",
+                "starterCode": """// Milestone 2 Challenge: Array Transformation & Statistics
+const learningTasks = [
+    { title: "Flexbox Froggy", completed: true, timeMinutes: 30 },
+    { title: "DOM Event Delegation", completed: true, timeMinutes: 45 },
+    { title: "Fetch API & JSON", completed: false, timeMinutes: 60 },
+    { title: "Async/Await Refactoring", completed: false, timeMinutes: 40 }
+];
+
+function analyzeRoadmapTasks(tasks) {
+    const completed = tasks.filter(t => t.completed);
+    const totalTimeSpent = completed.reduce((sum, t) => sum + t.timeMinutes, 0);
+    const pendingNames = tasks.filter(t => !t.completed).map(t => t.title);
+
+    return {
+        completedCount: completed.length,
+        totalTimeSpentMinutes: totalTimeSpent,
+        nextUpcoming: pendingNames[0] || "None"
+    };
+}
+
+console.log("Task Progress Report:", analyzeRoadmapTasks(learningTasks));"""
+            },
+            {
+                "index": 2,
+                "title": "React.js State & Hooks",
+                "week": "Week 5 – 6",
+                "topics": ["Functional components", "useState & useEffect", "Component props", "Custom hooks"],
+                "challenge": "Implement a pure state reducer simulation for managing a counter and study log history.",
+                "lang": "javascript",
+                "starterCode": """// Milestone 3 Challenge: Reducer State Simulation
+function studyLogReducer(state, action) {
+    switch (action.type) {
+        case 'LOG_HOURS':
+            return {
+                ...state,
+                totalHours: state.totalHours + action.hours,
+                logs: [...state.logs, { day: action.day, hours: action.hours }]
+            };
+        case 'RESET':
+            return { totalHours: 0, logs: [] };
+        default:
+            return state;
+    }
+}
+
+let state = { totalHours: 0, logs: [] };
+state = studyLogReducer(state, { type: 'LOG_HOURS', day: 'Mon', hours: 2.5 });
+state = studyLogReducer(state, { type: 'LOG_HOURS', day: 'Tue', hours: 3.0 });
+console.log("Final State:", state);"""
+            },
+            {
+                "index": 3,
+                "title": "Backend APIs with Node.js & Express",
+                "week": "Week 7 – 8",
+                "topics": ["Express route controllers", "Middleware chaining", "REST status codes", "Input validation"],
+                "challenge": "Write a mock Express route validation middleware function.",
+                "lang": "python",
+                "starterCode": """# Milestone 4 Challenge: API Request Validator
+def validate_student_payload(data):
+    required_fields = ["student_id", "track_key", "milestone_index"]
+    missing = [f for f in required_fields if f not in data or data[f] is None]
+    
+    if missing:
+        return {"valid": False, "status": 400, "error": f"Missing required fields: {', '.join(missing)}"}
+    
+    if not isinstance(data["milestone_index"], int) or data["milestone_index"] < 0:
+        return {"valid": False, "status": 422, "error": "milestone_index must be a non-negative integer"}
+    
+    return {"valid": True, "status": 200, "message": "Payload verified."}
+
+print(validate_student_payload({"student_id": "user_001", "track_key": "webdev", "milestone_index": 2}))
+print(validate_student_payload({"student_id": "user_001", "milestone_index": -1}))"""
+            },
+            {
+                "index": 4,
+                "title": "Database Schema Design & Full Stack Project",
+                "week": "Week 9 – 12",
+                "topics": ["Relational DB schemas", "SQL queries & indexing", "JWT authentication", "Cloud deployment"],
+                "challenge": "Write an in-memory SQL mock query to aggregate student scores.",
+                "lang": "python",
+                "starterCode": """# Milestone 5 Challenge: Leaderboard Aggregator
+students = [
+    {"name": "Astha", "score": 98, "track": "webdev"},
+    {"name": "Rahul", "score": 85, "track": "aiml"},
+    {"name": "Priya", "score": 94, "track": "webdev"},
+    {"name": "Karan", "score": 79, "track": "webdev"}
+]
+
+def rank_students_by_track(records, track):
+    filtered = [s for s in records if s["track"] == track]
+    sorted_records = sorted(filtered, key=lambda x: x["score"], reverse=True)
+    return [{"rank": i + 1, "name": s["name"], "score": s["score"]} for i, s in enumerate(sorted_records)]
+
+print("WebDev Rankings:", rank_students_by_track(students, "webdev"))"""
+            }
+        ]
+    },
+    "aiml": {
+        "title": "AI & Machine Learning Engineering",
+        "milestones": [
+            {
+                "index": 0,
+                "title": "Python for Data Science & NumPy",
+                "week": "Week 1 – 2",
+                "topics": ["NumPy array broadcasting", "Pandas DataFrame operations", "Vectorized math", "Matplotlib"],
+                "challenge": "Implement vector Euclidean distance and Cosine Similarity without heavy dependencies.",
+                "lang": "python",
+                "starterCode": """# Milestone 1 Challenge: Vector Operations from Scratch
+import math
+
+def euclidean_distance(v1, v2):
+    if len(v1) != len(v2):
+        raise ValueError("Vectors must have equal length")
+    return round(math.sqrt(sum((a - b) ** 2 for a, b in zip(v1, v2))), 4)
+
+def cosine_similarity(v1, v2):
+    dot_product = sum(a * b for a, b in zip(v1, v2))
+    norm_v1 = math.sqrt(sum(a ** 2 for a in v1))
+    norm_v2 = math.sqrt(sum(b ** 2 for b in v2))
+    return round(dot_product / (norm_v1 * norm_v2), 4)
+
+vec_a = [1.2, 3.4, 0.8]
+vec_b = [1.5, 3.1, 1.0]
+
+print("Euclidean Distance:", euclidean_distance(vec_a, vec_b))
+print("Cosine Similarity: ", cosine_similarity(vec_a, vec_b))"""
+            },
+            {
+                "index": 1,
+                "title": "Supervised Learning & Model Evaluation",
+                "week": "Week 3 – 4",
+                "topics": ["Linear & Logistic Regression", "Decision Trees", "Train-Test Splits", "Confusion Matrix & F1-Score"],
+                "challenge": "Calculate Precision, Recall, Accuracy, and F1-score from raw confusion matrix values.",
+                "lang": "python",
+                "starterCode": """# Milestone 2 Challenge: Classification Metrics Evaluator
+def evaluate_classification(tp, fp, tn, fn):
+    accuracy = (tp + tn) / (tp + fp + tn + fn)
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    
+    return {
+        "Accuracy": round(accuracy, 4),
+        "Precision": round(precision, 4),
+        "Recall": round(recall, 4),
+        "F1_Score": round(f1, 4)
+    }
+
+print("Model Performance:", evaluate_classification(tp=85, fp=15, tn=90, fn=10))"""
+            },
+            {
+                "index": 2,
+                "title": "Deep Learning & Neural Networks",
+                "week": "Week 5 – 6",
+                "topics": ["Multilayer Perceptrons", "Activation functions (ReLU, Sigmoid)", "Backpropagation", "PyTorch tensors"],
+                "challenge": "Implement forward pass of a 2-layer neural network with ReLU activation.",
+                "lang": "python",
+                "starterCode": """# Milestone 3 Challenge: 2-Layer Forward Pass with ReLU
+def relu(x):
+    return max(0.0, x)
+
+def forward_pass(inputs, weights, bias):
+    z = sum(w * x for w, x in zip(weights, inputs)) + bias
+    return relu(z)
+
+x = [0.5, 1.2]
+w = [0.4, -0.2]
+b = 0.1
+
+output = forward_pass(x, w, b)
+print("Input:", x)
+print("Neuron Output (ReLU):", round(output, 4))"""
+            }
+        ]
+    },
+    "cybersecurity": {
+        "title": "Cybersecurity & Defense Analysis",
+        "milestones": [
+            {
+                "index": 0,
+                "title": "Networking & Linux Security Foundations",
+                "week": "Week 1 – 2",
+                "topics": ["OSI model & TCP/IP handshakes", "Linux permission bitmasks", "Bash scripting", "Wireshark packet analysis"],
+                "challenge": "Parse CIDR notation to calculate subnet host capacity.",
+                "lang": "python",
+                "starterCode": """# Milestone 1 Challenge: Subnet Capacity Calculator
+def cidr_hosts(cidr_mask):
+    if not (0 <= cidr_mask <= 32):
+        raise ValueError("Invalid CIDR mask")
+    host_bits = 32 - cidr_mask
+    total_addresses = 2 ** host_bits
+    usable_hosts = max(0, total_addresses - 2)
+    return {"mask": f"/{cidr_mask}", "totalAddresses": total_addresses, "usableHosts": usable_hosts}
+
+for mask in [24, 28, 30]:
+    print(f"Mask /{mask}:", cidr_hosts(mask))"""
+            },
+            {
+                "index": 1,
+                "title": "Web Security & OWASP Top 10 Defense",
+                "week": "Week 3 – 4",
+                "topics": ["SQL Injection sanitization", "XSS mitigation & CSP", "CSRF tokens", "IDOR prevention"],
+                "challenge": "Write an HTML sanitizer function to escape dangerous tags.",
+                "lang": "python",
+                "starterCode": """# Milestone 2 Challenge: XSS HTML Sanitizer
+import html
+
+def sanitize_user_comment(comment):
+    sanitized = html.escape(comment.strip())
+    has_script_payload = any(tag in comment.lower() for tag in ["<script>", "javascript:", "onload=", "onerror="])
+    return {
+        "originalLength": len(comment),
+        "sanitizedOutput": sanitized,
+        "threatFlagged": has_script_payload
+    }
+
+print(sanitize_user_comment("Hello World! Great article."))
+print(sanitize_user_comment("<script>alert('XSS')</script>"))"""
+            }
+        ]
+    },
+    "datascience": {
+        "title": "Data Science & Analytics",
+        "milestones": [
+            {
+                "index": 0,
+                "title": "Data Wrangling & Statistical Foundations",
+                "week": "Week 1 – 2",
+                "topics": ["Pandas aggregation", "Mean, Median, Standard Deviation", "Outlier detection (IQR)", "Data cleaning"],
+                "challenge": "Detect outliers using IQR rule.",
+                "lang": "python",
+                "starterCode": """# Milestone 1 Challenge: IQR Outlier Detector
+def find_iqr_outliers(data):
+    sorted_d = sorted(data)
+    n = len(sorted_d)
+    q1 = sorted_d[n // 4]
+    q3 = sorted_d[(3 * n) // 4]
+    iqr = q3 - q1
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+    
+    outliers = [x for x in data if x < lower_bound or x > upper_bound]
+    return {"Q1": q1, "Q3": q3, "IQR": iqr, "outliers": outliers}
+
+salaries = [35000, 42000, 45000, 49000, 52000, 55000, 58000, 62000, 150000]
+print("Outlier Detection:", find_iqr_outliers(salaries))"""
+            }
+        ]
+    },
+    "uiux": {
+        "title": "UI/UX & Product Design",
+        "milestones": [
+            {
+                "index": 0,
+                "title": "Design Systems & 8pt Grid Layouts",
+                "week": "Week 1 – 2",
+                "topics": ["8pt grid alignment", "WCAG AA contrast calculation", "Auto Layout", "Component tokens"],
+                "challenge": "Calculate if a color contrast ratio satisfies WCAG AA (4.5:1).",
+                "lang": "javascript",
+                "starterCode": """// Milestone 1 Challenge: WCAG Contrast Ratio Checker
+function calculateRelativeLuminance(r, g, b) {
+    const sRGB = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
+}
+
+function checkContrast(lum1, lum2) {
+    const brighter = Math.max(lum1, lum2);
+    const darker = Math.min(lum1, lum2);
+    const ratio = (brighter + 0.05) / (darker + 0.05);
+    return {
+        ratio: ratio.toFixed(2) + ":1",
+        passesAA: ratio >= 4.5
+    };
+}
+
+const textLum = calculateRelativeLuminance(15, 23, 42); // Slate 900
+const bgLum = calculateRelativeLuminance(255, 255, 255); // White
+console.log("Contrast Result:", checkContrast(textLum, bgLum));"""
+            }
+        ]
+    },
+    "cloud": {
+        "title": "Cloud Architecture & DevOps",
+        "milestones": [
+            {
+                "index": 0,
+                "title": "Docker Containers & Microservices",
+                "week": "Week 1 – 2",
+                "topics": ["Multi-stage Dockerfiles", "Image optimization", "Container networks", "Docker Compose"],
+                "challenge": "Parse and validate environment variables for container configuration.",
+                "lang": "python",
+                "starterCode": """# Milestone 1 Challenge: Container Env Validator
+def validate_container_env(env_vars):
+    required = ["PORT", "DATABASE_URL", "NODE_ENV"]
+    missing = [k for k in required if k not in env_vars]
+    port_valid = str(env_vars.get("PORT", "")).isdigit()
+    
+    return {
+        "isValid": len(missing) == 0 and port_valid,
+        "missing": missing,
+        "portValid": port_valid
+    }
+
+print("Dev Config:", validate_container_env({"PORT": "8000", "DATABASE_URL": "sqlite:///db.sqlite", "NODE_ENV": "development"}))
+print("Broken Config:", validate_container_env({"PORT": "abc"}))"""
+            }
+        ]
+    }
+}
+
+
+def get_student_roadmap_context(student_id: str, track_key: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Retrieves the student's active roadmap milestone progress, completion metrics,
+    and tailored practice problems to enable context-aware AI mentorship.
+    """
+    from services.auth_service import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    active_track = (track_key or "").lower().strip()
+    student_name = "Student"
+
+    # Lookup user info
+    try:
+        cursor.execute("SELECT full_name, career_track FROM users WHERE id = ? OR email = ?", (student_id, student_id))
+        user_row = cursor.fetchone()
+        if user_row:
+            student_name = user_row["full_name"] or "Student"
+            if not active_track and user_row["career_track"]:
+                active_track = user_row["career_track"].lower().strip()
+    except Exception:
+        pass
+
+    # If track still not known, check roadmap_subtasks
+    if not active_track or active_track not in TRACK_ROADMAP_METADATA:
+        try:
+            cursor.execute("SELECT track_key FROM roadmap_subtasks WHERE student_id = ? ORDER BY completed_at DESC LIMIT 1", (student_id,))
+            st_row = cursor.fetchone()
+            if st_row and st_row["track_key"]:
+                active_track = st_row["track_key"].lower().strip()
+        except Exception:
+            pass
+
+    # Normalize track aliases
+    if active_track in ("cyber", "infosec", "security"):
+        active_track = "cybersecurity"
+    elif active_track in ("web", "fullstack", "frontend"):
+        active_track = "webdev"
+    elif active_track in ("ai", "ml", "machine-learning"):
+        active_track = "aiml"
+    elif active_track in ("ds", "data", "analytics"):
+        active_track = "datascience"
+    elif active_track in ("design", "ux", "ui"):
+        active_track = "uiux"
+    elif active_track in ("devops", "aws", "gcp"):
+        active_track = "cloud"
+
+    if active_track not in TRACK_ROADMAP_METADATA:
+        active_track = "webdev"
+
+    track_info = TRACK_ROADMAP_METADATA[active_track]
+    track_title = track_info["title"]
+    milestones = track_info["milestones"]
+
+    # Query subtasks
+    subtasks = []
+    try:
+        cursor.execute("""
+        SELECT subtask_id, is_completed, milestone_index, subtask_text
+        FROM roadmap_subtasks
+        WHERE student_id = ? AND (track_key = ? OR track_key = ?)
+        """, (student_id, active_track, "webdev" if active_track == "webdev" else active_track))
+        subtasks = cursor.fetchall()
+    except Exception:
+        pass
+
+    conn.close()
+
+    total_subtasks = len(subtasks)
+    completed_subtasks = sum(1 for s in subtasks if s["is_completed"])
+    percent_complete = round((completed_subtasks / total_subtasks * 100), 1) if total_subtasks > 0 else 25.0
+
+    # Determine current active milestone (earliest with incomplete subtasks)
+    incomplete_indices = [s["milestone_index"] for s in subtasks if not s["is_completed"] and s["milestone_index"] is not None]
+    if incomplete_indices:
+        current_idx = min(incomplete_indices)
+    elif completed_subtasks == total_subtasks and total_subtasks > 0:
+        current_idx = min(len(milestones) - 1, completed_subtasks // 2)
+    else:
+        current_idx = 1 if len(milestones) > 1 else 0
+
+    if current_idx >= len(milestones):
+        current_idx = len(milestones) - 1
+
+    current_milestone = milestones[current_idx]
+    pending_topics = current_milestone.get("topics", [])
+    starter_code = current_milestone.get("starterCode", "")
+    challenge_desc = current_milestone.get("challenge", "Complete the coding challenge for this stage.")
+    lang = current_milestone.get("lang", "python")
+
+    return {
+        "studentId": student_id,
+        "studentName": student_name,
+        "trackKey": active_track,
+        "trackTitle": track_title,
+        "milestoneIndex": current_idx,
+        "milestoneNumber": current_idx + 1,
+        "milestoneTitle": current_milestone["title"],
+        "milestoneWeek": current_milestone.get("week", f"Stage {current_idx + 1}"),
+        "percentComplete": percent_complete,
+        "completedSubtasks": completed_subtasks,
+        "totalSubtasks": total_subtasks,
+        "pendingTopics": pending_topics,
+        "practiceProblem": {
+            "title": f"Practice Challenge: {current_milestone['title']}",
+            "description": challenge_desc,
+            "language": lang,
+            "starterCode": starter_code
+        },
+        "suggestedPracticePrompt": f"I'm currently working on Milestone {current_idx + 1}: {current_milestone['title']} in my {track_title} roadmap. Give me a practice coding problem to test my skills on {', '.join(pending_topics[:2])}!",
+        "suggestedExplanationPrompt": f"Can you explain the core concepts of Milestone {current_idx + 1}: {current_milestone['title']} with practical examples?"
+    }
+
 
 def mentor_chat(student_id: str, message: str, custom_api_key: Optional[str] = None) -> str:
     """
@@ -21,17 +479,19 @@ def mentor_chat(student_id: str, message: str, custom_api_key: Optional[str] = N
     """
     api_key = custom_api_key or settings.GEMINI_API_KEY or ""
 
-    # Fetch live student context from SQLite
+    # Fetch live student context & roadmap memory from SQLite
     context_addon = ""
+    roadmap_ctx = None
     try:
-        from services.auth_service import get_db_connection
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT full_name, career_track, year, college, branch FROM users WHERE id = ? OR email = ?", (student_id, student_id))
-        u = cursor.fetchone()
-        if u:
-            context_addon = f"\n\nStudent Profile: Name: {u['full_name']}, Specialization Track: {u['career_track']}, Year: {u['year']}, Branch: {u['branch']}, College: {u['college']}. Tailor your advice directly to their specialization and progress."
-        conn.close()
+        roadmap_ctx = get_student_roadmap_context(student_id)
+        if roadmap_ctx:
+            context_addon += (
+                f"\n\nStudent Learning Roadmap Status: Enrolled in '{roadmap_ctx['trackTitle']}' ({roadmap_ctx['trackKey']}), "
+                f"currently on Milestone {roadmap_ctx['milestoneNumber']}: '{roadmap_ctx['milestoneTitle']}' "
+                f"({roadmap_ctx['percentComplete']}% overall progress). Pending topics: {', '.join(roadmap_ctx['pendingTopics'][:3])}. "
+                f"When the student asks what to practice, asks for coding exercises, or asks for roadmap help, "
+                f"provide a tailored, runnable code problem for this milestone."
+            )
     except Exception:
         pass
 
@@ -80,7 +540,7 @@ def mentor_chat(student_id: str, message: str, custom_api_key: Optional[str] = N
             payload = {
                 "model": "llama-3.3-70b-versatile",
                 "messages": [
-                    {"role": "system", "content": SYSTEM_INSTRUCTION},
+                    {"role": "system", "content": full_system_instruction},
                     {"role": "user", "content": message}
                 ],
                 "temperature": 0.7,
@@ -93,15 +553,32 @@ def mentor_chat(student_id: str, message: str, custom_api_key: Optional[str] = N
             logger.error(f"Groq API call failed: {e}")
 
     # 3. Intelligent Domain-Aware Built-in AI Mentor Engine (Fallback)
-    return generate_intelligent_mentor_response(message)
+    return generate_intelligent_mentor_response(message, roadmap_ctx=roadmap_ctx)
 
 
-def generate_intelligent_mentor_response(message: str) -> str:
+def generate_intelligent_mentor_response(message: str, roadmap_ctx: Optional[Dict[str, Any]] = None) -> str:
     """
     Intelligent dynamic response generator when external API keys are unreachable.
     Provides structured, domain-specific mentorship for students.
     """
     msg = (message or "").lower()
+
+    # Context-Aware Roadmap Milestone Practice & Assistance
+    if roadmap_ctx and any(k in msg for k in ["practice", "problem", "challenge", "exercise", "code", "stuck", "what next", "milestone", "current step"]):
+        prob = roadmap_ctx["practiceProblem"]
+        lang = prob.get("language", "python")
+        topics_str = ", ".join(roadmap_ctx["pendingTopics"])
+        return (
+            f"🎯 **Tailored Roadmap Practice: Milestone {roadmap_ctx['milestoneNumber']} — {roadmap_ctx['milestoneTitle']}**\n\n"
+            f"You are currently progressing through the **{roadmap_ctx['trackTitle']}** track ({roadmap_ctx['percentComplete']}% complete).\n\n"
+            f"**Focus Topics:** {topics_str}\n\n"
+            f"### Challenge Description:\n"
+            f"{prob['description']}\n\n"
+            f"```{lang}\n"
+            f"{prob['starterCode']}\n"
+            f"```\n\n"
+            f"💡 **Interactive Sandbox:** Click **▶ Run Code** in the sandbox directly below this message to execute this solution. You can also edit values inside the code block before running to test custom test cases!"
+        )
 
     if any(k in msg for k in ["ui", "ux", "design", "figma", "wireframe"]):
         return (

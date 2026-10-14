@@ -591,3 +591,338 @@
     padding: 12px 16px;
   }
 }
+
+/* ============================================
+   ROADMAP CONTEXT BANNER
+   ============================================ */
+.roadmap-context-banner {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.04));
+  border-bottom: 1px solid var(--gray-200);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.rc-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rc-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), #7C3AED);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
+
+.rc-details {
+  min-width: 0;
+}
+
+.rc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.rc-track-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(79, 70, 229, 0.12);
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rc-progress {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  font-weight: 600;
+}
+
+.rc-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-topics {
+  font-size: 0.74rem;
+  color: var(--gray-400);
+  margin: 2px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.rc-btn {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.rc-btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.rc-btn-primary:hover {
+  background: #4338CA;
+  transform: translateY(-1px);
+}
+
+.rc-btn-outline {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  color: var(--dark);
+}
+
+.rc-btn-outline:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+/* ============================================
+   CHAT CODE SANDBOX RUNNER
+   ============================================ */
+.chat-code-sandbox {
+  margin: 12px 0;
+  background: #1E293B;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+.sandbox-header {
+  background: #0F172A;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #334155;
+}
+
+.sandbox-lang {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sandbox-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sandbox-btn {
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #475569;
+  background: #1E293B;
+  color: #CBD5E1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+
+.sandbox-btn:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.sandbox-btn.run-btn {
+  background: linear-gradient(135deg, #10B981, #059669);
+  border-color: #10B981;
+  color: #fff;
+}
+
+.sandbox-btn.run-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.sandbox-pre {
+  margin: 0;
+  padding: 14px 16px;
+  background: #1E293B;
+  color: #E2E8F0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.sandbox-pre code {
+  font-family: inherit;
+  outline: none;
+  white-space: pre;
+}
+
+.sandbox-console {
+  background: #0B0F19;
+  border-top: 1px solid #1E293B;
+  padding: 10px 14px;
+  transition: all 0.2s;
+}
+
+.console-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.console-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.console-timing {
+  font-size: 0.72rem;
+  color: #10B981;
+  font-weight: 600;
+}
+
+.console-clear {
+  background: none;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 2px 4px;
+}
+
+.console-clear:hover {
+  color: #CBD5E1;
+}
+
+.console-body {
+  margin: 0;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: #4ADE80;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.console-body.has-error {
+  color: #F87171;
+}
+
+/* ============================================
+   TEXT-TO-SPEECH AUDIO BUTTONS
+   ============================================ */
+.msg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 4px;
+}
+
+.speak-btn {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  font-size: 0.74rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.speak-btn:hover {
+  background: var(--gray-100);
+  color: var(--primary);
+}
+
+.speak-btn.speaking {
+  color: var(--primary);
+  font-weight: 700;
+  animation: pulseSpeaking 1s infinite alternate;
+}
+
+@keyframes pulseSpeaking {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
+
+.chat-tool-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-400);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  transition: all 0.2s;
+}
+
+.chat-tool-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.chat-tool-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}

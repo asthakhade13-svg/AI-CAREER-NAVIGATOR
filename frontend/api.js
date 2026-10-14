@@ -1219,6 +1219,67 @@ const ChatAPI = {
             }
         } catch(e) {}
         return null;
+    },
+
+    getRoadmapContext: async (studentId = null, trackKey = null) => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = studentId || localStorage.getItem('user_id') || user.id || user.email || 'user_001';
+        const track = trackKey || localStorage.getItem('career_track') || user.careerTrack || '';
+        const query = track ? `?track_key=${encodeURIComponent(track)}` : '';
+
+        try {
+            const res = await mlApiCall(`/chatbot/roadmap-context/${encodeURIComponent(sid)}${query}`, 'GET');
+            if (res.status === 200 && res.data && res.data.context) {
+                return res.data.context;
+            }
+        } catch(e) {}
+
+        // Intelligent local fallback if backend is unreachable
+        return {
+            studentId: sid,
+            trackKey: track || 'webdev',
+            trackTitle: 'Full-Stack Web Engineering',
+            milestoneIndex: 1,
+            milestoneNumber: 2,
+            milestoneTitle: 'JavaScript Fundamentals & DOM',
+            milestoneWeek: 'Week 3 – 4',
+            percentComplete: 25.0,
+            completedSubtasks: 2,
+            totalSubtasks: 8,
+            pendingTopics: ['Variables & scoping', 'Higher-order array methods', 'Async/await', 'DOM event listeners'],
+            practiceProblem: {
+                title: 'Practice Challenge: JavaScript Fundamentals',
+                description: 'Build an async task filtering function using map, filter, and reduce to calculate study completion metrics.',
+                language: 'javascript',
+                starterCode: `// Milestone 2 Challenge: Array Transformation & Statistics\nconst learningTasks = [\n    { title: "Flexbox Froggy", completed: true, timeMinutes: 30 },\n    { title: "DOM Event Delegation", completed: true, timeMinutes: 45 },\n    { title: "Fetch API & JSON", completed: false, timeMinutes: 60 }\n];\n\nfunction analyzeRoadmapTasks(tasks) {\n    const completed = tasks.filter(t => t.completed);\n    return {\n        completedCount: completed.length,\n        totalTimeMinutes: completed.reduce((sum, t) => sum + t.timeMinutes, 0)\n    };\n}\n\nconsole.log(analyzeRoadmapTasks(learningTasks));`
+            },
+            suggestedPracticePrompt: "I'm currently working on Milestone 2 (JavaScript Fundamentals) in my Web Development roadmap. Can you give me a hands-on coding challenge with starter code?",
+            suggestedExplanationPrompt: "Can you explain the core concepts of Milestone 2: JavaScript Fundamentals & DOM with clean code examples?"
+        };
+    },
+
+    runCode: async (code, language = 'python', studentId = null) => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = studentId || localStorage.getItem('user_id') || user.id || user.email || 'user_001';
+        try {
+            const res = await mlApiCall('/chatbot/run-code', 'POST', {
+                code: code,
+                language: language,
+                student_id: sid
+            });
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+
+        if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.runCode) {
+            return await RoadmapAPI.runCode(code, language, sid);
+        }
+
+        return {
+            success: false,
+            stdout: '',
+            stderr: 'Sandbox runner unavailable. Please ensure backend is running.',
+            executionTimeMs: 0
+        };
     }
 };
 const ChatbotAPI = ChatAPI;
