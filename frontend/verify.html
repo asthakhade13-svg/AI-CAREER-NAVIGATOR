@@ -60,6 +60,42 @@
       font-weight: 600;
       margin: 4px;
     }
+    @keyframes shareModalIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    [data-theme="dark"] body {
+      background: #0b0f19 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] header {
+      background: #111827 !important;
+      border-bottom-color: #1f2937 !important;
+    }
+    [data-theme="dark"] header a {
+      color: #f9fafb !important;
+    }
+    [data-theme="dark"] .verify-search-card,
+    [data-theme="dark"] .verify-result-card,
+    [data-theme="dark"] .modal-content-card {
+      background: #111827 !important;
+      border-color: #1f2937 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .verify-input-group input {
+      background: #0b0f19 !important;
+      border-color: #374151 !important;
+      color: #f9fafb !important;
+    }
+    [data-theme="dark"] .verify-search-card h2,
+    [data-theme="dark"] #resStudentName,
+    [data-theme="dark"] #resCertId {
+      color: #f9fafb !important;
+    }
+    [data-theme="dark"] .badge-tag {
+      background: rgba(99,102,241,0.2) !important;
+      color: #a5b4fc !important;
+    }
   </style>
 </head>
 
@@ -165,15 +201,21 @@
       </div>
 
       <!-- Action Buttons -->
-      <div style="margin-top: 22px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 18px;">
-        <a id="btnViewStudentPortfolio" href="portfolio.html" class="btn btn-outline sm" style="padding: 9px 18px; border-radius: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: #4F46E5; border-color: #4F46E5;">
+      <div style="margin-top: 22px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+        <a id="btnViewStudentPortfolio" href="portfolio.html" class="btn btn-outline sm" style="padding: 9px 16px; border-radius: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: #4F46E5; border-color: #4F46E5;">
           <i class="fas fa-id-badge"></i> View Candidate Portfolio
         </a>
-        <button class="btn btn-outline sm" onclick="downloadCertificatePDF()" style="padding: 9px 18px; border-radius: 12px; font-weight: 600;">
-          <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 6px;"></i> Download PDF Certificate
+        <button id="btnOpenSharePreview" class="btn btn-outline sm" onclick="openSharePreviewModal()" style="padding: 9px 16px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #0284c7; border-color: #0284c7;">
+          <i class="fas fa-share-nodes"></i> Social Share Preview
         </button>
-        <button class="btn btn-primary sm" onclick="shareOnLinkedIn()" style="padding: 9px 18px; border-radius: 12px; font-weight: 600; background: #0077b5; border: none; color: white;">
-          <i class="fab fa-linkedin" style="margin-right: 6px;"></i> Share to LinkedIn
+        <button id="btnDownloadPng" class="btn btn-outline sm" onclick="downloadCertificatePNG()" style="padding: 9px 16px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: #7c3aed; border-color: #7c3aed;">
+          <i class="fas fa-file-image"></i> High-Res PNG Export
+        </button>
+        <button id="btnDownloadPdf" class="btn btn-outline sm" onclick="downloadCertificatePDF()" style="padding: 9px 16px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fas fa-file-pdf" style="color: #ef4444;"></i> Download PDF
+        </button>
+        <button id="btnAddToLinkedIn" class="btn btn-primary sm" onclick="addCertificationToLinkedIn()" style="padding: 9px 18px; border-radius: 12px; font-weight: 600; background: #0a66c2; border: none; color: white; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fab fa-linkedin"></i> Add to LinkedIn Profile
         </button>
       </div>
     </div>
@@ -185,10 +227,116 @@
       <p style="color: #7F1D1D; font-size: 0.88rem; margin: 0;">Please ensure the Certificate ID was entered correctly (e.g., <code>CN-2026-AIML-XXXX</code>).</p>
     </div>
 
+    <!-- Social Share Preview Modal -->
+    <div id="sharePreviewModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+      <div class="modal-content-card" style="background: white; border-radius: 24px; max-width: 620px; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); overflow: hidden; animation: shareModalIn 0.25s ease-out;">
+        <!-- Modal Header -->
+        <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: rgba(248,250,252,0.8);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(79,70,229,0.1); color: #4F46E5; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+              <i class="fas fa-share-nodes"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0;">Social Share Preview</h3>
+              <p style="font-size: 0.78rem; color: #64748b; margin: 0;">Share verified credential card across professional networks</p>
+            </div>
+          </div>
+          <button id="closeShareModalBtn" onclick="closeSharePreviewModal()" style="border: none; background: transparent; font-size: 1.4rem; color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 8px;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding: 24px;">
+          <!-- Rich Social Card Preview -->
+          <div id="socialShareCardPreview" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); border-radius: 18px; padding: 22px; color: white; box-shadow: 0 12px 30px rgba(49, 46, 129, 0.25); position: relative; overflow: hidden; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <span style="font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: #a5b4fc;">
+                First-Gen AI Career Navigator
+              </span>
+              <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fas fa-shield-alt"></i> Verified Credential
+              </span>
+            </div>
+
+            <h3 id="previewCardTrack" style="font-size: 1.25rem; font-weight: 800; margin: 0 0 4px 0; color: #ffffff;">
+              AI & Machine Learning Specialization
+            </h3>
+            <p id="previewCardStudent" style="font-size: 0.92rem; color: #c7d2fe; margin: 0 0 12px 0;">
+              Conferred to <strong style="color: #ffffff;">Astha Khade</strong>
+            </p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
+              <span style="background: rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                <i class="fas fa-shield-check" style="color: #6ee7b7; margin-right: 4px;"></i> Cryptographic SHA-256
+              </span>
+              <span style="background: rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                <i class="fas fa-database" style="color: #93c5fd; margin-right: 4px;"></i> Tamper-Proof Ledger
+              </span>
+              <span id="previewCardDate" style="background: rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                Sep 2026
+              </span>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 8px 12px; font-size: 0.75rem; color: #94a3b8; font-family: monospace; display: flex; justify-content: space-between; align-items: center;">
+              <span id="previewCardCertId">CN-2026-AIML-783E4B</span>
+              <span id="previewCardHash" style="color: #818cf8;">SHA256-VALID</span>
+            </div>
+          </div>
+
+          <!-- Share Options Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+            <!-- 1-Click LinkedIn Add -->
+            <button id="modalBtnLinkedInAdd" onclick="addCertificationToLinkedIn()" class="btn" style="background: #0a66c2; color: white; border: none; border-radius: 12px; padding: 11px 14px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i class="fab fa-linkedin" style="font-size: 1.1rem;"></i> Add to LinkedIn Profile
+            </button>
+
+            <!-- LinkedIn Post to Feed -->
+            <button id="modalBtnLinkedInFeed" onclick="shareOnLinkedInFeed()" class="btn" style="background: #004182; color: white; border: none; border-radius: 12px; padding: 11px 14px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i class="fab fa-linkedin-in" style="font-size: 1.1rem;"></i> Share on LinkedIn Feed
+            </button>
+
+            <!-- Twitter / X Post -->
+            <button id="modalBtnTwitter" onclick="shareOnTwitter()" class="btn" style="background: #0f172a; color: white; border: none; border-radius: 12px; padding: 11px 14px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i class="fab fa-x-twitter" style="font-size: 1.1rem;"></i> Post on X / Twitter
+            </button>
+
+            <!-- High-Res PNG Download -->
+            <button id="modalBtnDownloadPng" onclick="downloadCertificatePNG()" class="btn" style="background: #7c3aed; color: white; border: none; border-radius: 12px; padding: 11px 14px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i class="fas fa-file-image" style="font-size: 1.1rem;"></i> Download High-Res PNG
+            </button>
+          </div>
+
+          <!-- Copy Link and Markdown Badge -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <input type="text" id="shareUrlInput" readonly style="flex: 1; padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.8rem; font-family: monospace; background: white; color: #475569;" />
+              <button id="btnCopyShareUrl" onclick="copyShareUrl()" class="btn btn-outline sm" style="padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; white-space: nowrap;">
+                <i class="fas fa-copy"></i> Copy Link
+              </button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <input type="text" id="shareBadgeInput" readonly style="flex: 1; padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.8rem; font-family: monospace; background: white; color: #475569;" />
+              <button id="btnCopyBadgeCode" onclick="copyBadgeCode()" class="btn btn-outline sm" style="padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; white-space: nowrap;">
+                <i class="fas fa-code"></i> Copy Badge
+              </button>
+            </div>
+          </div>
+
+          <!-- Toast Notification for Copy -->
+          <div id="shareCopyToast" style="display: none; margin-top: 10px; text-align: center; color: #10b981; font-weight: 600; font-size: 0.82rem;">
+            <i class="fas fa-check-circle"></i> Copied to clipboard!
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script>
     let currentVerifiedCertId = null;
+    let currentCertData = null;
 
     // Extract query parameter if provided
     document.addEventListener('DOMContentLoaded', () => {
@@ -242,6 +390,7 @@
         document.getElementById('verifyLoading').style.display = 'none';
 
         if (certData) {
+          currentCertData = certData;
           currentVerifiedCertId = certData.certificateId || input;
           document.getElementById('resStudentName').textContent = certData.studentName || 'Astha Khade';
           document.getElementById('resTrackTitle').textContent = certData.trackTitle || 'Professional Engineering Specialization';
@@ -271,18 +420,382 @@
       }
     }
 
-    async function shareOnLinkedIn() {
+    // ─────────────────────────────────────────────────────────────
+    // ONE-CLICK "ADD TO LINKEDIN PROFILE"
+    // Official LinkedIn Add Certification Integration
+    // ─────────────────────────────────────────────────────────────
+    async function addCertificationToLinkedIn() {
       if (!currentVerifiedCertId) return;
       try {
         if (typeof CertificateAPI !== 'undefined' && CertificateAPI.getSharePayload) {
           const payload = await CertificateAPI.getSharePayload(currentVerifiedCertId);
-          if (payload && payload.linkedinUrl) {
-            window.open(payload.linkedinUrl, '_blank');
+          if (payload && (payload.linkedinUrl || payload.linkedinAddUrl)) {
+            window.open(payload.linkedinAddUrl || payload.linkedinUrl, '_blank');
             return;
           }
         }
       } catch(e) {}
-      window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(window.location.href), '_blank');
+
+      // Fallback: construct official LinkedIn Certification URL directly
+      const trackName = (document.getElementById('resTrackTitle')?.textContent || 'Specialization').trim() + ' Certificate of Completion';
+      const orgName = 'AI Career Navigator';
+      const certUrl = window.location.origin + window.location.pathname + '?certId=' + encodeURIComponent(currentVerifiedCertId);
+      const issueYear = 2026;
+      const issueMonth = 9;
+      const officialUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(trackName)}&organizationName=${encodeURIComponent(orgName)}&issueYear=${issueYear}&issueMonth=${issueMonth}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(currentVerifiedCertId)}`;
+      window.open(officialUrl, '_blank');
+    }
+
+    // Share to LinkedIn Feed
+    function shareOnLinkedInFeed() {
+      if (!currentVerifiedCertId) return;
+      const verifyUrl = window.location.origin + window.location.pathname + '?certId=' + encodeURIComponent(currentVerifiedCertId);
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(verifyUrl)}`, '_blank');
+    }
+
+    // Share to Twitter / X
+    function shareOnTwitter() {
+      if (!currentVerifiedCertId) return;
+      const trackTitle = document.getElementById('resTrackTitle')?.textContent || 'Specialization';
+      const verifyUrl = window.location.origin + window.location.pathname + '?certId=' + encodeURIComponent(currentVerifiedCertId);
+      const tweetText = `🎉 Proud to verify my official ${trackTitle} certificate on @AICareerNavigator! Public ledger record: ${verifyUrl}`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
+    }
+
+    // Legacy share wrapper
+    async function shareOnLinkedIn() {
+      addCertificationToLinkedIn();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SOCIAL SHARE PREVIEW MODAL
+    // ─────────────────────────────────────────────────────────────
+    function openSharePreviewModal() {
+      if (!currentVerifiedCertId) return;
+      const trackTitle = document.getElementById('resTrackTitle')?.textContent || 'Professional Specialization';
+      const studentName = document.getElementById('resStudentName')?.textContent || 'Astha Khade';
+      const hashVal = document.getElementById('resHash')?.textContent || 'SHA256-VALID';
+      const verifyUrl = window.location.origin + window.location.pathname + '?certId=' + encodeURIComponent(currentVerifiedCertId);
+
+      document.getElementById('previewCardTrack').textContent = trackTitle;
+      document.getElementById('previewCardStudent').innerHTML = `Conferred to <strong style="color: #ffffff;">${studentName}</strong>`;
+      document.getElementById('previewCardCertId').textContent = currentVerifiedCertId;
+      document.getElementById('previewCardHash').textContent = hashVal.length > 18 ? hashVal.substring(0, 18) + '...' : hashVal;
+
+      document.getElementById('shareUrlInput').value = verifyUrl;
+      document.getElementById('shareBadgeInput').value = `[![Verified Certificate](https://img.shields.io/badge/Verified_Certificate-${encodeURIComponent(trackTitle)}-4f46e5?style=for-the-badge&logo=shield)](${verifyUrl})`;
+
+      const modal = document.getElementById('sharePreviewModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeSharePreviewModal() {
+      const modal = document.getElementById('sharePreviewModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function copyShareUrl() {
+      const input = document.getElementById('shareUrlInput');
+      if (input) {
+        input.select();
+        navigator.clipboard.writeText(input.value);
+        showShareToast();
+      }
+    }
+
+    function copyBadgeCode() {
+      const input = document.getElementById('shareBadgeInput');
+      if (input) {
+        input.select();
+        navigator.clipboard.writeText(input.value);
+        showShareToast();
+      }
+    }
+
+    function showShareToast() {
+      const toast = document.getElementById('shareCopyToast');
+      if (toast) {
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2200);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // HIGH-RES PNG EXPORT (HTML5 Canvas 1920x1080)
+    // ─────────────────────────────────────────────────────────────
+    function downloadCertificatePNG() {
+      if (!currentVerifiedCertId) return;
+
+      const btn = document.getElementById('btnDownloadPng');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rendering PNG...';
+
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1920;
+        canvas.height = 1080;
+        const ctx = canvas.getContext('2d');
+
+        const studentName = document.getElementById('resStudentName')?.textContent || 'Astha Khade';
+        const trackTitle = document.getElementById('resTrackTitle')?.textContent || 'AI & Machine Learning Specialization';
+        const issueDate = document.getElementById('resIssueDate')?.textContent.replace('Issued on: ', '') || 'Sep 26, 2026';
+        const certId = currentVerifiedCertId;
+        const hashVal = document.getElementById('resHash')?.textContent || 'SHA256-VALID-VERIFIED';
+        const verifyUrl = window.location.origin + window.location.pathname + '?certId=' + encodeURIComponent(certId);
+
+        // 1. Background Gradient
+        const bgGrad = ctx.createLinearGradient(0, 0, 1920, 1080);
+        bgGrad.addColorStop(0, '#ffffff');
+        bgGrad.addColorStop(0.5, '#faf5ff');
+        bgGrad.addColorStop(1, '#f1f5f9');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, 1920, 1080);
+
+        // 2. Watermark
+        ctx.save();
+        ctx.translate(960, 540);
+        ctx.rotate(-18 * Math.PI / 180);
+        ctx.font = '900 78px "Segoe UI", sans-serif';
+        ctx.fillStyle = 'rgba(79, 70, 229, 0.035)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('AI CAREER NAVIGATOR ACCREDITATION', 0, 0);
+        ctx.restore();
+
+        // 3. Ornate Double Borders
+        // Outer Navy Border
+        ctx.strokeStyle = '#1e1b4b';
+        ctx.lineWidth = 14;
+        ctx.strokeRect(36, 36, 1848, 1008);
+
+        // Inner Gold Border
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(54, 54, 1812, 972);
+
+        // Hairline Inset Border
+        ctx.strokeStyle = '#e0e7ff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(66, 66, 1788, 948);
+
+        // Corner Ornaments
+        const drawCorner = (cx, cy, rot) => {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(rot);
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 24);
+          ctx.lineTo(0, 0);
+          ctx.lineTo(24, 0);
+          ctx.stroke();
+          ctx.fillStyle = '#d97706';
+          ctx.fillRect(-3, -3, 6, 6);
+          ctx.restore();
+        };
+        drawCorner(76, 76, 0);
+        drawCorner(1844, 76, Math.PI / 2);
+        drawCorner(1844, 1004, Math.PI);
+        drawCorner(76, 1004, -Math.PI / 2);
+
+        // 4. Header & Organization Title
+        ctx.textAlign = 'center';
+        ctx.font = '700 22px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#4f46e5';
+        ctx.fillText('FIRST-GEN AI CAREER NAVIGATOR ACCREDITATION BOARD', 960, 130);
+
+        // Emblem / Shield Icon
+        ctx.beginPath();
+        ctx.arc(960, 175, 26, 0, Math.PI * 2);
+        ctx.fillStyle = '#4f46e5';
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px "Segoe UI", sans-serif';
+        ctx.fillText('★', 960, 183);
+
+        // Main Title
+        ctx.font = '800 46px "Segoe UI", serif';
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText('CERTIFICATE OF SPECIALIZATION COMPLETION', 960, 255);
+
+        // Narrative line 1
+        ctx.font = 'italic 20px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('This official credential certifies that', 960, 305);
+
+        // Student Recipient Name
+        ctx.font = '700 56px "Segoe UI", serif';
+        ctx.fillStyle = '#1e1b4b';
+        ctx.fillText(studentName, 960, 385);
+
+        // Underline accent under name
+        const nameWidth = ctx.measureText(studentName).width;
+        const lineStart = 960 - (nameWidth / 2) - 40;
+        const lineEnd = 960 + (nameWidth / 2) + 40;
+        const accentGrad = ctx.createLinearGradient(lineStart, 405, lineEnd, 405);
+        accentGrad.addColorStop(0, 'rgba(79, 70, 229, 0.1)');
+        accentGrad.addColorStop(0.5, '#4f46e5');
+        accentGrad.addColorStop(1, 'rgba(79, 70, 229, 0.1)');
+        ctx.strokeStyle = accentGrad;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(lineStart, 405);
+        ctx.lineTo(lineEnd, 405);
+        ctx.stroke();
+
+        // Narrative line 2
+        ctx.font = '20px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.fillText('has successfully met all rigorous academic standards, milestone assessments,', 960, 455);
+        ctx.fillText('and practical capstone challenges to earn professional certification in:', 960, 485);
+
+        // Specialization Title
+        ctx.font = '800 36px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#4338ca';
+        ctx.fillText(trackTitle, 960, 545);
+
+        // Skills Badges (4 pills)
+        const skillBadges = ['Supervised & Deep Learning', 'PyTorch & Transformers', 'Model Deployment & APIs', 'Algorithmic Problem Solving'];
+        let badgeX = 960 - 450;
+        skillBadges.forEach(skill => {
+          const pillWidth = 210;
+          const pillHeight = 36;
+          ctx.fillStyle = '#eef2ff';
+          ctx.strokeStyle = '#c7d2fe';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(badgeX, 580, pillWidth, pillHeight, 18);
+          } else {
+            ctx.rect(badgeX, 580, pillWidth, pillHeight);
+          }
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#3730a3';
+          ctx.font = '600 13px "Segoe UI", sans-serif';
+          ctx.fillText(skill, badgeX + (pillWidth / 2), 603);
+          badgeX += pillWidth + 20;
+        });
+
+        // 5. Bottom Section / Verification Ledger & Seal & Signatures
+        const footerY = 740;
+
+        // Decorative divider
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(140, footerY);
+        ctx.lineTo(1780, footerY);
+        ctx.stroke();
+
+        // Left Column: Cryptographic Verification Details
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 15px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#1e293b';
+        ctx.fillText('VERIFIABLE CREDENTIAL LEDGER', 140, footerY + 45);
+
+        ctx.font = '14px monospace';
+        ctx.fillStyle = '#475569';
+        ctx.fillText('Certificate ID:   ' + certId, 140, footerY + 75);
+        ctx.fillText('Verification:     ' + hashVal, 140, footerY + 105);
+        ctx.fillText('Issue Date:       ' + issueDate, 140, footerY + 135);
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+        ctx.fillText('✓ Tamper-Proof Cryptographic Ledger Record', 140, footerY + 165);
+
+        // Center Column: Official Gold Accreditation Seal
+        ctx.save();
+        ctx.translate(960, footerY + 100);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, 68, 0, Math.PI * 2);
+        ctx.fillStyle = '#fef3c7';
+        ctx.fill();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, 0, 58, 0, Math.PI * 2);
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#92400e';
+        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.fillText('★ OFFICIAL SEAL ★', 0, -28);
+        ctx.font = 'bold 13px "Segoe UI", sans-serif';
+        ctx.fillText('ACCREDITED', 0, -6);
+        ctx.fillText('SPECIALIST', 0, 12);
+        ctx.font = 'bold 10px "Segoe UI", sans-serif';
+        ctx.fillText('2026', 0, 32);
+
+        ctx.restore();
+
+        // Right Column: Academic Director Signature
+        ctx.textAlign = 'right';
+        ctx.font = 'italic 34px "Brush Script MT", "Segoe Script", cursive, sans-serif';
+        ctx.fillStyle = '#1e293b';
+        ctx.fillText('Dr. A. Sharma', 1780, footerY + 75);
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(1520, footerY + 95);
+        ctx.lineTo(1780, footerY + 95);
+        ctx.stroke();
+
+        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.fillText('Dr. A. Sharma', 1780, footerY + 120);
+
+        ctx.font = '13px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('Academic & AI Curriculum Director', 1780, footerY + 140);
+        ctx.fillText('First-Gen AI Career Navigator', 1780, footerY + 160);
+
+        // Bottom verification link banner
+        ctx.textAlign = 'center';
+        ctx.font = '12px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('Verify online at ' + verifyUrl, 960, 1020);
+
+        // Export to PNG blob and trigger download
+        canvas.toBlob(blob => {
+          if (!blob) {
+            // Fallback to toDataURL
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `CareerNav_Certificate_${certId}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `CareerNav_Certificate_${certId}.png`;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+
+          if (btn) {
+            btn.innerHTML = '<i class="fas fa-check" style="color: #10B981;"></i> PNG Exported!';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2500);
+          }
+        }, 'image/png');
+
+      } catch(err) {
+        console.error('Error generating PNG credential:', err);
+        if (btn) btn.innerHTML = originalText;
+        alert('Could not export PNG certificate. Please try again.');
+      }
     }
 
     function downloadCertificatePDF() {

@@ -1312,6 +1312,64 @@ def run_tests():
     print("[PASS] 49. Frontend Google One-Tap / OAuth & Interactive Forgot Password Modal (login.html, GET /google/url, POST /forgot-password SMTP OTP)")
     tests_passed += 1
 
+    # 50. Recruiter Verification Portal: One-Click LinkedIn Add, Social Share Card Preview & High-Res PNG Export (verify.html)
+    total_tests += 1
+
+    # 50.1 Verify HTML elements in verify.html
+    res_verify_html = client.get("/verify.html")
+    assert res_verify_html.status_code == 200, f"verify.html retrieval failed: {res_verify_html.status_code}"
+    assert "btnAddToLinkedIn" in res_verify_html.text, "btnAddToLinkedIn missing from verify.html"
+    assert "addCertificationToLinkedIn" in res_verify_html.text, "addCertificationToLinkedIn handler missing from verify.html"
+    assert "btnDownloadPng" in res_verify_html.text, "btnDownloadPng missing from verify.html"
+    assert "downloadCertificatePNG" in res_verify_html.text, "downloadCertificatePNG handler missing from verify.html"
+    assert "btnOpenSharePreview" in res_verify_html.text, "btnOpenSharePreview missing from verify.html"
+    assert "sharePreviewModal" in res_verify_html.text, "sharePreviewModal missing from verify.html"
+    assert "modalBtnLinkedInAdd" in res_verify_html.text, "modalBtnLinkedInAdd missing from verify.html"
+    assert "modalBtnTwitter" in res_verify_html.text, "modalBtnTwitter missing from verify.html"
+
+    # 50.2 Issue a certificate for testing recruiter verification flow
+    res_cert_gen = client.post("/api/v1/certificates/generate", json={
+        "student_id": "test_recruiter_student_50",
+        "student_name": "Astha Khade",
+        "track_key": "aiml",
+        "score_percentage": 98
+    })
+    assert res_cert_gen.status_code == 200, f"Certificate generate failed: {res_cert_gen.text}"
+    cert_50_id = res_cert_gen.json()["certificate"]["certificateId"]
+
+    # 50.3 Verification Lookup Route (GET /api/v1/certificates/verify/{cert_id})
+    res_cert_ver = client.get(f"/api/v1/certificates/verify/{cert_50_id}")
+    assert res_cert_ver.status_code == 200, f"Certificate verify failed: {res_cert_ver.text}"
+    ver_data = res_cert_ver.json()
+    assert ver_data.get("success") is True
+    assert ver_data["verification"]["certificateId"] == cert_50_id
+    assert ver_data["verification"]["studentName"] == "Astha Khade"
+
+    # 50.4 LinkedIn Official Certification URL & Share Payload (GET /api/v1/certificates/share-payload/{cert_id})
+    res_payload = client.get(f"/api/v1/certificates/share-payload/{cert_50_id}")
+    assert res_payload.status_code == 200, f"Share payload failed: {res_payload.text}"
+    payload_data = res_payload.json()
+    assert payload_data.get("success") is True
+    assert "linkedinUrl" in payload_data
+    assert "startTask=CERTIFICATION_NAME" in payload_data["linkedinUrl"]
+    assert "organizationName=AI%20Career%20Navigator" in payload_data["linkedinUrl"]
+    assert f"certId={cert_50_id}" in payload_data["linkedinUrl"]
+    assert "twitterUrl" in payload_data and "twitter.com/intent/tweet" in payload_data["twitterUrl"]
+    assert "badgeMarkdown" in payload_data and "[![Verified Certificate]" in payload_data["badgeMarkdown"]
+
+    # 50.5 Social Share Card Endpoint (GET /api/v1/certificates/share-card/{cert_id})
+    res_card = client.get(f"/api/v1/certificates/share-card/{cert_50_id}")
+    assert res_card.status_code == 200, f"Share card endpoint failed: {res_card.text}"
+    card_data = res_card.json()
+    assert card_data.get("success") is True
+    assert card_data["certId"] == cert_50_id
+    assert "linkedinAddUrl" in card_data
+    assert "linkedinFeedUrl" in card_data
+    assert "skillsAcquired" in card_data and len(card_data["skillsAcquired"]) > 0
+
+    print("[PASS] 50. Recruiter Verification Portal: One-Click LinkedIn Add, Social Share Card Preview & High-Res PNG Export (verify.html, GET /share-payload, GET /share-card)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")

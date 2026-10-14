@@ -2184,6 +2184,14 @@ const CertificateAPI = {
         return null;
     },
 
+    getShareCard: async (certId) => {
+        try {
+            const res = await mlApiCall(`/certificates/share-card/${encodeURIComponent(certId)}`, 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
     getDownloadPdfUrl: (certId) => {
         return `${ML_API_BASE_URL}/certificates/download-pdf/${encodeURIComponent(certId)}`;
     }

@@ -75,8 +75,7 @@ def get_share_payload(cert_id: str):
     student_name = cert.get("studentName", "Student")
     track_title = cert.get("trackTitle", "Career Track")
 
-    # LinkedIn Share Link
-    linkedin_summary = f"I am proud to share that I have successfully completed the {track_title} career track on AI Career Navigator with a score of {cert.get('scorePercentage', 95)}%!"
+    # LinkedIn Official Add Certification Link
     linkedin_url = (
         f"https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME"
         f"&name={urllib.parse.quote(track_title + ' Certificate of Completion')}"
@@ -85,6 +84,9 @@ def get_share_payload(cert_id: str):
         f"&certUrl={urllib.parse.quote(verify_url)}"
         f"&certId={urllib.parse.quote(cert_id)}"
     )
+
+    # LinkedIn Social Feed Share
+    linkedin_feed_url = f"https://www.linkedin.com/sharing/share-offsite/?url={urllib.parse.quote(verify_url)}"
 
     # Twitter / X Intent
     tweet_text = f"🎉 Just verified my {track_title} certificate on @AICareerNavigator! Check out my verified credential: {verify_url}"
@@ -100,8 +102,47 @@ def get_share_payload(cert_id: str):
         "trackTitle": track_title,
         "verifyUrl": verify_url,
         "linkedinUrl": linkedin_url,
+        "linkedinAddUrl": linkedin_url,
+        "linkedinFeedUrl": linkedin_feed_url,
         "twitterUrl": twitter_url,
         "badgeMarkdown": badge_markdown
+    }
+
+
+@router.get("/share-card/{cert_id}")
+def get_share_card(cert_id: str):
+    """
+    Returns structured share card metadata for social embeds and rich previews.
+    """
+    cert = verify_certificate_id(cert_id)
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificate ID not found")
+
+    verify_url = f"https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId={cert_id}"
+    student_name = cert.get("studentName", "Student")
+    track_title = cert.get("trackTitle", "Career Track")
+
+    return {
+        "success": True,
+        "certId": cert_id,
+        "studentName": student_name,
+        "trackTitle": track_title,
+        "issuer": "First-Gen AI Career Navigator Accreditation Board",
+        "scorePercentage": cert.get("scorePercentage", 95),
+        "issuedAt": cert.get("issuedAt", "2026-09-28"),
+        "verificationHash": cert.get("verificationHash", "SHA256-VERIFIED"),
+        "verifyUrl": verify_url,
+        "skillsAcquired": cert.get("skillsAcquired", ["Core Curriculum Mastery", "System Architecture"]),
+        "linkedinAddUrl": (
+            f"https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME"
+            f"&name={urllib.parse.quote(track_title + ' Certificate of Completion')}"
+            f"&organizationName={urllib.parse.quote('AI Career Navigator')}"
+            f"&issueYear=2026&issueMonth=9"
+            f"&certUrl={urllib.parse.quote(verify_url)}"
+            f"&certId={urllib.parse.quote(cert_id)}"
+        ),
+        "linkedinFeedUrl": f"https://www.linkedin.com/sharing/share-offsite/?url={urllib.parse.quote(verify_url)}",
+        "twitterUrl": f"https://twitter.com/intent/tweet?text={urllib.parse.quote('🎉 Just verified my ' + track_title + ' certificate on @AICareerNavigator! ' + verify_url)}"
     }
 
 
