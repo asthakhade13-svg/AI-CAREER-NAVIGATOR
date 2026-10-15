@@ -294,65 +294,6 @@ The backend contains a rigorous, end-to-end automated testing suite with **50 co
 cd backend
 python test_all_features.py
 ```
-
-### ✅ Test Suite Results (50/50 Passing):
-```
-==================================================
-RUNNING COMPREHENSIVE BACKEND VERIFICATION SUITE
-==================================================
-[PASS]  1. Root & Health API Check
-[PASS]  2. Roadmap Subtask Toggle
-[PASS]  3. Roadmap Subtasks Retrieval
-[PASS]  4. Dynamic Real-User Leaderboard
-[PASS]  5. Quiz Attempt Logging
-[PASS]  6. Quiz Multi-Attempt History
-[PASS]  7. Certificate Generation
-[PASS]  8. Certificate Printable PDF Generator Route with Recruiter Verification QR Code
-[PASS]  9. Study Stopwatch Logger
-[PASS] 10. Live Activity Stream
-[PASS] 11. Capstone Repository Verification
-[PASS] 12. ICS Calendar Scheduler
-[PASS] 13. Resume ATS Scanner
-[PASS] 14. Resume Latest Scan Retrieval
-[PASS] 15. Assessment Attempt History Ledger
-[PASS] 16. Chatbot Server-Side Voice Transcription
-[PASS] 17. Tech Internships Portal Listings
-[PASS] 18. Live RSS Internship Scraper
-[PASS] 19. Google OAuth 2.0 URL & Authentication Engine
-[PASS] 20. Outbound SMTP Password Reset Email Dispatch
-[PASS] 21. Weekly AI Progress Email Digest Dispatch
-[PASS] 22. Active Peer Study Rooms Query
-[PASS] 23. Real-Time WebSockets Peer Study Room Connection
-[PASS] 24. Profile Avatar Image File Upload & Static Disk Hosting
-[PASS] 25. User Preferences & Dark Mode Multi-Device Sync
-[PASS] 26. Server-Side CSV Data & Progress Export
-[PASS] 27. Dynamic AI Daily Study Tips Generator
-[PASS] 28. Batch Mark All Read for Notification Center
-[PASS] 29. Granular Per-Question Assessment Timing Analytics
-[PASS] 30. Career Card Share & Referral Analytics
-[PASS] 31. Internship Application Tracker & Saved Opportunities
-[PASS] 32. Unified Server-Side Omnisearch Index
-[PASS] 33. Study Session Notes & Category Breakdown
-[PASS] 34. Capstone Project Mentor & Peer Review Notes
-[PASS] 35. Custom Personal Roadmap Subtasks / Goals
-[PASS] 36. Two-Factor Authentication (2FA), Session Revocation & Cascading Account Deletion
-[PASS] 37. Tech Hackathons, Event Reminders, .ics Export & Track Syllabus PDF
-[PASS] 38. Custom Weekly Study Target & Social Share Card Preview
-[PASS] 39. AI Mentor Persistent Chat History & Voice Input
-[PASS] 40. Gamification & Achievement Badges
-[PASS] 41. Quiz Assessment & Review Mistakes Modal
-[PASS] 42. Embedded Quick Code Runner / Scratchpad
-[PASS] 43. Complete Student Data Export & GDPR Portable Archive (JSON & ZIP)
-[PASS] 44. Internships Portal: Filters, AI Cover Letter & 1-Click Application Modal
-[PASS] 45. Public Student Showcase & Recruiter Portfolio (/portfolio/{id})
-[PASS] 46. Universal Dark Mode Theme Toggle & Multi-Device Sync
-[PASS] 47. Milestone Notes & Direct Roadmap Certificate Claim (100% Milestone Banner)
-[PASS] 48. AI Mentor Chatbot (Audio TTS, Context-Aware Roadmap Memory & Code Sandbox)
-[PASS] 49. Frontend Google One-Tap / OAuth & Interactive Forgot Password Modal
-[PASS] 50. Recruiter Verification Portal: One-Click LinkedIn Add, Social Share Preview & High-Res PNG Export
-==================================================
-ALL TESTS PASSED: 50/50 (100%)
-==================================================
 ```
 
 ---
@@ -459,19 +400,6 @@ AI-CAREER-NAVIGATOR/
 │
 └── frontend/                    # Synchronized static mirror for GitHub Pages
 ```
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-Feel free to check the [issues page](https://github.com/asthakhade13-svg/AI-CAREER-NAVIGATOR/issues).
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ---
 
