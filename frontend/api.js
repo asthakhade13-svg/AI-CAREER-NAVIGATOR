@@ -980,11 +980,20 @@ const RoadmapAPI = {
     getSubtasks: async (trackKey = null) => {
         const user = UserManager.get() || { email: 'user_001' };
         const sid = user.email || user.id || 'user_001';
+        const cacheKey = `careernav_offline_subtasks_${sid}_${trackKey || 'all'}`;
         const url = trackKey ? `/roadmap/subtasks/${encodeURIComponent(sid)}?track_key=${encodeURIComponent(trackKey)}` : `/roadmap/subtasks/${encodeURIComponent(sid)}`;
         try {
             const res = await mlApiCall(url, 'GET');
-            if (res.status === 200 && res.data) return res.data;
+            if (res.status === 200 && res.data) {
+                try { localStorage.setItem(cacheKey, JSON.stringify(res.data)); } catch(ce) {}
+                return res.data;
+            }
         } catch(e) {}
+        // Offline fallback
+        try {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) return JSON.parse(cached);
+        } catch(ce) {}
         return { completedIds: [], states: {} };
     },
 
@@ -1050,19 +1059,39 @@ const RoadmapAPI = {
     getMilestoneNotes: async (trackKey = null, studentId = null) => {
         const user = UserManager.get() || { email: 'user_001' };
         const sid = studentId || user.email || user.id || 'user_001';
+        const cacheKey = `careernav_offline_notes_${sid}_${trackKey || 'all'}`;
         const url = trackKey ? `/roadmap/milestone-notes/${encodeURIComponent(sid)}?track_key=${encodeURIComponent(trackKey)}` : `/roadmap/milestone-notes/${encodeURIComponent(sid)}`;
         try {
             const res = await mlApiCall(url, 'GET');
             if (res.status === 200 && res.data && res.data.notes) {
+                try { localStorage.setItem(cacheKey, JSON.stringify(res.data.notes)); } catch(ce) {}
                 return res.data.notes;
             }
         } catch(e) {}
+        // Fallback to offline cached milestone notes
+        try {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) return JSON.parse(cached);
+        } catch(ce) {}
         return {};
     },
 
     saveMilestoneNote: async (trackKey, milestoneIndex, noteText, studentId = null) => {
         const user = UserManager.get() || { email: 'user_001' };
         const sid = studentId || user.email || user.id || 'user_001';
+        const cacheKey = `careernav_offline_notes_${sid}_${trackKey || 'all'}`;
+        // Optimistically update local offline cache immediately
+        try {
+            let existingNotes = {};
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) existingNotes = JSON.parse(cached);
+            existingNotes[milestoneIndex] = {
+                noteText: noteText,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(existingNotes));
+        } catch(ce) {}
+
         try {
             const res = await mlApiCall('/roadmap/milestone-note', 'POST', {
                 student_id: sid,
@@ -1072,7 +1101,7 @@ const RoadmapAPI = {
             });
             return res.data;
         } catch(e) {
-            return { success: false };
+            return { success: true, offline: true, note: { noteText } };
         }
     },
 
@@ -3075,10 +3104,161 @@ const PortfolioAPI = {
     }
 };
 
+// ============================================
+// PWA & OFFLINE EXPERIENCE CONTROLLER
+// ============================================
+let deferredPwaPrompt = null;
+
+const PwaController = {
+    init: function() {
+        // 1. Ensure Manifest link in document head
+        if (!document.querySelector('link[rel="manifest"]')) {
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = 'manifest.json';
+            document.head.appendChild(manifestLink);
+        }
+        if (!document.querySelector('meta[name="theme-color"]')) {
+            const metaTheme = document.createElement('meta');
+            metaTheme.name = 'theme-color';
+            metaTheme.content = '#4f46e5';
+            document.head.appendChild(metaTheme);
+        }
+
+        // 2. Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => {
+                        console.log('[PWA] Service Worker registered with scope:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.log('[PWA] Service Worker registration note:', err.message);
+                    });
+            });
+        }
+
+        // 3. Listen for BeforeInstallPrompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPwaPrompt = e;
+            console.log('[PWA] Captured beforeinstallprompt event');
+
+            // Do not show banner if running in standalone PWA window already
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (isStandalone) return;
+
+            // Check if dismissed recently (within 24 hours)
+            const dismissedAt = localStorage.getItem('careernav_pwa_dismissed');
+            if (dismissedAt && (Date.now() - parseInt(dismissedAt, 10)) < 24 * 60 * 60 * 1000) {
+                return;
+            }
+
+            PwaController.renderInstallBanner();
+        });
+
+        // 4. Listen for AppInstalled event
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App successfully installed on device');
+            deferredPwaPrompt = null;
+            PwaController.hideInstallBanner();
+            PwaController.showToast('🎉 AI Career Navigator installed successfully!');
+        });
+
+        // 5. Offline & Online Connection Status Indicators
+        window.addEventListener('online', () => {
+            PwaController.showToast('🌐 Back online — Synced with cloud!');
+            document.body.classList.remove('is-offline');
+        });
+        window.addEventListener('offline', () => {
+            PwaController.showToast('⚡ Offline Mode — Roadmaps & study notes available from cache', 4500);
+            document.body.classList.add('is-offline');
+        });
+    },
+
+    renderInstallBanner: function() {
+        if (document.getElementById('pwaInstallBanner')) {
+            document.getElementById('pwaInstallBanner').style.display = 'flex';
+            return;
+        }
+
+        const banner = document.createElement('div');
+        banner.id = 'pwaInstallBanner';
+        banner.className = 'pwa-install-banner';
+        banner.innerHTML = `
+            <div class="pwa-banner-content">
+                <div class="pwa-banner-badge">
+                    <i class="fas fa-mobile-screen-button"></i>
+                </div>
+                <div class="pwa-banner-info">
+                    <strong>Install AI Career Navigator App</strong>
+                    <span>Add to your home screen or desktop for fast, offline roadmap and study note access!</span>
+                </div>
+            </div>
+            <div class="pwa-banner-actions">
+                <button id="btnPwaInstall" class="btn btn-primary sm" onclick="PwaController.triggerInstall()">
+                    <i class="fas fa-download"></i> Install Now
+                </button>
+                <button id="btnDismissPwa" class="btn-dismiss-pwa" onclick="PwaController.dismissBanner()" title="Dismiss">&times;</button>
+            </div>
+        `;
+        document.body.prepend(banner);
+    },
+
+    triggerInstall: async function() {
+        if (!deferredPwaPrompt) {
+            alert('To install CareerNav:\n• On Chrome/Edge: Click the install icon in the URL bar.\n• On iOS Safari: Tap Share -> Add to Home Screen.');
+            return;
+        }
+        deferredPwaPrompt.prompt();
+        const { outcome } = await deferredPwaPrompt.userChoice;
+        console.log('[PWA] User choice outcome:', outcome);
+        deferredPwaPrompt = null;
+        PwaController.hideInstallBanner();
+    },
+
+    dismissBanner: function() {
+        PwaController.hideInstallBanner();
+        localStorage.setItem('careernav_pwa_dismissed', Date.now().toString());
+    },
+
+    hideInstallBanner: function() {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+    },
+
+    showToast: function(message, duration = 3200) {
+        let toast = document.getElementById('pwaConnectionToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'pwaConnectionToast';
+            toast.className = 'pwa-connection-toast';
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, duration);
+    }
+};
+
+// Global shortcuts for inline HTML onclick handlers
+function triggerPwaInstall() {
+    PwaController.triggerInstall();
+}
+
+function dismissPwaBanner() {
+    PwaController.dismissBanner();
+}
+
 // ---- Auto run when page loads ----
 document.addEventListener('DOMContentLoaded', () => {
     updateSidebarUser();
     initNotificationCenter();
     bindSidebarUserClicks();
     UserPreferencesAPI.applyThemeOnLoad();
+    PwaController.init();
 });

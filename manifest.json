@@ -1,0 +1,93 @@
+{
+  "name": "First-Gen AI Career Navigator",
+  "short_name": "CareerNav",
+  "description": "AI-powered career diagnostic assessments, adaptive skill roadmaps, mentor chatbot & verifiable credentials for CS students.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "any",
+  "categories": [
+    "education",
+    "productivity",
+    "career"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Milestone Roadmap",
+      "short_name": "Roadmap",
+      "description": "Access your personalized learning milestones and code scratchpad",
+      "url": "roadmap.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "AI Mentor Chatbot",
+      "short_name": "AI Mentor",
+      "description": "Chat with your AI mentor with voice TTS & context memory",
+      "url": "chatbot.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Adaptive Quiz",
+      "short_name": "Quiz",
+      "description": "Test your technical competencies with calibrated questions",
+      "url": "quiz.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Student Dashboard",
+      "short_name": "Dashboard",
+      "description": "Track your study streaks, leaderboard rank, and badges",
+      "url": "dashboard.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

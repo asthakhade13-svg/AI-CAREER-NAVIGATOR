@@ -160,6 +160,28 @@ def serve_api_js():
     """Serves frontend api.js SDK."""
     return _serve_page("api.js")
 
+@app.get("/manifest.json")
+def serve_manifest():
+    """Serves PWA Web App Manifest with correct application/manifest+json MIME."""
+    res = _serve_page("manifest.json")
+    if isinstance(res, FileResponse):
+        res.headers["Content-Type"] = "application/manifest+json"
+    return res
+
+@app.get("/sw.js")
+def serve_service_worker():
+    """Serves Service Worker with Service-Worker-Allowed header scoped to root."""
+    res = _serve_page("sw.js")
+    if isinstance(res, FileResponse):
+        res.headers["Content-Type"] = "application/javascript"
+        res.headers["Service-Worker-Allowed"] = "/"
+    return res
+
+@app.get("/icons/{icon_name}")
+def serve_icon_file(icon_name: str):
+    """Serves PWA icons."""
+    return _serve_page(os.path.join("icons", icon_name))
+
 # Include API routers
 app.include_router(dashboard_routes.router)
 app.include_router(auth_routes.router)

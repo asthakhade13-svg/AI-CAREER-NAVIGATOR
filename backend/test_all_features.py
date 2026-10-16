@@ -1370,6 +1370,65 @@ def run_tests():
     print("[PASS] 50. Recruiter Verification Portal: One-Click LinkedIn Add, Social Share Card Preview & High-Res PNG Export (verify.html, GET /share-payload, GET /share-card)")
     tests_passed += 1
 
+    # 51. Progressive Web App (PWA) & Offline Mode (manifest.json, sw.js, PwaController, offline caching & install banner)
+    total_tests += 1
+
+    # 51.1 Web App Manifest Verification (GET /manifest.json)
+    res_manifest = client.get("/manifest.json")
+    assert res_manifest.status_code == 200, f"manifest.json retrieval failed: {res_manifest.status_code}"
+    manifest_data = res_manifest.json()
+    assert manifest_data.get("name") == "First-Gen AI Career Navigator", "Manifest name mismatch"
+    assert manifest_data.get("short_name") == "CareerNav", "Manifest short_name mismatch"
+    assert manifest_data.get("display") == "standalone", "Manifest display mode must be standalone"
+    assert manifest_data.get("theme_color") == "#4f46e5", "Manifest theme_color mismatch"
+    assert manifest_data.get("background_color") == "#0f172a", "Manifest background_color mismatch"
+    assert len(manifest_data.get("icons", [])) >= 3, "Manifest missing required icons"
+    assert len(manifest_data.get("shortcuts", [])) >= 2, "Manifest missing app shortcuts"
+
+    # 51.2 Service Worker Verification (GET /sw.js)
+    res_sw = client.get("/sw.js")
+    assert res_sw.status_code == 200, f"sw.js retrieval failed: {res_sw.status_code}"
+    assert "javascript" in res_sw.headers.get("Content-Type", ""), "sw.js must be served as application/javascript"
+    assert res_sw.headers.get("Service-Worker-Allowed") == "/", "sw.js missing Service-Worker-Allowed header"
+    assert "careernav-shell-v1.0" in res_sw.text, "sw.js missing versioned cache name"
+    assert "PRECACHE_ASSETS" in res_sw.text, "sw.js missing pre-cache shell assets"
+    assert "caches.open" in res_sw.text, "sw.js missing cache opening logic"
+    assert "skipWaiting" in res_sw.text, "sw.js missing skipWaiting activation"
+
+    # 51.3 PWA Icon Endpoints (GET /icons/{icon_name})
+    res_icon_192 = client.get("/icons/icon-192.png")
+    assert res_icon_192.status_code == 200, "icon-192.png retrieval failed"
+    res_icon_512 = client.get("/icons/icon-512.png")
+    assert res_icon_512.status_code == 200, "icon-512.png retrieval failed"
+    res_icon_svg = client.get("/icons/icon.svg")
+    assert res_icon_svg.status_code == 200, "icon.svg retrieval failed"
+
+    # 51.4 PWA Controller & Offline Cache in api.js
+    res_api = client.get("/api.js")
+    assert res_api.status_code == 200, f"api.js retrieval failed: {res_api.status_code}"
+    assert "PwaController" in res_api.text, "PwaController missing from api.js"
+    assert "pwaInstallBanner" in res_api.text, "pwaInstallBanner missing from api.js"
+    assert "btnPwaInstall" in res_api.text, "btnPwaInstall missing from api.js"
+    assert "btnDismissPwa" in res_api.text, "btnDismissPwa missing from api.js"
+    assert "beforeinstallprompt" in res_api.text, "beforeinstallprompt listener missing from api.js"
+    assert "careernav_offline_notes_" in res_api.text, "Offline milestone notes caching missing from api.js"
+    assert "careernav_offline_subtasks_" in res_api.text, "Offline subtasks caching missing from api.js"
+
+    # 51.5 PWA Styles in style.css
+    res_css = client.get("/style.css")
+    assert res_css.status_code == 200, f"style.css retrieval failed: {res_css.status_code}"
+    assert "pwa-install-banner" in res_css.text, "pwa-install-banner missing from style.css"
+    assert "pwa-connection-toast" in res_css.text, "pwa-connection-toast missing from style.css"
+
+    # 51.6 PWA Manifest link in index.html
+    res_index = client.get("/index.html")
+    assert res_index.status_code == 200, f"index.html retrieval failed: {res_index.status_code}"
+    assert 'rel="manifest"' in res_index.text, "manifest link missing from index.html"
+    assert 'name="theme-color"' in res_index.text, "theme-color meta tag missing from index.html"
+
+    print("[PASS] 51. Progressive Web App (PWA) & Offline Mode (manifest.json, sw.js, PwaController, offline caching & install banner)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
