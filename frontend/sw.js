@@ -18,6 +18,7 @@ const PRECACHE_ASSETS = [
   './internships.html',
   './portfolio.html',
   './verify.html',
+  './interview.html',
   './login.html',
   './register.html',
   './settings.html',

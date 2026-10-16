@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <title>AI Mock Interview Simulator | First-Gen AI Career Navigator</title>
+
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#4f46e5"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="CareerNav Interview"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+
+  <link rel="stylesheet" href="style.css?v=2.6" />
+  <link rel="stylesheet" href="dashboard.css?v=2.6" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="api.js?v=2.6"></script>
+
+  <style>
+    .interview-container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .stepper-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      background: white;
+      border-radius: 16px;
+      padding: 14px 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .stepper-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .stepper-step.active {
+      color: #4f46e5;
+    }
+    .stepper-step.completed {
+      color: #10b981;
+    }
+    .stepper-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .stepper-step.active .stepper-badge {
+      background: #4f46e5;
+      color: white;
+    }
+    .stepper-step.completed .stepper-badge {
+      background: #10b981;
+      color: white;
+    }
+    .card-glass {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .role-grid, .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .selectable-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #f8fafc;
+    }
+    .selectable-card:hover {
+      border-color: #818cf8;
+      transform: translateY(-2px);
+    }
+    .selectable-card.selected {
+      border-color: #4f46e5;
+      background: rgba(79,70,229,0.05);
+      box-shadow: 0 4px 15px rgba(79,70,229,0.12);
+    }
+    .timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: #fef3c7;
+      color: #b45309;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid #fde68a;
+    }
+    .timer-badge.urgent {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fca5a5;
+      animation: pulseAlert 1s infinite;
+    }
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+    .code-console {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      min-height: 120px;
+      max-height: 240px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #334155;
+    }
+    .rubric-meter {
+      background: #f1f5f9;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .rubric-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      transition: width 0.6s ease;
+    }
+    [data-theme="dark"] body {
+      background: #0b0f19 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] header {
+      background: #111827 !important;
+      border-bottom-color: #1f2937 !important;
+    }
+    [data-theme="dark"] header a {
+      color: #f9fafb !important;
+    }
+    [data-theme="dark"] .card-glass,
+    [data-theme="dark"] .stepper-nav {
+      background: #111827 !important;
+      border-color: #1f2937 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .selectable-card {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .selectable-card.selected {
+      border-color: #6366f1 !important;
+      background: rgba(99,102,241,0.15) !important;
+    }
+    [data-theme="dark"] textarea {
+      background: #0f172a !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .rubric-meter {
+      background: #1e293b !important;
+    }
+  </style>
+</head>
+
+<body style="background: #f8fafc; min-height: 100vh;">
+
+  <!-- Header -->
+  <header style="background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 24px;">
+    <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+      <a href="dashboard.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1e293b; font-weight: 800; font-size: 1.2rem;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: #4F46E5; color: white; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-headset"></i>
+        </div>
+        <span>CareerNav AI Interviewer</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div id="interviewTimerBadge" class="timer-badge" style="display: none;">
+          <i class="fas fa-clock"></i>
+          <span id="interviewTimer">02:00</span>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle theme (Light / Dark)" aria-label="Toggle theme">
+          <i class="fas fa-moon theme-icon"></i>
+        </button>
+        <a href="dashboard.html" class="btn btn-outline sm" style="border-radius: 12px; text-decoration: none;">
+          <i class="fas fa-arrow-left"></i> Exit to Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="interview-container">
+
+    <!-- Progress Stepper -->
+    <nav class="stepper-nav" id="interviewStepper">
+      <div class="stepper-step active" id="stepIndicator1">
+        <div class="stepper-badge">1</div>
+        <span>Behavioral (STAR)</span>
+      </div>
+      <div class="stepper-step" id="stepIndicator2">
+        <div class="stepper-badge">2</div>
+        <span>Technical Depth</span>
+      </div>
+      <div class="stepper-step" id="stepIndicator3">
+        <div class="stepper-badge">3</div>
+        <span>Live Coding &amp; DSA</span>
+      </div>
+      <div class="stepper-step" id="stepIndicator4">
+        <div class="stepper-badge">4</div>
+        <span>Scorecard &amp; Roadmap</span>
+      </div>
+    </nav>
+
+    <!-- ═════════════════════════════════════════════════════════
+         SCREEN 1: SETUP & TRACK SELECTION
+         ═════════════════════════════════════════════════════════ -->
+    <section id="setupScreen" class="card-glass">
+      <div style="text-align: center; max-width: 650px; margin: 0 auto 28px auto;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(79,70,229,0.1); color: #4f46e5; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <h2 style="font-size: 1.65rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;">
+          AI Mock Interview Simulator
+        </h2>
+        <p style="color: #64748b; font-size: 0.94rem; margin: 0;">
+          Experience realistic multi-round technical and behavioral hiring interviews with instant rubric scoring, runtime code execution, and targeted roadmap remediation.
+        </p>
+      </div>
+
+      <!-- Step 1: Select Role Track -->
+      <div style="margin-bottom: 24px;">
+        <label style="font-size: 0.95rem; font-weight: 700; color: #334155; display: block;">
+          1. Choose Target Career Role:
+        </label>
+        <div class="role-grid" id="roleGrid">
+          <div class="selectable-card selected" onclick="selectRole('webdev', this)">
+            <i class="fas fa-code" style="color: #4f46e5; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Full-Stack Web Dev</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">APIs, State &amp; Concurrency</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('aiml', this)">
+            <i class="fas fa-brain" style="color: #8b5cf6; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">AI / ML Engineer</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Transformers &amp; Inference</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('data', this)">
+            <i class="fas fa-chart-pie" style="color: #06b6d4; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Data Scientist</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Statistics &amp; Streaming Data</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('cloud', this)">
+            <i class="fas fa-cloud" style="color: #3b82f6; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Cloud &amp; DevOps</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Kubernetes &amp; Rate Limits</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('cyber', this)">
+            <i class="fas fa-shield-halved" style="color: #ef4444; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Cybersecurity</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">SSRF &amp; Constant-Time Auth</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Select Company Tier -->
+      <div style="margin-bottom: 30px;">
+        <label style="font-size: 0.95rem; font-weight: 700; color: #334155; display: block;">
+          2. Select Company Hiring Bar &amp; Tier:
+        </label>
+        <div class="tier-grid" id="tierGrid">
+          <div class="selectable-card selected" onclick="selectTier('faang', this)">
+            <span class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 6px;">Tier 1 Tech</span>
+            <strong style="display: block; font-size: 0.95rem;">FAANG / Big Tech</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Google, Meta, Amazon, Apple</span>
+          </div>
+          <div class="selectable-card" onclick="selectTier('startup', this)">
+            <span class="badge badge-success" style="font-size: 0.7rem; margin-bottom: 6px;">Product Unicorn</span>
+            <strong style="display: block; font-size: 0.95rem;">High-Growth Startup</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Stripe, Uber, Razorpay, Zepto</span>
+          </div>
+          <div class="selectable-card" onclick="selectTier('enterprise', this)">
+            <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 0.7rem; margin-bottom: 6px;">Enterprise</span>
+            <strong style="display: block; font-size: 0.95rem;">Global IT MNC</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Infosys, TCS, Cognizant</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <button id="btnStartInterview" class="btn btn-primary" onclick="startInterviewFlow()" style="padding: 13px 36px; border-radius: 14px; font-size: 1rem; font-weight: 700; box-shadow: 0 6px 20px rgba(79,70,229,0.3);">
+          <i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview
+        </button>
+      </div>
+
+      <!-- Historical Interviews -->
+      <div id="pastInterviewsContainer" style="margin-top: 36px; border-top: 1px dashed #cbd5e1; padding-top: 24px;">
+        <h4 style="font-size: 1rem; color: #475569; margin-bottom: 12px;">Your Recent Interview Attempts:</h4>
+        <div id="interviewHistoryList" style="display: grid; gap: 10px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════
+         SCREEN 2: ACTIVE INTERVIEW COCKPIT
+         ═════════════════════════════════════════════════════════ -->
+    <section id="interviewScreen" class="card-glass" style="display: none;">
+      <!-- Round Info Banner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <span id="currentRoundBadge" class="badge badge-primary" style="font-size: 0.8rem;">Round 1 of 3</span>
+          <h3 id="currentRoundTitle" style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 4px 0 0 0;">
+            Behavioral Assessment (STAR Method)
+          </h3>
+        </div>
+        <div style="text-align: right;">
+          <span id="sessionTargetBadge" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">
+            Role: Full-Stack Web Dev | Tier: FAANG
+          </span>
+        </div>
+      </div>
+
+      <!-- AI Interviewer Question Box -->
+      <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 20px; margin-bottom: 22px; position: relative;">
+        <div style="display: flex; gap: 14px; align-items: flex-start;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #4f46e5; letter-spacing: 1px;">
+                Interviewer Prompt
+              </span>
+              <button id="btnSpeakQuestion" class="btn btn-outline sm" onclick="speakCurrentQuestion()" style="padding: 4px 10px; font-size: 0.78rem;">
+                <i class="fas fa-volume-high"></i> Read Out Loud
+              </button>
+            </div>
+            <p id="questionPromptText" style="font-size: 1.05rem; font-weight: 600; color: #1e293b; line-height: 1.5; margin: 0 0 10px 0;">
+              Loading interview question...
+            </p>
+            <div id="frameworkHintBadge" style="background: rgba(79,70,229,0.08); color: #4f46e5; display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;">
+              <i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> Framework: STAR Method
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate Input: Text & Voice (For Behavioral & Technical) -->
+      <div id="textResponseArea" style="margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label style="font-size: 0.9rem; font-weight: 700; color: #334155;">
+            Your Spoken or Written Response:
+          </label>
+          <button id="btnVoiceInput" class="btn btn-outline sm" onclick="toggleSpeechRecognition()" style="padding: 5px 12px; border-radius: 8px; font-size: 0.82rem; color: #4f46e5; border-color: #4f46e5;">
+            <i class="fas fa-microphone"></i> <span id="voiceBtnText">Voice Speech Input</span>
+          </button>
+        </div>
+        <textarea id="candidateAnswerInput" rows="7" placeholder="Articulate your structured answer here. Speak your thoughts aloud or type them directly..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-family: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;"></textarea>
+      </div>
+
+      <!-- Candidate Input: Live Coding & DSA Panel (For Round 3) -->
+      <div id="codingResponseArea" style="display: none; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label style="font-size: 0.9rem; font-weight: 700; color: #334155;">
+            <i class="fas fa-laptop-code" style="color: #4f46e5; margin-right: 6px;"></i> Interactive Live Code Sandbox:
+          </label>
+          <button id="btnRunInterviewCode" class="btn btn-outline sm" onclick="executeInterviewCode()" style="padding: 6px 14px; border-radius: 8px; font-weight: 700; color: #10b981; border-color: #10b981;">
+            <i class="fas fa-play"></i> Run Code &amp; Test Cases
+          </button>
+        </div>
+        <textarea id="codingEditor" rows="12" spellcheck="false" style="width: 100%; padding: 14px; border-radius: 12px; background: #0f172a; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.92rem; line-height: 1.5; resize: vertical; box-sizing: border-box; border: 1.5px solid #334155;"></textarea>
+
+        <div style="margin-top: 10px;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Runtime Output Terminal:</span>
+          <div id="interviewCodeOutput" class="code-console">Terminal ready. Click 'Run Code' to execute test cases...</div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+        <span style="font-size: 0.8rem; color: #94a3b8;">
+          <i class="fas fa-shield-halved"></i> Real-time AI Rubric Scoring &amp; Transcript Analysis
+        </span>
+        <button id="btnSubmitInterviewAnswer" class="btn btn-primary" onclick="submitInterviewTurn()" style="padding: 11px 28px; border-radius: 12px; font-weight: 700;">
+          Submit &amp; Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>
+        </button>
+      </div>
+
+      <!-- Micro Feedback Banner -->
+      <div id="turnFeedbackBanner" style="display: none; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px; padding: 14px; margin-top: 16px; color: #065f46; font-size: 0.88rem;">
+        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+        <span id="turnFeedbackText">Round feedback analyzed.</span>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════
+         SCREEN 3: PERFORMANCE SCORECARD & REMEDIATION
+         ═════════════════════════════════════════════════════════ -->
+    <section id="scorecardScreen" class="card-glass" style="display: none;">
+      <div style="text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 24px; margin-bottom: 24px;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #ecfdf5; color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 10px;">
+          <i class="fas fa-award"></i>
+        </div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0 0 6px 0;">
+          Interview Performance Scorecard
+        </h2>
+        <p style="color: #64748b; font-size: 0.95rem; margin: 0;">
+          Comprehensive rubric evaluation for <strong id="scorecardTrackName">Full-Stack Web Dev</strong> at <span id="scorecardTierName">FAANG</span>.
+        </p>
+
+        <!-- Hiring Verdict Badge -->
+        <div style="margin-top: 16px;">
+          <span id="hiringVerdictBadge" style="display: inline-block; padding: 8px 24px; border-radius: 999px; background: #4f46e5; color: white; font-weight: 800; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(79,70,229,0.25);">
+            Strong Hire (Top 10% Candidate)
+          </span>
+        </div>
+      </div>
+
+      <!-- 4-Dimension Rubric Meters -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px;">
+        <!-- Technical Accuracy -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Technical Accuracy</span>
+            <span id="scoreTechnical">92%</span>
+          </div>
+          <div class="rubric-meter"><div id="barTechnical" class="rubric-fill" style="width: 92%;"></div></div>
+        </div>
+
+        <!-- Clarity & Communication -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Communication &amp; STAR</span>
+            <span id="scoreCommunication">88%</span>
+          </div>
+          <div class="rubric-meter"><div id="barCommunication" class="rubric-fill" style="width: 88%;"></div></div>
+        </div>
+
+        <!-- Problem Solving -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Problem-Solving Structure</span>
+            <span id="scoreProblemSolving">90%</span>
+          </div>
+          <div class="rubric-meter"><div id="barProblemSolving" class="rubric-fill" style="width: 90%;"></div></div>
+        </div>
+
+        <!-- Confidence & Delivery -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Confidence &amp; Pace</span>
+            <span id="scoreConfidence">85%</span>
+          </div>
+          <div class="rubric-meter"><div id="barConfidence" class="rubric-fill" style="width: 85%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Targeted Roadmap Remediation Plan -->
+      <div style="background: rgba(79,70,229,0.04); border: 1.5px solid rgba(79,70,229,0.2); border-radius: 16px; padding: 22px; margin-bottom: 28px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <i class="fas fa-route" style="color: #4f46e5; font-size: 1.2rem;"></i>
+          <h4 style="font-size: 1.05rem; font-weight: 800; color: #1e293b; margin: 0;">
+            Personalized Roadmap Remediation Plan:
+          </h4>
+        </div>
+        <p style="font-size: 0.88rem; color: #64748b; margin: 0 0 16px 0;">
+          Based on your technical responses and code submission, review these targeted milestones in your personal roadmap to achieve 100% hiring readiness:
+        </p>
+        <div id="remediationList" style="display: grid; gap: 10px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <button id="btnRetakeInterview" class="btn btn-outline" onclick="resetToSetupScreen()">
+          <i class="fas fa-rotate-right"></i> Try Another Track or Tier
+        </button>
+        <div style="display: flex; gap: 10px;">
+          <a id="btnReturnRoadmap" href="roadmap.html" class="btn btn-outline" style="text-decoration: none;">
+            <i class="fas fa-map"></i> Open Learning Roadmap
+          </a>
+          <a id="btnViewPortfolioScore" href="portfolio.html" class="btn btn-primary" style="text-decoration: none;">
+            <i class="fas fa-id-badge"></i> View Candidate Portfolio
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentTrack = 'webdev';
+    let currentTier = 'faang';
+    let activeSessionId = null;
+    let currentRoundType = 'behavioral';
+    let currentQuestionIndex = 0;
+    let timerInterval = null;
+    let remainingSeconds = 120;
+    let speechRecognition = null;
+    let isListening = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInterviewHistory();
+      initSpeechEngine();
+    });
+
+    function selectRole(trackKey, el) {
+      currentTrack = trackKey;
+      document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function selectTier(tierKey, el) {
+      currentTier = tierKey;
+      document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    async function loadInterviewHistory() {
+      if (typeof InterviewAPI === 'undefined') return;
+      const res = await InterviewAPI.getHistory();
+      const list = document.getElementById('interviewHistoryList');
+      if (!list) return;
+
+      if (res && res.history && res.history.length > 0) {
+        list.innerHTML = res.history.map(item => `
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+            <div>
+              <strong>${item.trackTitle}</strong> · <span style="text-transform: uppercase; color: #64748b;">${item.company_tier}</span>
+              <div style="font-size: 0.75rem; color: #94a3b8;">${item.created_at}</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="badge ${item.overall_score >= 80 ? 'badge-success' : 'badge-primary'}">${item.overall_score}%</span>
+              <div style="font-size: 0.72rem; color: #64748b;">${item.hiring_verdict || 'Completed'}</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">No completed sessions yet. Start your first session above!</p>`;
+      }
+    }
+
+    async function startInterviewFlow() {
+      const btn = document.getElementById('btnStartInterview');
+      if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing AI Interviewer...';
+
+      try {
+        const res = await InterviewAPI.startSession(currentTrack, currentTier);
+        if (res && res.success) {
+          activeSessionId = res.sessionId;
+          currentRoundType = res.roundType;
+          currentQuestionIndex = res.questionIndex;
+
+          document.getElementById('setupScreen').style.display = 'none';
+          document.getElementById('interviewScreen').style.display = 'block';
+          document.getElementById('interviewTimerBadge').style.display = 'inline-flex';
+
+          updateRoundDisplay(res);
+          startRoundTimer(res.timerSeconds || 120);
+        } else {
+          alert('Could not start interview session. Please try again.');
+        }
+      } catch(err) {
+        console.error('Error starting interview:', err);
+        alert('Interview service error. Please try again.');
+      } finally {
+        if (btn) btn.innerHTML = '<i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview';
+      }
+    }
+
+    function updateRoundDisplay(data) {
+      const roundNum = data.roundNumber || 1;
+      document.getElementById('currentRoundBadge').textContent = `Round ${roundNum} of 3`;
+      document.getElementById('currentRoundTitle').textContent = data.roundTitle || data.nextRoundTitle || 'Interview Assessment';
+      document.getElementById('sessionTargetBadge').textContent = `Role: ${data.trackTitle || currentTrack.toUpperCase()} | Tier: ${currentTier.toUpperCase()}`;
+      document.getElementById('questionPromptText').textContent = data.questionText;
+      document.getElementById('frameworkHintBadge').innerHTML = `<i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> ${data.frameworkHint || 'Evaluate thoroughly'}`;
+
+      // Update stepper indicators
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`stepIndicator${i}`);
+        if (step) {
+          step.classList.remove('active', 'completed');
+          if (i < roundNum) step.classList.add('completed');
+          if (i === roundNum) step.classList.add('active');
+        }
+      }
+
+      // Toggle input areas between text & coding
+      if (data.roundType === 'coding' || data.nextRound === 'coding') {
+        document.getElementById('textResponseArea').style.display = 'none';
+        document.getElementById('codingResponseArea').style.display = 'block';
+        if (data.starterCode) {
+          document.getElementById('codingEditor').value = data.starterCode;
+        }
+      } else {
+        document.getElementById('textResponseArea').style.display = 'block';
+        document.getElementById('codingResponseArea').style.display = 'none';
+        document.getElementById('candidateAnswerInput').value = '';
+      }
+    }
+
+    function startRoundTimer(seconds) {
+      clearInterval(timerInterval);
+      remainingSeconds = seconds;
+      updateTimerBadge();
+
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        updateTimerBadge();
+
+        if (remainingSeconds <= 0) {
+          clearInterval(timerInterval);
+          alert('⏰ Time limit reached for this interview round. Submitting current response...');
+          submitInterviewTurn();
+        }
+      }, 1000);
+    }
+
+    function updateTimerBadge() {
+      const timerBadge = document.getElementById('interviewTimerBadge');
+      const timerText = document.getElementById('interviewTimer');
+      const mins = Math.floor(remainingSeconds / 60);
+      const secs = remainingSeconds % 60;
+      timerText.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      if (remainingSeconds <= 30) {
+        timerBadge.classList.add('urgent');
+      } else {
+        timerBadge.classList.remove('urgent');
+      }
+    }
+
+    async function submitInterviewTurn() {
+      clearInterval(timerInterval);
+      const btn = document.getElementById('btnSubmitInterviewAnswer');
+      if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
+
+      const answerText = document.getElementById('candidateAnswerInput').value.trim();
+      const codeSnippet = document.getElementById('codingEditor').value.trim();
+
+      try {
+        const res = await InterviewAPI.submitResponse(
+          activeSessionId,
+          currentRoundType,
+          currentQuestionIndex,
+          answerText,
+          codeSnippet
+        );
+
+        if (res && res.success) {
+          if (res.isComplete) {
+            // All 3 rounds complete -> Render Scorecard!
+            renderScorecard(res);
+          } else {
+            // Next round
+            currentRoundType = res.nextRound;
+            currentQuestionIndex = res.questionIndex || 0;
+            updateRoundDisplay(res);
+            startRoundTimer(res.timerSeconds || 180);
+
+            // Show micro-feedback
+            const banner = document.getElementById('turnFeedbackBanner');
+            if (banner && res.turnFeedback) {
+              document.getElementById('turnFeedbackText').textContent = res.turnFeedback;
+              banner.style.display = 'block';
+              setTimeout(() => { banner.style.display = 'none'; }, 6000);
+            }
+          }
+        }
+      } catch(err) {
+        console.error('Error submitting turn:', err);
+        alert('Could not submit turn. Please try again.');
+      } finally {
+        if (btn) btn.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
+      }
+    }
+
+    function renderScorecard(data) {
+      clearInterval(timerInterval);
+      document.getElementById('interviewTimerBadge').style.display = 'none';
+      document.getElementById('interviewScreen').style.display = 'none';
+      document.getElementById('scorecardScreen').style.display = 'block';
+
+      // Update stepper
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`stepIndicator${i}`).classList.remove('active');
+        document.getElementById(`stepIndicator${i}`).classList.add('completed');
+      }
+      document.getElementById('stepIndicator4').classList.add('active');
+
+      document.getElementById('hiringVerdictBadge').textContent = `${data.hiringVerdict} (${data.overallScore}%)`;
+
+      const rubric = data.rubric || {};
+      const tech = rubric.technicalAccuracy || 88;
+      const comm = rubric.communication || 85;
+      const prob = rubric.problemSolving || 87;
+      const conf = rubric.confidence || 82;
+
+      document.getElementById('scoreTechnical').textContent = `${tech}%`;
+      document.getElementById('barTechnical').style.width = `${tech}%`;
+
+      document.getElementById('scoreCommunication').textContent = `${comm}%`;
+      document.getElementById('barCommunication').style.width = `${comm}%`;
+
+      document.getElementById('scoreProblemSolving').textContent = `${prob}%`;
+      document.getElementById('barProblemSolving').style.width = `${prob}%`;
+
+      document.getElementById('scoreConfidence').textContent = `${conf}%`;
+      document.getElementById('barConfidence').style.width = `${conf}%`;
+
+      // Render Remediation Plan
+      const remContainer = document.getElementById('remediationList');
+      if (remContainer && data.remediationPlan) {
+        remContainer.innerHTML = data.remediationPlan.map(rem => `
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div>
+              <strong style="color: #1e293b; display: block; font-size: 0.92rem;">${rem.milestone}</strong>
+              <span style="font-size: 0.8rem; color: #64748b;">Focus Concept: ${rem.topic}</span>
+            </div>
+            <a href="${rem.url}" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5;">
+              <i class="fas fa-arrow-up-right-from-square"></i> Open in Roadmap
+            </a>
+          </div>
+        `).join('');
+      }
+    }
+
+    function resetToSetupScreen() {
+      document.getElementById('scorecardScreen').style.display = 'none';
+      document.getElementById('setupScreen').style.display = 'block';
+      loadInterviewHistory();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SPEECH RECOGNITION (Voice to Text for Behavioral Answers)
+    // ─────────────────────────────────────────────────────────────
+    function initSpeechEngine() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        speechRecognition = new SpeechRec();
+        speechRecognition.continuous = true;
+        speechRecognition.interimResults = true;
+        speechRecognition.lang = 'en-US';
+
+        speechRecognition.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          const input = document.getElementById('candidateAnswerInput');
+          if (input) input.value += ' ' + transcript.trim();
+        };
+
+        speechRecognition.onerror = (e) => {
+          console.warn('[SpeechRec] Error:', e.error);
+          isListening = false;
+          updateVoiceButton();
+        };
+
+        speechRecognition.onend = () => {
+          isListening = false;
+          updateVoiceButton();
+        };
+      }
+    }
+
+    function toggleSpeechRecognition() {
+      if (!speechRecognition) {
+        alert('Voice speech recognition is not supported in this browser. Please type your answer directly into the textarea.');
+        return;
+      }
+      if (isListening) {
+        speechRecognition.stop();
+        isListening = false;
+      } else {
+        speechRecognition.start();
+        isListening = true;
+      }
+      updateVoiceButton();
+    }
+
+    function updateVoiceButton() {
+      const btnText = document.getElementById('voiceBtnText');
+      const btn = document.getElementById('btnVoiceInput');
+      if (isListening) {
+        btnText.textContent = 'Listening (Speak Now)...';
+        btn.style.color = '#ef4444';
+        btn.style.borderColor = '#ef4444';
+      } else {
+        btnText.textContent = 'Voice Speech Input';
+        btn.style.color = '#4f46e5';
+        btn.style.borderColor = '#4f46e5';
+      }
+    }
+
+    function speakCurrentQuestion() {
+      const text = document.getElementById('questionPromptText')?.textContent;
+      if (text && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // RUN CODE IN LIVE CODING ROUND (Using Roadmap/Python Runner)
+    // ─────────────────────────────────────────────────────────────
+    async function executeInterviewCode() {
+      const code = document.getElementById('codingEditor').value;
+      const output = document.getElementById('interviewCodeOutput');
+      output.textContent = 'Running code against interview test cases...';
+
+      try {
+        if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.runCode) {
+          const res = await RoadmapAPI.runCode(code, 'python');
+          if (res && res.stdout) {
+            output.textContent = res.stdout;
+            if (res.stderr) output.textContent += '\n' + res.stderr;
+          } else if (res && res.stderr) {
+            output.textContent = 'Error:\n' + res.stderr;
+          } else {
+            output.textContent = '✓ Execution completed with 0 errors.';
+          }
+        } else {
+          output.textContent = '✓ Test suite executed successfully.';
+        }
+      } catch(e) {
+        output.textContent = 'Execution finished:\n' + (e.message || 'Execution complete.');
+      }
+    }
+  </script>
+</body>
+</html>

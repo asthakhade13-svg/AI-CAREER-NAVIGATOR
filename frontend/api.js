@@ -3075,6 +3075,67 @@ const UserPreferencesAPI = {
 window.toggleTheme = () => UserPreferencesAPI.toggleTheme();
 
 // ============================================
+// AI MOCK INTERVIEW SIMULATOR APIs
+// ============================================
+const InterviewAPI = {
+    getTracksAndCompanies: async () => {
+        try {
+            const res = await mlApiCall('/interview/tracks-and-companies', 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return { success: false, tracks: {}, companyTiers: {} };
+    },
+
+    startSession: async (trackKey = 'webdev', companyTier = 'faang') => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = user.email || user.id || 'user_001';
+        const name = user.fullName || user.name || 'Candidate';
+        try {
+            const res = await mlApiCall('/interview/start', 'POST', {
+                student_id: sid,
+                student_name: name,
+                track_key: trackKey,
+                company_tier: companyTier
+            });
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
+    submitResponse: async (sessionId, roundType, questionIndex, answerText, codeSnippet = '') => {
+        try {
+            const res = await mlApiCall('/interview/submit-response', 'POST', {
+                session_id: sessionId,
+                round_type: roundType,
+                question_index: questionIndex,
+                answer_text: answerText,
+                code_snippet: codeSnippet
+            });
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
+    getScorecard: async (sessionId) => {
+        try {
+            const res = await mlApiCall(`/interview/scorecard/${encodeURIComponent(sessionId)}`, 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return null;
+    },
+
+    getHistory: async (studentId = null) => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/interview/history/${encodeURIComponent(sid)}`, 'GET');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return { success: false, history: [] };
+    }
+};
+
+// ============================================
 // PUBLIC PORTFOLIO & RECRUITER SHOWCASE API
 // ============================================
 const PortfolioAPI = {

@@ -1429,6 +1429,129 @@ def run_tests():
     print("[PASS] 51. Progressive Web App (PWA) & Offline Mode (manifest.json, sw.js, PwaController, offline caching & install banner)")
     tests_passed += 1
 
+    # 52. AI Technical & Behavioral Mock Interview Simulator (interview.html, routes, live coding sandbox & scorecard)
+    total_tests += 1
+
+    # 52.1 Tracks & Companies Catalog (GET /api/v1/interview/tracks-and-companies)
+    res_tracks = client.get("/api/v1/interview/tracks-and-companies")
+    assert res_tracks.status_code == 200, f"Interview catalog failed: {res_tracks.text}"
+    catalog_data = res_tracks.json()
+    assert catalog_data.get("success") is True, "Catalog success is False"
+    assert "tracks" in catalog_data and "webdev" in catalog_data["tracks"]
+    assert "aiml" in catalog_data["tracks"]
+    assert "companyTiers" in catalog_data and "faang" in catalog_data["companyTiers"]
+
+    # 52.2 Start Interview Session (POST /api/v1/interview/start)
+    start_payload = {
+        "student_id": "test_user_int_52",
+        "student_name": "Astha Khade",
+        "track_key": "webdev",
+        "company_tier": "faang"
+    }
+    res_start = client.post("/api/v1/interview/start", json=start_payload)
+    assert res_start.status_code == 200, f"Interview start failed: {res_start.text}"
+    start_data = res_start.json()
+    assert start_data.get("success") is True
+    session_id = start_data.get("sessionId")
+    assert session_id is not None
+    assert start_data.get("roundType") == "behavioral"
+    assert start_data.get("roundNumber") == 1
+    assert "questionText" in start_data
+
+    # 52.3 Submit Behavioral Turn (POST /api/v1/interview/submit-response)
+    res_turn1 = client.post("/api/v1/interview/submit-response", json={
+        "session_id": session_id,
+        "round_type": "behavioral",
+        "question_index": 0,
+        "answer_text": "In my previous project, the Situation was high latency during checkout. My Task was to optimize queries. My Action was adding Redis caching and indexing. As a Result, response time dropped by 60%."
+    })
+    assert res_turn1.status_code == 200, f"Turn 1 failed: {res_turn1.text}"
+    turn1_data = res_turn1.json()
+    assert turn1_data.get("success") is True
+    assert turn1_data.get("nextRound") == "technical"
+    assert turn1_data.get("roundNumber") == 2
+
+    # 52.4 Submit Technical Turn (POST /api/v1/interview/submit-response)
+    res_turn2 = client.post("/api/v1/interview/submit-response", json={
+        "session_id": session_id,
+        "round_type": "technical",
+        "question_index": 0,
+        "answer_text": "We implemented optimistic concurrency control and distributed caching with Redis to prevent race conditions and maintain sub-50ms latency across multi-region services."
+    })
+    assert res_turn2.status_code == 200, f"Turn 2 failed: {res_turn2.text}"
+    turn2_data = res_turn2.json()
+    assert turn2_data.get("success") is True
+    assert turn2_data.get("nextRound") == "coding"
+    assert turn2_data.get("roundNumber") == 3
+    assert "starterCode" in turn2_data
+
+    # 52.5 Submit Coding Turn & Finalize Session (POST /api/v1/interview/submit-response)
+    res_turn3 = client.post("/api/v1/interview/submit-response", json={
+        "session_id": session_id,
+        "round_type": "coding",
+        "question_index": 0,
+        "answer_text": "Implemented LRU Cache using HashMap and doubly linked list for O(1) get and put operations.",
+        "code_snippet": "class LRUCache:\n    def __init__(self, capacity: int):\n        self.cap = capacity\n        self.cache = {}\n    def get(self, key: int) -> int:\n        return self.cache.get(key, -1)\n    def put(self, key: int, value: int) -> None:\n        self.cache[key] = value"
+    })
+    assert res_turn3.status_code == 200, f"Turn 3 failed: {res_turn3.text}"
+    turn3_data = res_turn3.json()
+    assert turn3_data.get("success") is True
+    assert turn3_data.get("isComplete") is True
+    assert "overallScore" in turn3_data
+    assert "rubric" in turn3_data
+    assert "remediationPlan" in turn3_data
+
+    # 52.6 Comprehensive Performance Scorecard Endpoint (GET /api/v1/interview/scorecard/{session_id})
+    res_scorecard = client.get(f"/api/v1/interview/scorecard/{session_id}")
+    assert res_scorecard.status_code == 200, f"Scorecard endpoint failed: {res_scorecard.text}"
+    scorecard = res_scorecard.json()
+    assert scorecard.get("success") is True
+    assert scorecard.get("sessionId") == session_id
+    assert "rubric" in scorecard
+    rubric = scorecard["rubric"]
+    assert "technicalAccuracy" in rubric
+    assert "communication" in rubric
+    assert "problemSolving" in rubric
+    assert "confidence" in rubric
+    assert "hiringVerdict" in scorecard
+    assert "remediationPlan" in scorecard and len(scorecard["remediationPlan"]) > 0
+    assert "roadmap.html" in scorecard["remediationPlan"][0]["url"]
+
+    # 52.7 Student Interview History Endpoint (GET /api/v1/interview/history/{student_id})
+    res_history = client.get("/api/v1/interview/history/test_user_int_52")
+    assert res_history.status_code == 200, f"Interview history failed: {res_history.text}"
+    hist_data = res_history.json()
+    assert hist_data.get("success") is True
+    assert hist_data.get("totalInterviews", 0) >= 1
+    assert any(h["session_id"] == session_id for h in hist_data.get("history", []))
+
+    # 52.8 Frontend Page & DOM ID Validation (GET /interview.html)
+    res_interview_html = client.get("/interview.html")
+    assert res_interview_html.status_code == 200, f"interview.html failed: {res_interview_html.status_code}"
+    html_text = res_interview_html.text
+    assert 'id="btnStartInterview"' in html_text, "Missing btnStartInterview in interview.html"
+    assert 'id="interviewTimer"' in html_text, "Missing interviewTimer in interview.html"
+    assert 'id="candidateAnswerInput"' in html_text, "Missing candidateAnswerInput in interview.html"
+    assert 'id="codingEditor"' in html_text, "Missing codingEditor in interview.html"
+    assert 'id="btnVoiceInput"' in html_text, "Missing btnVoiceInput in interview.html"
+    assert 'id="scorecardScreen"' in html_text, "Missing scorecardScreen in interview.html"
+    assert 'id="remediationList"' in html_text, "Missing remediationList in interview.html"
+    assert 'id="scoreTechnical"' in html_text, "Missing scoreTechnical in interview.html"
+    assert 'id="scoreCommunication"' in html_text, "Missing scoreCommunication in interview.html"
+    assert 'id="scoreProblemSolving"' in html_text, "Missing scoreProblemSolving in interview.html"
+    assert 'id="scoreConfidence"' in html_text, "Missing scoreConfidence in interview.html"
+
+    # 52.9 InterviewAPI in api.js Validation
+    assert "InterviewAPI" in res_api.text, "InterviewAPI missing from api.js"
+    assert "getTracksAndCompanies" in res_api.text, "getTracksAndCompanies missing from api.js"
+    assert "startSession" in res_api.text, "startSession missing from api.js"
+    assert "submitResponse" in res_api.text, "submitResponse missing from api.js"
+    assert "getScorecard" in res_api.text, "getScorecard missing from api.js"
+    assert "getHistory" in res_api.text, "getHistory missing from api.js"
+
+    print("[PASS] 52. AI Technical & Behavioral Mock Interview Simulator (interview.html, routes, live coding sandbox & scorecard)")
+    tests_passed += 1
+
     print("==================================================")
     print(f"ALL TESTS PASSED: {tests_passed}/{total_tests} (100%)")
     print("==================================================")
