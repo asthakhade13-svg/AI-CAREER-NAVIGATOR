@@ -121,6 +121,18 @@
       border-color: #fca5a5;
       animation: pulseAlert 1s infinite;
     }
+    .timer-badge.paused {
+      background: #f1f5f9;
+      color: #64748b;
+      border-color: #cbd5e1;
+      animation: none;
+    }
+    .timer-badge.transitioning {
+      background: #ede9fe;
+      color: #6d28d9;
+      border-color: #c4b5fd;
+      animation: none;
+    }
     @keyframes pulseAlert {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.85; transform: scale(1.03); }
@@ -536,7 +548,9 @@
     let currentRoundType = 'behavioral';
     let currentQuestionIndex = 0;
     let timerInterval = null;
+    let timerOwner = 0;          // incremented each time a new timer starts; stale ticks self-cancel
     let remainingSeconds = 120;
+    let isSubmitting = false;    // prevents double-submit from rapid click + timer expiry race
     let speechRecognition = null;
     let isListening = false;
 
@@ -656,26 +670,95 @@
       }
     }
 
-    function startRoundTimer(seconds) {
+    // ─────────────────────────────────────────────────────────────
+    // TIMER — collision-safe with owner token + isSubmitting guard
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Unconditionally kills any running timer and clears the interval.
+     * Always call this before starting a new round.
+     */
+    function stopTimer() {
+      timerOwner++;                  // invalidate any in-flight interval tick
       clearInterval(timerInterval);
-      remainingSeconds = seconds;
-      updateTimerBadge();
+      timerInterval = null;
+    }
+
+    /**
+     * Start a fresh countdown for a new round.
+     * Uses a snapshot of timerOwner so stale ticks from a previous round
+     * self-cancel even if clearInterval is delayed by the JS event loop.
+     */
+    function startRoundTimer(seconds) {
+      stopTimer();                   // kill old timer first — always
+      remainingSeconds = Math.max(0, seconds);
+      const myToken = timerOwner;    // capture ownership token for this round
+
+      updateTimerBadge('running');
 
       timerInterval = setInterval(() => {
+        // Stale tick guard: if a newer timer started, self-cancel silently
+        if (timerOwner !== myToken) {
+          clearInterval(timerInterval);
+          return;
+        }
+
         remainingSeconds--;
-        updateTimerBadge();
+        updateTimerBadge('running');
 
         if (remainingSeconds <= 0) {
-          clearInterval(timerInterval);
-          alert('⏰ Time limit reached for this interview round. Submitting current response...');
-          submitInterviewTurn();
+          stopTimer();
+          // Only auto-submit if not already mid-submit (race guard)
+          if (!isSubmitting) {
+            showTimerExpiredBanner();
+            submitInterviewTurn();
+          }
         }
       }, 1000);
     }
 
-    function updateTimerBadge() {
+    // Show a non-blocking banner instead of alert() on timer expiry
+    function showTimerExpiredBanner() {
+      const badge = document.getElementById('interviewTimerBadge');
+      const timerText = document.getElementById('interviewTimer');
+      if (badge) {
+        badge.classList.remove('urgent', 'paused');
+        badge.classList.add('transitioning');
+      }
+      if (timerText) timerText.textContent = 'Time Up!';
+
+      // Brief inline notification above the submit button
+      const banner = document.getElementById('turnFeedbackBanner');
+      const bannerText = document.getElementById('turnFeedbackText');
+      if (banner && bannerText) {
+        bannerText.textContent = '⏰ Time limit reached — submitting your current response automatically.';
+        banner.style.background = '#fef3c7';
+        banner.style.borderColor = '#fde68a';
+        banner.style.color = '#92400e';
+        banner.style.display = 'block';
+      }
+    }
+
+    function updateTimerBadge(state = 'running') {
       const timerBadge = document.getElementById('interviewTimerBadge');
       const timerText = document.getElementById('interviewTimer');
+      if (!timerBadge || !timerText) return;
+
+      if (state === 'transitioning') {
+        timerBadge.classList.remove('urgent', 'paused');
+        timerBadge.classList.add('transitioning');
+        timerText.textContent = '⟳ Next Round';
+        return;
+      }
+
+      if (state === 'paused') {
+        timerBadge.classList.remove('urgent', 'transitioning');
+        timerBadge.classList.add('paused');
+        return;
+      }
+
+      // Normal running state
+      timerBadge.classList.remove('transitioning', 'paused');
       const mins = Math.floor(remainingSeconds / 60);
       const secs = remainingSeconds % 60;
       timerText.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -688,9 +771,21 @@
     }
 
     async function submitInterviewTurn() {
-      clearInterval(timerInterval);
+      // ── Double-submit guard: reject if already processing ──────
+      if (isSubmitting) return;
+      isSubmitting = true;
+
+      // Stop the timer immediately so it cannot fire again mid-await
+      stopTimer();
+
+      // Switch badge to "transitioning" while we wait for the API
+      updateTimerBadge('transitioning');
+
       const btn = document.getElementById('btnSubmitInterviewAnswer');
-      if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
+      }
 
       const answerText = document.getElementById('candidateAnswerInput').value.trim();
       const codeSnippet = document.getElementById('codingEditor').value.trim();
@@ -706,34 +801,58 @@
 
         if (res && res.success) {
           if (res.isComplete) {
-            // All 3 rounds complete -> Render Scorecard!
+            // All 3 rounds done → scorecard
             renderScorecard(res);
           } else {
-            // Next round
+            // ── Round transition: show brief pause before new timer ──
+            // Display micro-feedback first
+            const banner = document.getElementById('turnFeedbackBanner');
+            const bannerText = document.getElementById('turnFeedbackText');
+            if (banner && bannerText && res.turnFeedback) {
+              bannerText.textContent = res.turnFeedback;
+              banner.style.background = '';   // reset any expiry colouring
+              banner.style.borderColor = '';
+              banner.style.color = '';
+              banner.style.display = 'block';
+              // Auto-hide after 6s (runs in parallel with the 1.5s delay below)
+              setTimeout(() => { banner.style.display = 'none'; }, 6000);
+            }
+
+            // Update round content immediately
             currentRoundType = res.nextRound;
             currentQuestionIndex = res.questionIndex || 0;
             updateRoundDisplay(res);
-            startRoundTimer(res.timerSeconds || 180);
 
-            // Show micro-feedback
-            const banner = document.getElementById('turnFeedbackBanner');
-            if (banner && res.turnFeedback) {
-              document.getElementById('turnFeedbackText').textContent = res.turnFeedback;
-              banner.style.display = 'block';
-              setTimeout(() => { banner.style.display = 'none'; }, 6000);
-            }
+            // Hold in "transitioning" state for 1.5 s so the user can
+            // read the round title before the countdown begins
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Start the new round's timer only after the pause
+            startRoundTimer(res.timerSeconds || 180);
           }
         }
       } catch(err) {
         console.error('Error submitting turn:', err);
-        alert('Could not submit turn. Please try again.');
+        // Restart the timer so the candidate isn't locked out
+        startRoundTimer(remainingSeconds || 120);
+        const banner = document.getElementById('turnFeedbackBanner');
+        const bannerText = document.getElementById('turnFeedbackText');
+        if (banner && bannerText) {
+          bannerText.textContent = '⚠️ Could not submit your answer — please try again.';
+          banner.style.display = 'block';
+          setTimeout(() => { banner.style.display = 'none'; }, 5000);
+        }
       } finally {
-        if (btn) btn.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
+        isSubmitting = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
+        }
       }
     }
 
     function renderScorecard(data) {
-      clearInterval(timerInterval);
+      stopTimer();   // invalidate any in-flight interval tick via timerOwner
       document.getElementById('interviewTimerBadge').style.display = 'none';
       document.getElementById('interviewScreen').style.display = 'none';
       document.getElementById('scorecardScreen').style.display = 'block';
