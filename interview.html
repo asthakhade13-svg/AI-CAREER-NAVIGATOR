@@ -376,9 +376,25 @@
             Your Spoken or Written Response:
           </label>
           <button id="btnVoiceInput" class="btn btn-outline sm" onclick="toggleSpeechRecognition()" style="padding: 5px 12px; border-radius: 8px; font-size: 0.82rem; color: #4f46e5; border-color: #4f46e5;">
-            <i class="fas fa-microphone"></i> <span id="voiceBtnText">Voice Speech Input</span>
+            <i class="fas fa-microphone" id="voiceMicIcon"></i> <span id="voiceBtnText">Voice Speech Input</span>
           </button>
         </div>
+
+        <!-- Speech-Not-Supported Banner (hidden by default; shown when API unavailable) -->
+        <div id="speechUnsupportedBanner" style="display: none; align-items: flex-start; gap: 10px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.84rem; color: #92400e;">
+          <i class="fas fa-triangle-exclamation" style="color: #f59e0b; margin-top: 2px; flex-shrink: 0;"></i>
+          <div>
+            <strong>Voice input not supported in this browser.</strong><br>
+            The Speech Recognition API requires <strong>Chrome or Edge (desktop)</strong>. You can still type your full answer below — the AI evaluator works equally well with written responses.
+          </div>
+        </div>
+
+        <!-- Inline speech-error toast (hidden by default) -->
+        <div id="speechErrorToast" style="display: none; align-items: center; gap: 8px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.83rem; color: #b91c1c;">
+          <i class="fas fa-circle-exclamation" style="flex-shrink: 0;"></i>
+          <span id="speechErrorMsg">Microphone error. Please check your permissions and try again.</span>
+        </div>
+
         <textarea id="candidateAnswerInput" rows="7" placeholder="Articulate your structured answer here. Speak your thoughts aloud or type them directly..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-family: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;"></textarea>
       </div>
 
@@ -527,7 +543,22 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadInterviewHistory();
       initSpeechEngine();
+      checkTTSSupport();
     });
+
+    // Eagerly disable the Read Out Loud button on browsers without speechSynthesis
+    function checkTTSSupport() {
+      if (!('speechSynthesis' in window)) {
+        const btn = document.getElementById('btnSpeakQuestion');
+        if (btn) {
+          btn.disabled = true;
+          btn.title = 'Text-to-speech is not supported in this browser';
+          btn.style.opacity = '0.4';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = '<i class="fas fa-volume-xmark"></i> TTS Unavailable';
+        }
+      }
+    }
 
     function selectRole(trackKey, el) {
       currentTrack = trackKey;
@@ -762,45 +793,113 @@
     // ─────────────────────────────────────────────────────────────
     function initSpeechEngine() {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRec) {
-        speechRecognition = new SpeechRec();
-        speechRecognition.continuous = true;
-        speechRecognition.interimResults = true;
-        speechRecognition.lang = 'en-US';
 
-        speechRecognition.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-          const input = document.getElementById('candidateAnswerInput');
-          if (input) input.value += ' ' + transcript.trim();
-        };
+      if (!SpeechRec) {
+        // ── API not available (Firefox, Safari, most mobile browsers) ──
+        // Reveal the persistent warning banner
+        const banner = document.getElementById('speechUnsupportedBanner');
+        if (banner) banner.style.display = 'flex';
 
-        speechRecognition.onerror = (e) => {
-          console.warn('[SpeechRec] Error:', e.error);
-          isListening = false;
-          updateVoiceButton();
-        };
-
-        speechRecognition.onend = () => {
-          isListening = false;
-          updateVoiceButton();
-        };
+        // Visually disable the mic button so it looks non-interactive
+        const btn = document.getElementById('btnVoiceInput');
+        const btnText = document.getElementById('voiceBtnText');
+        const micIcon = document.getElementById('voiceMicIcon');
+        if (btn) {
+          btn.disabled = true;
+          btn.title = 'Voice input requires Chrome or Edge (desktop)';
+          btn.style.opacity = '0.45';
+          btn.style.cursor = 'not-allowed';
+          btn.style.color = '#94a3b8';
+          btn.style.borderColor = '#cbd5e1';
+        }
+        if (btnText) btnText.textContent = 'Not Supported';
+        if (micIcon) {
+          micIcon.classList.remove('fa-microphone');
+          micIcon.classList.add('fa-microphone-slash');
+        }
+        return; // leave speechRecognition = null
       }
+
+      speechRecognition = new SpeechRec();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = 'en-US';
+
+      speechRecognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        const input = document.getElementById('candidateAnswerInput');
+        if (input) input.value += ' ' + transcript.trim();
+      };
+
+      speechRecognition.onerror = (e) => {
+        console.warn('[SpeechRec] Error:', e.error);
+        isListening = false;
+        updateVoiceButton();
+
+        // Map each error code to a friendly human-readable inline message
+        const errorMessages = {
+          'not-allowed':    'Microphone access was denied. Please allow microphone permission in your browser settings and try again.',
+          'permission-denied': 'Microphone access was denied. Please allow microphone permission in your browser settings and try again.',
+          'no-speech':      'No speech was detected. Make sure your microphone is working and try speaking again.',
+          'audio-capture':  'No microphone was found. Please connect a microphone and try again.',
+          'network':        'A network error occurred during speech recognition. Please check your connection.',
+          'service-not-allowed': 'Speech recognition was blocked. This feature requires HTTPS or a Chrome origin trial.',
+          'aborted':        'Voice recording was cancelled. Click the mic button to try again.',
+          'language-not-supported': 'The selected language is not supported by your browser\'s speech engine.',
+          'bad-grammar':    'Could not understand the speech input. Please try again.',
+        };
+
+        const msg = errorMessages[e.error] || `Microphone error (${e.error}). Please try again or type your answer.`;
+        showSpeechError(msg);
+      };
+
+      speechRecognition.onend = () => {
+        isListening = false;
+        updateVoiceButton();
+      };
+    }
+
+    // Show an inline error toast beneath the mic button
+    function showSpeechError(msg) {
+      const toast = document.getElementById('speechErrorToast');
+      const msgEl = document.getElementById('speechErrorMsg');
+      if (!toast || !msgEl) return;
+      msgEl.textContent = msg;
+      toast.style.display = 'flex';
+      // Auto-dismiss after 6 seconds
+      clearTimeout(showSpeechError._timer);
+      showSpeechError._timer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 6000);
     }
 
     function toggleSpeechRecognition() {
       if (!speechRecognition) {
-        alert('Voice speech recognition is not supported in this browser. Please type your answer directly into the textarea.');
+        // API is unavailable — ensure banner is visible (defensive re-show)
+        const banner = document.getElementById('speechUnsupportedBanner');
+        if (banner) banner.style.display = 'flex';
         return;
       }
+      // Hide any lingering error toast when user manually retries
+      const toast = document.getElementById('speechErrorToast');
+      if (toast) toast.style.display = 'none';
+
       if (isListening) {
         speechRecognition.stop();
         isListening = false;
       } else {
-        speechRecognition.start();
-        isListening = true;
+        try {
+          speechRecognition.start();
+          isListening = true;
+        } catch (err) {
+          // Catches "already started" or any synchronous start failure
+          console.warn('[SpeechRec] start() failed:', err.message);
+          isListening = false;
+          showSpeechError('Could not start the microphone. ' + (err.message || 'Please try again.'));
+        }
       }
       updateVoiceButton();
     }
@@ -808,26 +907,76 @@
     function updateVoiceButton() {
       const btnText = document.getElementById('voiceBtnText');
       const btn = document.getElementById('btnVoiceInput');
+      const micIcon = document.getElementById('voiceMicIcon');
+      if (!btn || !btnText) return;
+
+      if (!speechRecognition) {
+        // Already handled by initSpeechEngine — nothing more to do
+        return;
+      }
+
       if (isListening) {
         btnText.textContent = 'Listening (Speak Now)...';
         btn.style.color = '#ef4444';
         btn.style.borderColor = '#ef4444';
+        if (micIcon) {
+          micIcon.classList.remove('fa-microphone');
+          micIcon.classList.add('fa-microphone-lines');
+        }
       } else {
         btnText.textContent = 'Voice Speech Input';
         btn.style.color = '#4f46e5';
         btn.style.borderColor = '#4f46e5';
+        if (micIcon) {
+          micIcon.classList.remove('fa-microphone-lines');
+          micIcon.classList.add('fa-microphone');
+        }
       }
     }
 
     function speakCurrentQuestion() {
-      const text = document.getElementById('questionPromptText')?.textContent;
-      if (text && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 1.0;
-        utter.pitch = 1.0;
-        window.speechSynthesis.speak(utter);
+      const btn = document.getElementById('btnSpeakQuestion');
+
+      if (!('speechSynthesis' in window)) {
+        // TTS API not available (e.g. some mobile browsers, older Firefox)
+        if (btn) {
+          btn.disabled = true;
+          btn.title = 'Text-to-speech is not supported in this browser';
+          btn.style.opacity = '0.4';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = '<i class="fas fa-volume-xmark"></i> TTS Unavailable';
+        }
+        return;
       }
+
+      const text = document.getElementById('questionPromptText')?.textContent?.trim();
+      if (!text || text === 'Loading interview question...') return;
+
+      window.speechSynthesis.cancel(); // stop any previous utterance
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      utter.lang = 'en-US';
+
+      // Visual feedback: button shows "Reading..." while speaking
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-volume-high fa-beat-fade"></i> Reading...';
+      }
+      utter.onend = () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
+        }
+      };
+      utter.onerror = () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
+        }
+      };
+
+      window.speechSynthesis.speak(utter);
     }
 
     // ─────────────────────────────────────────────────────────────
