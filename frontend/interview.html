@@ -554,11 +554,168 @@
     let speechRecognition = null;
     let isListening = false;
 
+    // ─────────────────────────────────────────────────────────────
+    // SESSION PERSISTENCE — survives page refresh via sessionStorage
+    // ─────────────────────────────────────────────────────────────
+    const SESSION_KEY = 'careernav_interview_session';
+
+    const SessionPersistence = {
+      /**
+       * Save all in-flight interview state to sessionStorage.
+       * Called after every state mutation so a refresh can restore
+       * exactly where the candidate was.
+       * @param {object} extra — optional extra fields (roundData, etc.)
+       */
+      save(extra = {}) {
+        try {
+          const payload = {
+            activeSessionId,
+            currentRoundType,
+            currentQuestionIndex,
+            currentTrack,
+            currentTier,
+            remainingSeconds,
+            savedAt: Date.now(),
+            ...extra           // absorbs questionText, starterCode, roundTitle, etc.
+          };
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+        } catch(e) {
+          // sessionStorage unavailable (e.g. Safari private mode) — degrade silently
+          console.warn('[SessionPersistence] save failed:', e.message);
+        }
+      },
+
+      /** Load saved state, returns the parsed object or null. */
+      load() {
+        try {
+          const raw = sessionStorage.getItem(SESSION_KEY);
+          if (!raw) return null;
+          const data = JSON.parse(raw);
+          // Discard stale sessions older than 4 hours
+          if (Date.now() - (data.savedAt || 0) > 4 * 60 * 60 * 1000) {
+            this.clear();
+            return null;
+          }
+          return data;
+        } catch(e) {
+          return null;
+        }
+      },
+
+      /** Wipe saved state — call on completion, reset, or new session start. */
+      clear() {
+        try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
       loadInterviewHistory();
       initSpeechEngine();
       checkTTSSupport();
+      restoreSessionIfExists();   // ← attempt recovery from sessionStorage
     });
+
+    /**
+     * On page load, check for an interrupted in-progress session and
+     * restore the interview cockpit UI directly, skipping setup.
+     */
+    async function restoreSessionIfExists() {
+      const saved = SessionPersistence.load();
+      if (!saved || !saved.activeSessionId) return;
+
+      // Restore all module-level variables from saved state
+      activeSessionId      = saved.activeSessionId;
+      currentRoundType     = saved.currentRoundType     || 'behavioral';
+      currentQuestionIndex = saved.currentQuestionIndex || 0;
+      currentTrack         = saved.currentTrack         || 'webdev';
+      currentTier          = saved.currentTier          || 'faang';
+      remainingSeconds     = Math.max(30, saved.remainingSeconds || 120);  // floor at 30s
+
+      // Fetch fresh question data from the scorecard/history endpoint
+      // so we have the full round object (questionText, starterCode, etc.)
+      let roundData = null;
+      try {
+        if (typeof InterviewAPI !== 'undefined') {
+          const sc = await InterviewAPI.getScorecard(activeSessionId);
+          if (sc && sc.status === 'completed') {
+            // Session already finished — show scorecard directly
+            SessionPersistence.clear();
+            renderScorecard(sc);
+            return;
+          }
+        }
+      } catch(e) {
+        console.warn('[RestoreSession] scorecard fetch error:', e);
+      }
+
+      // Build a minimal round data object from saved fields so the UI renders
+      roundData = {
+        roundType:    saved.currentRoundType,
+        roundTitle:   saved.roundTitle    || `Round — ${saved.currentRoundType}`,
+        nextRoundTitle: saved.roundTitle  || '',
+        nextRound:    saved.currentRoundType,
+        roundNumber:  saved.roundNumber   || 1,
+        trackTitle:   saved.trackTitle    || saved.currentTrack.toUpperCase(),
+        questionText: saved.questionText  || 'Continue your answer below.',
+        frameworkHint:saved.frameworkHint || 'Continue where you left off',
+        starterCode:  saved.starterCode   || '',
+        timerSeconds: remainingSeconds
+      };
+
+      // Show interview screen
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('interviewScreen').style.display = 'block';
+      document.getElementById('interviewTimerBadge').style.display = 'inline-flex';
+
+      updateRoundDisplay(roundData);
+
+      // Show a non-intrusive recovery banner
+      showRecoveryBanner(saved);
+
+      // Resume the timer with the remaining time (already restored above)
+      startRoundTimer(remainingSeconds);
+    }
+
+    /** Shows a dismissible amber banner explaining the session was restored. */
+    function showRecoveryBanner(saved) {
+      // Re-use the turnFeedbackBanner element
+      const banner = document.getElementById('turnFeedbackBanner');
+      const bannerText = document.getElementById('turnFeedbackText');
+      if (!banner || !bannerText) return;
+
+      const roundLabel = { behavioral: 'Round 1 (Behavioral)', technical: 'Round 2 (Technical)', coding: 'Round 3 (Coding)' };
+      bannerText.innerHTML = `
+        <i class="fas fa-rotate-right" style="color:#4f46e5; margin-right:6px;"></i>
+        <strong>Session restored.</strong> You were at <strong>${roundLabel[saved.currentRoundType] || saved.currentRoundType}</strong>.
+        Your previous partial answer has been recovered.
+        <button onclick="this.parentElement.parentElement.style.display='none'"
+          style="margin-left:12px; background:none; border:none; color:#4f46e5; cursor:pointer; font-weight:700; font-size:0.9rem;">✕</button>
+      `;
+      banner.style.background = '#ede9fe';
+      banner.style.borderColor = '#c4b5fd';
+      banner.style.color = '#4c1d95';
+      banner.style.display = 'block';
+
+      // Also restore the partial text answer if it was saved
+      if (saved.draftAnswer) {
+        const input = document.getElementById('candidateAnswerInput');
+        if (input) input.value = saved.draftAnswer;
+      }
+      if (saved.draftCode) {
+        const editor = document.getElementById('codingEditor');
+        if (editor) editor.value = saved.draftCode;
+      }
+
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        if (banner.style.display !== 'none') {
+          banner.style.background = '';
+          banner.style.borderColor = '';
+          banner.style.color = '';
+          banner.style.display = 'none';
+        }
+      }, 10000);
+    }
 
     // Eagerly disable the Read Out Loud button on browsers without speechSynthesis
     function checkTTSSupport() {
@@ -614,6 +771,9 @@
       const btn = document.getElementById('btnStartInterview');
       if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing AI Interviewer...';
 
+      // Clear any leftover session from a previous run before starting fresh
+      SessionPersistence.clear();
+
       try {
         const res = await InterviewAPI.startSession(currentTrack, currentTier);
         if (res && res.success) {
@@ -627,6 +787,16 @@
 
           updateRoundDisplay(res);
           startRoundTimer(res.timerSeconds || 120);
+
+          // ── Persist the new session immediately after UI is live ──
+          SessionPersistence.save({
+            roundNumber:  res.roundNumber  || 1,
+            roundTitle:   res.roundTitle   || 'Round 1: Behavioral & STAR Method Assessment',
+            trackTitle:   res.trackTitle   || currentTrack.toUpperCase(),
+            questionText: res.questionText || '',
+            frameworkHint:res.frameworkHint|| 'STAR Method',
+            starterCode:  res.starterCode  || ''
+          });
         } else {
           alert('Could not start interview session. Please try again.');
         }
@@ -668,6 +838,16 @@
         document.getElementById('codingResponseArea').style.display = 'none';
         document.getElementById('candidateAnswerInput').value = '';
       }
+
+      // ── Persist the current round state so a refresh can reconstruct the UI ──
+      SessionPersistence.save({
+        roundNumber:   roundNum,
+        roundTitle:    data.roundTitle || data.nextRoundTitle || 'Interview Assessment',
+        trackTitle:    data.trackTitle || currentTrack.toUpperCase(),
+        questionText:  data.questionText || '',
+        frameworkHint: data.frameworkHint || 'Evaluate thoroughly',
+        starterCode:   data.starterCode || ''
+      });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -705,6 +885,15 @@
 
         remainingSeconds--;
         updateTimerBadge('running');
+
+        // Save remaining time every 10 seconds so a page refresh
+        // restores the countdown close to where it was
+        if (remainingSeconds % 10 === 0) {
+          SessionPersistence.save({
+            draftAnswer: document.getElementById('candidateAnswerInput')?.value || '',
+            draftCode:   document.getElementById('codingEditor')?.value || ''
+          });
+        }
 
         if (remainingSeconds <= 0) {
           stopTimer();
@@ -852,7 +1041,9 @@
     }
 
     function renderScorecard(data) {
-      stopTimer();   // invalidate any in-flight interval tick via timerOwner
+      stopTimer();               // invalidate any in-flight interval tick via timerOwner
+      SessionPersistence.clear(); // interview is complete — wipe persisted state
+
       document.getElementById('interviewTimerBadge').style.display = 'none';
       document.getElementById('interviewScreen').style.display = 'none';
       document.getElementById('scorecardScreen').style.display = 'block';
@@ -893,7 +1084,7 @@
               <strong style="color: #1e293b; display: block; font-size: 0.92rem;">${rem.milestone}</strong>
               <span style="font-size: 0.8rem; color: #64748b;">Focus Concept: ${rem.topic}</span>
             </div>
-            <a href="${rem.url}" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5;">
+            <a href="${rem.url}" target="_blank" rel="noopener" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5;">
               <i class="fas fa-arrow-up-right-from-square"></i> Open in Roadmap
             </a>
           </div>
@@ -902,6 +1093,8 @@
     }
 
     function resetToSetupScreen() {
+      stopTimer();
+      SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
       document.getElementById('scorecardScreen').style.display = 'none';
       document.getElementById('setupScreen').style.display = 'block';
       loadInterviewHistory();
