@@ -161,7 +161,14 @@
       height: 100%;
       border-radius: 999px;
       background: linear-gradient(90deg, #4f46e5, #7c3aed);
-      transition: width 0.6s ease;
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: width;
+    }
+    .score-label {
+      font-variant-numeric: tabular-nums;
+      min-width: 3ch;      /* prevents layout shifts as digits change */
+      display: inline-block;
+      text-align: right;
     }
     [data-theme="dark"] body {
       background: #0b0f19 !important;
@@ -474,36 +481,36 @@
         <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
             <span>Technical Accuracy</span>
-            <span id="scoreTechnical">92%</span>
+            <span id="scoreTechnical" class="score-label">0%</span>
           </div>
-          <div class="rubric-meter"><div id="barTechnical" class="rubric-fill" style="width: 92%;"></div></div>
+          <div class="rubric-meter"><div id="barTechnical" class="rubric-fill" style="width: 0%;"></div></div>
         </div>
 
         <!-- Clarity & Communication -->
         <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
             <span>Communication &amp; STAR</span>
-            <span id="scoreCommunication">88%</span>
+            <span id="scoreCommunication" class="score-label">0%</span>
           </div>
-          <div class="rubric-meter"><div id="barCommunication" class="rubric-fill" style="width: 88%;"></div></div>
+          <div class="rubric-meter"><div id="barCommunication" class="rubric-fill" style="width: 0%;"></div></div>
         </div>
 
         <!-- Problem Solving -->
         <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
             <span>Problem-Solving Structure</span>
-            <span id="scoreProblemSolving">90%</span>
+            <span id="scoreProblemSolving" class="score-label">0%</span>
           </div>
-          <div class="rubric-meter"><div id="barProblemSolving" class="rubric-fill" style="width: 90%;"></div></div>
+          <div class="rubric-meter"><div id="barProblemSolving" class="rubric-fill" style="width: 0%;"></div></div>
         </div>
 
         <!-- Confidence & Delivery -->
         <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
             <span>Confidence &amp; Pace</span>
-            <span id="scoreConfidence">85%</span>
+            <span id="scoreConfidence" class="score-label">0%</span>
           </div>
-          <div class="rubric-meter"><div id="barConfidence" class="rubric-fill" style="width: 85%;"></div></div>
+          <div class="rubric-meter"><div id="barConfidence" class="rubric-fill" style="width: 0%;"></div></div>
         </div>
       </div>
 
@@ -1040,6 +1047,54 @@
       }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // ANIMATED SCORE COUNTER — syncs numeric label with bar fill
+    // ─────────────────────────────────────────────────────────────
+    /**
+     * Animates a score label from 0% → target% while simultaneously
+     * expanding the bar via CSS transition. Uses requestAnimationFrame
+     * with an easeOutExpo easing for a premium "score reveal" feel.
+     *
+     * @param {string} labelId  - DOM id of the <span> text label
+     * @param {string} barId    - DOM id of the .rubric-fill bar element
+     * @param {number} target   - Final score value (0–100)
+     * @param {number} delayMs  - Optional stagger delay in ms (default 0)
+     */
+    function animateScore(labelId, barId, target, delayMs = 0) {
+      const labelEl = document.getElementById(labelId);
+      const barEl   = document.getElementById(barId);
+      if (!labelEl || !barEl) return;
+
+      const DURATION = 1200; // ms — matches CSS transition width 1.2s
+      let startTime = null;
+
+      function easeOutExpo(t) {
+        return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      }
+
+      function tick(timestamp) {
+        if (startTime === null) startTime = timestamp;
+        const elapsed  = timestamp - startTime;
+        const progress = Math.min(elapsed / DURATION, 1);
+        const eased    = easeOutExpo(progress);
+        const current  = Math.round(eased * target);
+
+        labelEl.textContent = `${current}%`;
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          labelEl.textContent = `${target}%`; // ensure exact final value
+        }
+      }
+
+      // Kick off bar fill (CSS transition) and counter after optional delay
+      setTimeout(() => {
+        barEl.style.width = `${target}%`;
+        requestAnimationFrame(tick);
+      }, delayMs);
+    }
+
     function renderScorecard(data) {
       stopTimer();               // invalidate any in-flight interval tick via timerOwner
       SessionPersistence.clear(); // interview is complete — wipe persisted state
@@ -1058,22 +1113,30 @@
       document.getElementById('hiringVerdictBadge').textContent = `${data.hiringVerdict} (${data.overallScore}%)`;
 
       const rubric = data.rubric || {};
-      const tech = rubric.technicalAccuracy || 88;
-      const comm = rubric.communication || 85;
-      const prob = rubric.problemSolving || 87;
-      const conf = rubric.confidence || 82;
+      const tech = Math.min(100, Math.max(0, rubric.technicalAccuracy || 88));
+      const comm = Math.min(100, Math.max(0, rubric.communication || 85));
+      const prob = Math.min(100, Math.max(0, rubric.problemSolving || 87));
+      const conf = Math.min(100, Math.max(0, rubric.confidence || 82));
 
-      document.getElementById('scoreTechnical').textContent = `${tech}%`;
-      document.getElementById('barTechnical').style.width = `${tech}%`;
+      // Reset all bars to 0 so the CSS transition fires cleanly
+      ['barTechnical','barCommunication','barProblemSolving','barConfidence'].forEach(id => {
+        document.getElementById(id).style.width = '0%';
+      });
+      ['scoreTechnical','scoreCommunication','scoreProblemSolving','scoreConfidence'].forEach(id => {
+        document.getElementById(id).textContent = '0%';
+      });
 
-      document.getElementById('scoreCommunication').textContent = `${comm}%`;
-      document.getElementById('barCommunication').style.width = `${comm}%`;
-
-      document.getElementById('scoreProblemSolving').textContent = `${prob}%`;
-      document.getElementById('barProblemSolving').style.width = `${prob}%`;
-
-      document.getElementById('scoreConfidence').textContent = `${conf}%`;
-      document.getElementById('barConfidence').style.width = `${conf}%`;
+      // Trigger the animated reveal after one paint so the browser registers
+      // the 0% starting width before transitioning to the target
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Stagger each bar slightly for a cascade reveal effect
+          animateScore('scoreTechnical', 'barTechnical', tech, 0);
+          animateScore('scoreCommunication', 'barCommunication', comm, 120);
+          animateScore('scoreProblemSolving', 'barProblemSolving', prob, 240);
+          animateScore('scoreConfidence', 'barConfidence', conf, 360);
+        });
+      });
 
       // Render Remediation Plan
       const remContainer = document.getElementById('remediationList');
