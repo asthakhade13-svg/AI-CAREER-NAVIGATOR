@@ -756,9 +756,16 @@
       const list = document.getElementById('interviewHistoryList');
       if (!list) return;
 
+      const container = document.getElementById('pastInterviewsContainer');
+
       if (res && res.history && res.history.length > 0) {
+        // Ensure the container and its heading are visible (may have been hidden by empty-state)
+        if (container) container.style.display = 'block';
+        const h4 = container ? container.querySelector('h4') : null;
+        if (h4) h4.style.display = '';
+
         list.innerHTML = res.history.map(item => `
-          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; transition: box-shadow 0.2s ease;" onmouseover="this.style.boxShadow='0 4px 14px rgba(79,70,229,0.10)'" onmouseout="this.style.boxShadow='none'">
             <div>
               <strong>${item.trackTitle}</strong> · <span style="text-transform: uppercase; color: #64748b;">${item.company_tier}</span>
               <div style="font-size: 0.75rem; color: #94a3b8;">${item.created_at}</div>
@@ -770,7 +777,49 @@
           </div>
         `).join('');
       } else {
-        list.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem; margin: 0;">No completed sessions yet. Start your first session above!</p>`;
+        // Show the container so the empty-state card is visible, but hide
+        // the raw "Your Recent Interview Attempts:" heading — the card has its own copy
+        if (container) container.style.display = 'block';
+        const heading = container ? container.querySelector('h4') : null;
+        if (heading) heading.style.display = 'none';
+
+        list.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 32px 20px;
+            background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+            border: 2px dashed #c7d2fe;
+            border-radius: 16px;
+            text-align: center;
+          ">
+            <div style="
+              width: 56px; height: 56px;
+              background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+              border-radius: 50%;
+              display: flex; align-items: center; justify-content: center;
+            ">
+              <i class="fas fa-clipboard-list" style="font-size: 1.4rem; color: #7c3aed;"></i>
+            </div>
+            <div>
+              <p style="font-size: 0.97rem; font-weight: 700; color: #3730a3; margin: 0 0 4px 0;">
+                No Interview Attempts Yet
+              </p>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0; line-height: 1.5;">
+                Complete your first mock interview above to see your<br>scores, feedback, and hiring verdict tracked here.
+              </p>
+            </div>
+            <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 0.78rem; color: #94a3b8;">
+              <span><i class="fas fa-star" style="color: #f59e0b; margin-right: 4px;"></i>Score Tracking</span>
+              <span><i class="fas fa-chart-line" style="color: #10b981; margin-right: 4px;"></i>Progress Over Time</span>
+              <span><i class="fas fa-route" style="color: #4f46e5; margin-right: 4px;"></i>Remediation Plans</span>
+            </div>
+          </div>`;
+
+        // When history is populated later (after retake), restore the heading
+        list._emptyState = true;
       }
     }
 
