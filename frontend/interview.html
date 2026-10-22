@@ -871,6 +871,7 @@
 
     function updateRoundDisplay(data) {
       stopTTS();   // ← cancel any in-flight TTS before loading the new question
+      stopSpeechRecognition(); // ← abort any active mic recording
       const roundNum = data.roundNumber || 1;
       document.getElementById('currentRoundBadge').textContent = `Round ${roundNum} of 3`;
       document.getElementById('currentRoundTitle').textContent = data.roundTitle || data.nextRoundTitle || 'Interview Assessment';
@@ -888,17 +889,40 @@
         }
       }
 
-      // Toggle input areas between text & coding
+      // ── Reset ALL input/output state before loading the new round ──────────
+      // This runs unconditionally so stale content from the previous round
+      // never bleeds into the next one, regardless of which direction the
+      // round transitions (behavioral → technical → coding, or back via retry).
+
+      // 1. Text answer textarea — always blank
+      const answerEl = document.getElementById('candidateAnswerInput');
+      if (answerEl) answerEl.value = '';
+
+      // 2. Code editor — always blank, then optionally fill with starterCode
+      const editorEl = document.getElementById('codingEditor');
+      if (editorEl) editorEl.value = data.starterCode || '';
+
+      // 3. Code output terminal — reset to ready state
+      const outputEl = document.getElementById('interviewCodeOutput');
+      if (outputEl) outputEl.textContent = 'Terminal ready. Click \'Run Code\' to execute test cases...';
+
+      // 4. Micro-feedback banner from last round — hide it unless this turn has fresh feedback to show
+      if (!data.turnFeedback) {
+        const fbBanner = document.getElementById('turnFeedbackBanner');
+        if (fbBanner) fbBanner.style.display = 'none';
+      }
+
+      // 5. Speech error toast from last round — hide it
+      const errToast = document.getElementById('speechErrorToast');
+      if (errToast) errToast.style.display = 'none';
+
+      // ── Toggle which input panel is visible ──────────────────────────────
       if (data.roundType === 'coding' || data.nextRound === 'coding') {
         document.getElementById('textResponseArea').style.display = 'none';
         document.getElementById('codingResponseArea').style.display = 'block';
-        if (data.starterCode) {
-          document.getElementById('codingEditor').value = data.starterCode;
-        }
       } else {
         document.getElementById('textResponseArea').style.display = 'block';
         document.getElementById('codingResponseArea').style.display = 'none';
-        document.getElementById('candidateAnswerInput').value = '';
       }
 
       // ── Persist the current round state so a refresh can reconstruct the UI ──
@@ -908,7 +932,9 @@
         trackTitle:    data.trackTitle || currentTrack.toUpperCase(),
         questionText:  data.questionText || '',
         frameworkHint: data.frameworkHint || 'Evaluate thoroughly',
-        starterCode:   data.starterCode || ''
+        starterCode:   data.starterCode || '',
+        draftAnswer:   '',
+        draftCode:     data.starterCode || ''
       });
     }
 
@@ -1029,6 +1055,7 @@
 
       // Stop the timer immediately so it cannot fire again mid-await
       stopTimer();
+      stopSpeechRecognition();
 
       // Switch badge to "transitioning" while we wait for the API
       updateTimerBadge('transitioning');
@@ -1154,6 +1181,7 @@
     function renderScorecard(data) {
       stopTimer();               // invalidate any in-flight interval tick via timerOwner
       stopTTS();                 // ← cancel TTS so audio doesn't bleed into scorecard screen
+      stopSpeechRecognition();   // ← cancel active mic recording
       SessionPersistence.clear(); // interview is complete — wipe persisted state
 
       document.getElementById('interviewTimerBadge').style.display = 'none';
@@ -1215,6 +1243,7 @@
     function resetToSetupScreen() {
       stopTimer();
       stopTTS();   // ← cancel TTS if user navigates back to setup mid-read
+      stopSpeechRecognition(); // ← cancel active mic recording
       SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
       document.getElementById('scorecardScreen').style.display = 'none';
       document.getElementById('setupScreen').style.display = 'block';
@@ -1364,6 +1393,20 @@
           micIcon.classList.remove('fa-microphone-lines');
           micIcon.classList.add('fa-microphone');
         }
+      }
+    }
+
+    /**
+     * Abort any in-progress speech recognition recording and reset button UI.
+     * Safe to call anywhere even if voice is inactive or unsupported.
+     */
+    function stopSpeechRecognition() {
+      if (typeof speechRecognition !== 'undefined' && speechRecognition && isListening) {
+        try {
+          speechRecognition.abort();
+        } catch (e) {}
+        isListening = false;
+        updateVoiceButton();
       }
     }
 
