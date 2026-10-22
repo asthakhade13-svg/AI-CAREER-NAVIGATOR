@@ -622,6 +622,11 @@
       restoreSessionIfExists();   // ← attempt recovery from sessionStorage
     });
 
+    // Stop TTS when the user closes the tab, refreshes, or navigates away
+    // so audio never bleeds into the next page load.
+    window.addEventListener('pagehide', stopTTS);
+    window.addEventListener('beforeunload', stopTTS);
+
     /**
      * On page load, check for an interrupted in-progress session and
      * restore the interview cockpit UI directly, skipping setup.
@@ -865,6 +870,7 @@
     }
 
     function updateRoundDisplay(data) {
+      stopTTS();   // ← cancel any in-flight TTS before loading the new question
       const roundNum = data.roundNumber || 1;
       document.getElementById('currentRoundBadge').textContent = `Round ${roundNum} of 3`;
       document.getElementById('currentRoundTitle').textContent = data.roundTitle || data.nextRoundTitle || 'Interview Assessment';
@@ -964,6 +970,7 @@
 
     // Show a non-blocking banner instead of alert() on timer expiry
     function showTimerExpiredBanner() {
+      stopTTS();   // ← cancel TTS immediately when time runs out
       const badge = document.getElementById('interviewTimerBadge');
       const timerText = document.getElementById('interviewTimer');
       if (badge) {
@@ -1146,6 +1153,7 @@
 
     function renderScorecard(data) {
       stopTimer();               // invalidate any in-flight interval tick via timerOwner
+      stopTTS();                 // ← cancel TTS so audio doesn't bleed into scorecard screen
       SessionPersistence.clear(); // interview is complete — wipe persisted state
 
       document.getElementById('interviewTimerBadge').style.display = 'none';
@@ -1206,6 +1214,7 @@
 
     function resetToSetupScreen() {
       stopTimer();
+      stopTTS();   // ← cancel TTS if user navigates back to setup mid-read
       SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
       document.getElementById('scorecardScreen').style.display = 'none';
       document.getElementById('setupScreen').style.display = 'block';
@@ -1358,6 +1367,25 @@
       }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // TTS STOP HELPER — call at every navigation / round transition
+    // ─────────────────────────────────────────────────────────────
+    /**
+     * Immediately cancels any in-progress TTS utterance and resets the
+     * "Read Out Loud" button back to its idle state.
+     * Safe to call even when TTS is not active or not supported.
+     */
+    function stopTTS() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      const btn = document.getElementById('btnSpeakQuestion');
+      if (btn && !btn.dataset.ttsUnavailable) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
+      }
+    }
+
     function speakCurrentQuestion() {
       const btn = document.getElementById('btnSpeakQuestion');
 
@@ -1365,6 +1393,7 @@
         // TTS API not available (e.g. some mobile browsers, older Firefox)
         if (btn) {
           btn.disabled = true;
+          btn.dataset.ttsUnavailable = 'true';   // ← flag so stopTTS() skips reset
           btn.title = 'Text-to-speech is not supported in this browser';
           btn.style.opacity = '0.4';
           btn.style.cursor = 'not-allowed';
