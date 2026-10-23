@@ -170,6 +170,19 @@
       display: inline-block;
       text-align: right;
     }
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake-anim {
+      animation: shakeError 0.4s ease-in-out;
+    }
+    [data-theme="dark"] #setupValidationError {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+    }
     [data-theme="dark"] body {
       background: #0b0f19 !important;
       color: #f1f5f9 !important;
@@ -277,7 +290,7 @@
           1. Choose Target Career Role:
         </label>
         <div class="role-grid" id="roleGrid">
-          <div class="selectable-card selected" onclick="selectRole('webdev', this)">
+          <div class="selectable-card" onclick="selectRole('webdev', this)">
             <i class="fas fa-code" style="color: #4f46e5; font-size: 1.3rem; margin-bottom: 8px;"></i>
             <strong style="display: block; font-size: 0.95rem;">Full-Stack Web Dev</strong>
             <span style="font-size: 0.78rem; color: #64748b;">APIs, State &amp; Concurrency</span>
@@ -311,7 +324,7 @@
           2. Select Company Hiring Bar &amp; Tier:
         </label>
         <div class="tier-grid" id="tierGrid">
-          <div class="selectable-card selected" onclick="selectTier('faang', this)">
+          <div class="selectable-card" onclick="selectTier('faang', this)">
             <span class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 6px;">Tier 1 Tech</span>
             <strong style="display: block; font-size: 0.95rem;">FAANG / Big Tech</strong>
             <span style="font-size: 0.78rem; color: #64748b;">Google, Meta, Amazon, Apple</span>
@@ -327,6 +340,12 @@
             <span style="font-size: 0.78rem; color: #64748b;">Infosys, TCS, Cognizant</span>
           </div>
         </div>
+      </div>
+
+      <!-- Step Validation Error Banner (hidden until start clicked without choices) -->
+      <div id="setupValidationError" style="display: none; max-width: 580px; margin: 0 auto 20px auto; padding: 12px 18px; border-radius: 12px; background: #fef2f2; border: 1.5px solid #f87171; color: #991b1b; font-size: 0.9rem; font-weight: 600; text-align: left; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);">
+        <i class="fas fa-circle-exclamation" style="font-size: 1.2rem; color: #dc2626; flex-shrink: 0;"></i>
+        <span id="setupValidationText">Please select both a target career role and a company tier before starting.</span>
       </div>
 
       <div style="text-align: center;">
@@ -549,8 +568,8 @@
   </main>
 
   <script>
-    let currentTrack = 'webdev';
-    let currentTier = 'faang';
+    let currentTrack = null;
+    let currentTier = null;
     let activeSessionId = null;
     let currentRoundType = 'behavioral';
     let currentQuestionIndex = 0;
@@ -747,12 +766,28 @@
       currentTrack = trackKey;
       document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
       el.classList.add('selected');
+      checkSetupValidationState();
     }
 
     function selectTier(tierKey, el) {
       currentTier = tierKey;
       document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
       el.classList.add('selected');
+      checkSetupValidationState();
+    }
+
+    function checkSetupValidationState() {
+      const banner = document.getElementById('setupValidationError');
+      const text = document.getElementById('setupValidationText');
+      if (!banner || banner.style.display === 'none') return;
+
+      if (currentTrack && currentTier) {
+        banner.style.display = 'none';
+      } else if (!currentTrack) {
+        if (text) text.textContent = 'Please choose a target career role (Step 1) to proceed.';
+      } else if (!currentTier) {
+        if (text) text.textContent = 'Please choose a company hiring tier (Step 2) to proceed.';
+      }
     }
 
     async function loadInterviewHistory() {
@@ -829,6 +864,32 @@
     }
 
     async function startInterviewFlow() {
+      // ── Step 0: Validation Guard — must have selected role and tier ──
+      const banner = document.getElementById('setupValidationError');
+      const text = document.getElementById('setupValidationText');
+
+      if (!currentTrack || !currentTier) {
+        let msg = 'Please select both a target career role and a company tier before starting the interview.';
+        if (!currentTrack && currentTier) {
+          msg = 'Please choose your target career role (Step 1) to begin.';
+        } else if (currentTrack && !currentTier) {
+          msg = 'Please choose a company hiring tier (Step 2) to begin.';
+        }
+
+        if (banner && text) {
+          text.textContent = msg;
+          banner.style.display = 'flex';
+          banner.classList.remove('shake-anim');
+          void banner.offsetWidth; // trigger reflow for animation replay
+          banner.classList.add('shake-anim');
+          banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        return;
+      }
+
+      // Hide validation banner if previously shown
+      if (banner) banner.style.display = 'none';
+
       const btn = document.getElementById('btnStartInterview');
       if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing AI Interviewer...';
 
@@ -853,7 +914,7 @@
           SessionPersistence.save({
             roundNumber:  res.roundNumber  || 1,
             roundTitle:   res.roundTitle   || 'Round 1: Behavioral & STAR Method Assessment',
-            trackTitle:   res.trackTitle   || currentTrack.toUpperCase(),
+            trackTitle:   res.trackTitle   || (currentTrack ? currentTrack.toUpperCase() : 'INTERVIEW'),
             questionText: res.questionText || '',
             frameworkHint:res.frameworkHint|| 'STAR Method',
             starterCode:  res.starterCode  || ''
@@ -875,7 +936,9 @@
       const roundNum = data.roundNumber || 1;
       document.getElementById('currentRoundBadge').textContent = `Round ${roundNum} of 3`;
       document.getElementById('currentRoundTitle').textContent = data.roundTitle || data.nextRoundTitle || 'Interview Assessment';
-      document.getElementById('sessionTargetBadge').textContent = `Role: ${data.trackTitle || currentTrack.toUpperCase()} | Tier: ${currentTier.toUpperCase()}`;
+      const displayTrack = data.trackTitle || (currentTrack ? currentTrack.toUpperCase() : 'CAREER NAV');
+      const displayTier = currentTier ? currentTier.toUpperCase() : (data.companyTier || 'GENERAL').toUpperCase();
+      document.getElementById('sessionTargetBadge').textContent = `Role: ${displayTrack} | Tier: ${displayTier}`;
       document.getElementById('questionPromptText').textContent = data.questionText;
       document.getElementById('frameworkHintBadge').innerHTML = `<i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> ${data.frameworkHint || 'Evaluate thoroughly'}`;
 
@@ -929,7 +992,7 @@
       SessionPersistence.save({
         roundNumber:   roundNum,
         roundTitle:    data.roundTitle || data.nextRoundTitle || 'Interview Assessment',
-        trackTitle:    data.trackTitle || currentTrack.toUpperCase(),
+        trackTitle:    data.trackTitle || (currentTrack ? currentTrack.toUpperCase() : 'INTERVIEW'),
         questionText:  data.questionText || '',
         frameworkHint: data.frameworkHint || 'Evaluate thoroughly',
         starterCode:   data.starterCode || '',
@@ -1245,6 +1308,17 @@
       stopTTS();   // ← cancel TTS if user navigates back to setup mid-read
       stopSpeechRecognition(); // ← cancel active mic recording
       SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
+
+      // Reset selection state & clear active card styling
+      currentTrack = null;
+      currentTier = null;
+      document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+
+      // Hide any previous validation banner
+      const banner = document.getElementById('setupValidationError');
+      if (banner) banner.style.display = 'none';
+
       document.getElementById('scorecardScreen').style.display = 'none';
       document.getElementById('setupScreen').style.display = 'block';
       loadInterviewHistory();
