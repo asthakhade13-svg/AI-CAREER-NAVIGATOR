@@ -69,7 +69,8 @@ def submit_interview_response(req: InterviewSubmitTurnRequest):
             code_snippet=req.code_snippet or ""
         )
         if not result.get("success"):
-            raise HTTPException(status_code=404, detail=result.get("message", "Session not found"))
+            status_code = 409 if result.get("duplicate") else 404
+            raise HTTPException(status_code=status_code, detail=result.get("message", "Session not found"))
         return result
     except HTTPException:
         raise

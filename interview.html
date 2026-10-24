@@ -178,6 +178,21 @@
     .shake-anim {
       animation: shakeError 0.4s ease-in-out;
     }
+    button:disabled, .btn:disabled, .btn[disabled] {
+      opacity: 0.65 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      box-shadow: none !important;
+    }
+    .btn-loading {
+      position: relative;
+      pointer-events: none !important;
+      cursor: not-allowed !important;
+      opacity: 0.75 !important;
+    }
+    .btn-loading i.fa-spinner {
+      margin-right: 8px;
+    }
     [data-theme="dark"] #setupValidationError {
       background: rgba(239, 68, 68, 0.15) !important;
       border-color: #ef4444 !important;
@@ -459,9 +474,10 @@
         <span style="font-size: 0.8rem; color: #94a3b8;">
           <i class="fas fa-shield-halved"></i> Real-time AI Rubric Scoring &amp; Transcript Analysis
         </span>
-        <button id="btnSubmitInterviewAnswer" class="btn btn-primary" onclick="submitInterviewTurn()" style="padding: 11px 28px; border-radius: 12px; font-weight: 700;">
+        <button id="btnSubmitInterviewAnswer" class="btn btn-primary" onclick="submitInterviewTurn()" style="padding: 11px 28px; border-radius: 12px; font-weight: 700; transition: all 0.2s ease;">
           Submit &amp; Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>
         </button>
+        <button id="btnSubmitAnswer" style="display: none;" onclick="submitInterviewTurn()"></button>
       </div>
 
       <!-- Micro Feedback Banner -->
@@ -891,7 +907,12 @@
       if (banner) banner.style.display = 'none';
 
       const btn = document.getElementById('btnStartInterview');
-      if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing AI Interviewer...';
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.setAttribute('aria-busy', 'true');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Initializing AI Interviewer...';
+      }
 
       // Clear any leftover session from a previous run before starting fresh
       SessionPersistence.clear();
@@ -926,7 +947,12 @@
         console.error('Error starting interview:', err);
         alert('Interview service error. Please try again.');
       } finally {
-        if (btn) btn.innerHTML = '<i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview';
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('btn-loading');
+          btn.removeAttribute('aria-busy');
+          btn.innerHTML = '<i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview';
+        }
       }
     }
 
@@ -1123,11 +1149,17 @@
       // Switch badge to "transitioning" while we wait for the API
       updateTimerBadge('transitioning');
 
-      const btn = document.getElementById('btnSubmitInterviewAnswer');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
-      }
+      const submitButtons = [
+        document.getElementById('btnSubmitInterviewAnswer'),
+        document.getElementById('btnSubmitAnswer')
+      ].filter(Boolean);
+
+      submitButtons.forEach(b => {
+        b.disabled = true;
+        b.classList.add('btn-loading');
+        b.setAttribute('aria-busy', 'true');
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
+      });
 
       const answerText = document.getElementById('candidateAnswerInput').value.trim();
       const codeSnippet = document.getElementById('codingEditor').value.trim();
@@ -1167,6 +1199,9 @@
 
             // Hold in "transitioning" state for 1.5 s so the user can
             // read the round title before the countdown begins
+            submitButtons.forEach(b => {
+              b.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Advancing Round...';
+            });
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             // Start the new round's timer only after the pause
@@ -1186,10 +1221,12 @@
         }
       } finally {
         isSubmitting = false;
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
-        }
+        submitButtons.forEach(b => {
+          b.disabled = false;
+          b.classList.remove('btn-loading');
+          b.removeAttribute('aria-busy');
+          b.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
+        });
       }
     }
 
@@ -1553,6 +1590,14 @@
     // RUN CODE IN LIVE CODING ROUND (Using Roadmap/Python Runner)
     // ─────────────────────────────────────────────────────────────
     async function executeInterviewCode() {
+      const runBtn = document.getElementById('btnRunInterviewCode');
+      const origHtml = runBtn ? runBtn.innerHTML : '';
+      if (runBtn) {
+        runBtn.disabled = true;
+        runBtn.classList.add('btn-loading');
+        runBtn.setAttribute('aria-busy', 'true');
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running Code...';
+      }
       const code = document.getElementById('codingEditor').value;
       const output = document.getElementById('interviewCodeOutput');
       output.textContent = 'Running code against interview test cases...';
@@ -1573,6 +1618,13 @@
         }
       } catch(e) {
         output.textContent = 'Execution finished:\n' + (e.message || 'Execution complete.');
+      } finally {
+        if (runBtn) {
+          runBtn.disabled = false;
+          runBtn.classList.remove('btn-loading');
+          runBtn.removeAttribute('aria-busy');
+          runBtn.innerHTML = origHtml || '<i class="fas fa-play"></i> Run Code &amp; Test Cases';
+        }
       }
     }
   </script>

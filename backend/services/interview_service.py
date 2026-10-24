@@ -519,6 +519,19 @@ def submit_interview_turn(session_id: str, round_type: str, question_index: int,
         conn.close()
         return {"success": False, "message": "Interview session not found"}
 
+    if row["status"] == "completed":
+        conn.close()
+        return {"success": False, "message": "Interview session already completed"}
+
+    # Guard against duplicate turn submission (e.g. rapid double-clicks)
+    c.execute("""
+        SELECT turn_id FROM mock_interview_turns 
+        WHERE session_id = ? AND round_type = ? AND question_index = ?
+    """, (session_id, round_type, question_index))
+    if c.fetchone():
+        conn.close()
+        return {"success": False, "duplicate": True, "message": f"Turn for round '{round_type}' question {question_index} already submitted"}
+
     track = row["track_key"]
     tier = row["company_tier"]
     questions_for_track = INTERVIEW_QUESTIONS.get(track, INTERVIEW_QUESTIONS["webdev"])
