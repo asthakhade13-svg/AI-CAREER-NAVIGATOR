@@ -571,11 +571,11 @@
           <i class="fas fa-rotate-right"></i> Try Another Track or Tier
         </button>
         <div style="display: flex; gap: 10px;">
-          <a id="btnReturnRoadmap" href="roadmap.html" class="btn btn-outline" style="text-decoration: none;">
-            <i class="fas fa-map"></i> Open Learning Roadmap
+          <a id="btnReturnRoadmap" href="roadmap.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="text-decoration: none;">
+            <i class="fas fa-arrow-up-right-from-square"></i> Open Learning Roadmap
           </a>
-          <a id="btnViewPortfolioScore" href="portfolio.html" class="btn btn-primary" style="text-decoration: none;">
-            <i class="fas fa-id-badge"></i> View Candidate Portfolio
+          <a id="btnViewPortfolioScore" href="portfolio.html" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration: none;">
+            <i class="fas fa-arrow-up-right-from-square"></i> View Candidate Portfolio
           </a>
         </div>
       </div>
@@ -647,6 +647,35 @@
       /** Wipe saved state — call on completion, reset, or new session start. */
       clear() {
         try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+      },
+
+      /** Cache the completed scorecard so refreshes or back navigation don't drop the user to setup */
+      saveScorecard(scorecardData) {
+        try {
+          sessionStorage.setItem('careernav_interview_scorecard', JSON.stringify({
+            scorecard: scorecardData,
+            savedAt: Date.now()
+          }));
+        } catch(e) {}
+      },
+
+      loadScorecard() {
+        try {
+          const raw = sessionStorage.getItem('careernav_interview_scorecard');
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (Date.now() - (parsed.savedAt || 0) > 4 * 60 * 60 * 1000) {
+            this.clearScorecard();
+            return null;
+          }
+          return parsed.scorecard;
+        } catch(e) {
+          return null;
+        }
+      },
+
+      clearScorecard() {
+        try { sessionStorage.removeItem('careernav_interview_scorecard'); } catch(e) {}
       }
     };
 
@@ -668,7 +697,14 @@
      */
     async function restoreSessionIfExists() {
       const saved = SessionPersistence.load();
-      if (!saved || !saved.activeSessionId) return;
+      if (!saved || !saved.activeSessionId) {
+        // If the candidate finished an interview and refreshed/returned, maintain scorecard view
+        const savedSc = SessionPersistence.loadScorecard();
+        if (savedSc) {
+          renderScorecard(savedSc);
+        }
+        return;
+      }
 
       // Restore all module-level variables from saved state
       activeSessionId      = saved.activeSessionId;
@@ -916,6 +952,7 @@
 
       // Clear any leftover session from a previous run before starting fresh
       SessionPersistence.clear();
+      SessionPersistence.clearScorecard();
 
       try {
         const res = await InterviewAPI.startSession(currentTrack, currentTier);
@@ -1282,7 +1319,8 @@
       stopTimer();               // invalidate any in-flight interval tick via timerOwner
       stopTTS();                 // ← cancel TTS so audio doesn't bleed into scorecard screen
       stopSpeechRecognition();   // ← cancel active mic recording
-      SessionPersistence.clear(); // interview is complete — wipe persisted state
+      SessionPersistence.clear(); // interview active rounds complete
+      SessionPersistence.saveScorecard(data); // persist completed scorecard for refresh/back navigation
 
       document.getElementById('interviewTimerBadge').style.display = 'none';
       document.getElementById('interviewScreen').style.display = 'none';
@@ -1323,20 +1361,40 @@
         });
       });
 
+      // Ensure footer action links always open in new tab so scorecard view is never lost
+      const btnRoadmap = document.getElementById('btnReturnRoadmap');
+      if (btnRoadmap) {
+        const track = data.trackKey || currentTrack || 'webdev';
+        btnRoadmap.href = `roadmap.html?track=${encodeURIComponent(track)}`;
+        btnRoadmap.target = '_blank';
+        btnRoadmap.rel = 'noopener noreferrer';
+      }
+      const btnPortfolio = document.getElementById('btnViewPortfolioScore');
+      if (btnPortfolio) {
+        btnPortfolio.target = '_blank';
+        btnPortfolio.rel = 'noopener noreferrer';
+      }
+
       // Render Remediation Plan
       const remContainer = document.getElementById('remediationList');
       if (remContainer && data.remediationPlan) {
-        remContainer.innerHTML = data.remediationPlan.map(rem => `
-          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div>
-              <strong style="color: #1e293b; display: block; font-size: 0.92rem;">${rem.milestone}</strong>
-              <span style="font-size: 0.8rem; color: #64748b;">Focus Concept: ${rem.topic}</span>
+        let plan = data.remediationPlan;
+        if (typeof plan === 'string') {
+          try { plan = JSON.parse(plan); } catch(e) { plan = []; }
+        }
+        if (Array.isArray(plan)) {
+          remContainer.innerHTML = plan.map(rem => `
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div>
+                <strong style="color: #1e293b; display: block; font-size: 0.92rem;">${rem.milestone}</strong>
+                <span style="font-size: 0.8rem; color: #64748b;">Focus Concept: ${rem.topic}</span>
+              </div>
+              <a href="${rem.url}" target="_blank" rel="noopener noreferrer" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-arrow-up-right-from-square"></i> Open in Roadmap
+              </a>
             </div>
-            <a href="${rem.url}" target="_blank" rel="noopener" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5;">
-              <i class="fas fa-arrow-up-right-from-square"></i> Open in Roadmap
-            </a>
-          </div>
-        `).join('');
+          `).join('');
+        }
       }
     }
 
@@ -1345,6 +1403,7 @@
       stopTTS();   // ← cancel TTS if user navigates back to setup mid-read
       stopSpeechRecognition(); // ← cancel active mic recording
       SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
+      SessionPersistence.clearScorecard();
 
       // Reset selection state & clear active card styling
       currentTrack = null;
