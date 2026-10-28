@@ -717,3 +717,24 @@ def get_student_interview_history(student_id: str) -> dict:
         "totalInterviews": len(interviews),
         "history": interviews
     }
+
+def delete_student_interview_history(student_id: str) -> dict:
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("""
+    DELETE FROM mock_interview_turns 
+    WHERE session_id IN (SELECT session_id FROM mock_interviews WHERE student_id = ?)
+    """, (student_id,))
+    turns_deleted = c.rowcount
+    c.execute("DELETE FROM mock_interviews WHERE student_id = ?", (student_id,))
+    sessions_deleted = c.rowcount
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "studentId": student_id,
+        "sessionsDeleted": sessions_deleted,
+        "turnsDeleted": turns_deleted
+    }
+

@@ -7,7 +7,8 @@ from services.interview_service import (
     start_interview_session,
     submit_interview_turn,
     get_interview_scorecard,
-    get_student_interview_history
+    get_student_interview_history,
+    delete_student_interview_history
 )
 
 logger = logging.getLogger(__name__)
@@ -104,3 +105,16 @@ def get_history(student_id: str):
     except Exception as e:
         logger.error(f"Error fetching interview history: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/history/{student_id}")
+def delete_history(student_id: str):
+    """
+    Deletes all mock interview sessions and associated turns for a student.
+    Useful for test cleanup and resetting interview state.
+    """
+    try:
+        return delete_student_interview_history(student_id)
+    except Exception as e:
+        logger.error(f"Error deleting interview history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

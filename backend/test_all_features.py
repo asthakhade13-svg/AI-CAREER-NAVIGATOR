@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import io
 import zipfile
 import json
@@ -1432,6 +1432,9 @@ def run_tests():
     # 52. AI Technical & Behavioral Mock Interview Simulator (interview.html, routes, live coding sandbox & scorecard)
     total_tests += 1
 
+    # Cleanup any lingering mock interview test data before test run
+    client.delete("/api/v1/interview/history/test_user_int_52")
+
     # 52.1 Tracks & Companies Catalog (GET /api/v1/interview/tracks-and-companies)
     res_tracks = client.get("/api/v1/interview/tracks-and-companies")
     assert res_tracks.status_code == 200, f"Interview catalog failed: {res_tracks.text}"
@@ -1548,6 +1551,10 @@ def run_tests():
     assert "submitResponse" in res_api.text, "submitResponse missing from api.js"
     assert "getScorecard" in res_api.text, "getScorecard missing from api.js"
     assert "getHistory" in res_api.text, "getHistory missing from api.js"
+
+    # Cleanup test interview records after completion
+    res_cleanup = client.delete("/api/v1/interview/history/test_user_int_52")
+    assert res_cleanup.status_code == 200 and res_cleanup.json().get("success") is True, "Failed to cleanup test interview history"
 
     print("[PASS] 52. AI Technical & Behavioral Mock Interview Simulator (interview.html, routes, live coding sandbox & scorecard)")
     tests_passed += 1
