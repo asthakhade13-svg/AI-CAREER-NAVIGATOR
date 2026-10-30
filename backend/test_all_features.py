@@ -1556,6 +1556,11 @@ def run_tests():
     res_cleanup = client.delete("/api/v1/interview/history/test_user_int_52")
     assert res_cleanup.status_code == 200 and res_cleanup.json().get("success") is True, "Failed to cleanup test interview history"
 
+    # 52.10 Dual Directory Parity Validation (root <-> frontend/)
+    from services.parity_service import verify_parity
+    is_clean, parity_mismatches = verify_parity()
+    assert is_clean, f"Dual directory parity failure: {parity_mismatches}"
+
     print("[PASS] 52. AI Technical & Behavioral Mock Interview Simulator (interview.html, routes, live coding sandbox & scorecard)")
     tests_passed += 1
 
