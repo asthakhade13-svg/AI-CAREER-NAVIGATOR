@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 from config import settings
 from database import Database
+from services.parity_service import sync_directories, resolve_newest_file
 
 # ── Resolve frontend index.html — try multiple candidate paths ─────────────────
 # When Railway runs `cd backend && uvicorn app:app`, __file__ may resolve
@@ -51,6 +52,13 @@ async def lifespan(app: FastAPI):
         init_sqlite_db()
     except Exception as e:
         logger.warning(f"SQLite init note: {e}")
+
+    try:
+        sync_res = sync_directories()
+        if sync_res.get("totalSynced", 0) > 0:
+            logger.info(f"Frontend dual-directory parity sync: updated {sync_res['totalSynced']} files.")
+    except Exception as e:
+        logger.warning(f"Parity sync note: {e}")
 
     Database.connect_db()           # graceful — won't crash if Mongo is offline
     os.makedirs("output", exist_ok=True)
@@ -111,8 +119,16 @@ _NO_CACHE_HEADERS = {
 }
 
 def _serve_index():
+    candidates = [
+        os.path.join(_this_dir, "..", "frontend", "index.html"),
+        os.path.join(_repo_root, "frontend", "index.html"),
+        os.path.join(_repo_root, "index.html"),
+        os.path.join(_this_dir, "frontend", "index.html"),
+    ]
+    resolved = resolve_newest_file("index.html", candidates)
+    if resolved and os.path.exists(resolved):
+        return FileResponse(resolved, headers=_NO_CACHE_HEADERS)
     if INDEX_FILE and os.path.exists(INDEX_FILE):
-        logger.info(f"Serving index.html from: {INDEX_FILE}")
         return FileResponse(INDEX_FILE, headers=_NO_CACHE_HEADERS)
     return JSONResponse({"message": "Welcome to First-Generation Career Navigator AI Backend"})
 
@@ -132,10 +148,9 @@ def _serve_page(filename: str):
         os.path.join(_repo_root, filename),
         os.path.join(_this_dir, "frontend", filename),
     ]
-    for cand in candidates:
-        norm = os.path.normpath(cand)
-        if os.path.exists(norm):
-            return FileResponse(norm, headers=_NO_CACHE_HEADERS)
+    resolved = resolve_newest_file(filename, candidates)
+    if resolved and os.path.exists(resolved):
+        return FileResponse(resolved, headers=_NO_CACHE_HEADERS)
     return JSONResponse({"message": f"{filename} not found"}, status_code=404)
 
 def _serve_portfolio():

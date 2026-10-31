@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 import hashlib
 import logging
@@ -119,7 +119,14 @@ def resolve_newest_file(filename: str, candidate_paths: List[str]) -> Optional[s
     Finds all existing candidate paths for a file, selects the most recently modified one,
     and automatically synchronizes newer content across duplicate locations.
     """
-    valid_paths = [os.path.normpath(p) for p in candidate_paths if os.path.isfile(p)]
+    seen = set()
+    valid_paths = []
+    for p in candidate_paths:
+        norm = os.path.normpath(p)
+        if norm not in seen and os.path.isfile(norm):
+            seen.add(norm)
+            valid_paths.append(norm)
+
     if not valid_paths:
         return None
 
@@ -129,10 +136,23 @@ def resolve_newest_file(filename: str, candidate_paths: List[str]) -> Optional[s
     # Sort candidates by mtime descending (newest first)
     valid_paths.sort(key=lambda p: os.path.getmtime(p), reverse=True)
     best_path = valid_paths[0]
-    best_hash = get_file_hash(best_path)
+    best_hash = None
 
     # Sync newer version to any outdated candidate paths
     for other_path in valid_paths[1:]:
+        try:
+            if os.path.samefile(best_path, other_path):
+                continue
+        except Exception:
+            pass
+
+        # If mtimes are virtually identical, files are already in sync
+        if abs(os.path.getmtime(best_path) - os.path.getmtime(other_path)) < 0.001:
+            continue
+
+        if best_hash is None:
+            best_hash = get_file_hash(best_path)
+
         if get_file_hash(other_path) != best_hash:
             try:
                 shutil.copy2(best_path, other_path)
