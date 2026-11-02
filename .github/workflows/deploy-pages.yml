@@ -26,6 +26,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Dual Directory Parity Sync (root <-> frontend/)
+        run: python sync_frontend.py
+
+      - name: Verify Parity (CI Fail-Safe)
+        run: python sync_frontend.py --check
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
