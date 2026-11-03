@@ -6,7 +6,7 @@
 [![Grok API](https://img.shields.io/badge/Grok%20API-xAI%20LLM-000000?style=flat&logo=x&logoColor=white)](https://console.x.ai/)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-Pro-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20%7C%20MongoDB-003B57?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-50%2F50%20(100%25)-success?style=flat&logo=pytest&logoColor=white)](#-automated-testing-suite)
+[![Tests Passing](https://img.shields.io/badge/Tests-52%2F52%20(100%25)-success?style=flat&logo=pytest&logoColor=white)](#-automated-testing-suite)
 [![Frontend](https://img.shields.io/badge/Frontend-GitHub%20Pages-222222?style=flat&logo=github&logoColor=white)](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
 [![Backend](https://img.shields.io/badge/Backend-Railway-0B0D0E?style=flat&logo=railway&logoColor=white)](https://railway.app/)
 
@@ -287,7 +287,7 @@
 
 ## 🧪 Automated Testing Suite
 
-The backend contains a rigorous, end-to-end automated testing suite with **50 comprehensive test suites**, validating all layers of the application:
+The backend contains a rigorous, end-to-end automated testing suite with **52 comprehensive test suites**, validating all layers of the application:
 
 ```bash
 # Run the complete test suite from the backend directory
