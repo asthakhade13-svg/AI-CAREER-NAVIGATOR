@@ -365,6 +365,7 @@ AI-CAREER-NAVIGATOR/
 ├── chatbot.html                 # AI Mentor with TTS voice & roadmap memory
 ├── quiz.html                    # Adaptive testing & mistake review engine
 ├── internships.html             # Tech internships portal & 1-click apply
+├── interview.html               # AI Mock Interview Simulator (3-round cockpit)
 ├── portfolio.html               # Public student showcase & recruiter portfolio
 ├── verify.html                  # Credential verification & LinkedIn 1-click add
 ├── login.html                   # Auth with Google One-Tap & SMTP OTP reset
@@ -372,18 +373,21 @@ AI-CAREER-NAVIGATOR/
 ├── settings.html                # Security, 2FA, session revocation & preferences
 ├── api.js                       # Comprehensive client-side API SDK
 ├── style.css / dashboard.css    # Responsive styles with dark mode CSS variables
+├── sync_frontend.py             # Standalone parity CLI (root <-> frontend/)
 │
 ├── backend/
 │   ├── app.py                   # FastAPI application & route mounting
 │   ├── config.py                # Configuration settings & environment loader
 │   ├── database.py              # SQLite & MongoDB database interfaces
-│   ├── test_all_features.py     # 50/50 Comprehensive automated test suite
+│   ├── sync_frontend.py         # Backend-directory launcher for parity CLI
+│   ├── test_all_features.py     # 52/52 Comprehensive automated test suite
 │   ├── routes/                  # Modular FastAPI routers
 │   │   ├── auth_routes.py       # Authentication, 2FA, GDPR & sessions
 │   │   ├── basic_info_routes.py # 19-Question assessment endpoints
 │   │   ├── certificate_routes.py# Verifiable credentials & LinkedIn payloads
 │   │   ├── chatbot_routes.py    # LLM conversation & voice transcription
 │   │   ├── internship_routes.py # Internships, RSS scraper & cover letters
+│   │   ├── interview_routes.py  # AI Mock Interview: start, submit, scorecard
 │   │   ├── portfolio_routes.py  # Public recruiter showcase endpoints
 │   │   ├── progress_routes.py   # Badges, study stopwatch & analytics
 │   │   ├── quiz_routes.py       # Adaptive assessment engine
@@ -393,12 +397,14 @@ AI-CAREER-NAVIGATOR/
 │   │   ├── auth_service.py      # SQLite tables, password hashing & JWT
 │   │   ├── certificate_service.py# Cryptographic signatures & SHA-256
 │   │   ├── chatbot_service.py   # LLM orchestration (Grok / Gemini)
-│   │   └── ml_service.py        # Random Forest model inference
+│   │   ├── interview_service.py # Mock interview engine, evaluator & question bank
+│   │   ├── ml_service.py        # Random Forest model inference
+│   │   └── parity_service.py    # Dual-directory sync & file resolution engine
 │   └── data/                    # Datasets & Questionnaires
 │       ├── basic_info_questions.csv # 19-Question assessment dataset
 │       └── career_nav.db        # SQLite persistence database
 │
-└── frontend/                    # Synchronized static mirror for GitHub Pages
+└── frontend/                    # Synchronized static mirror (auto-synced via parity)
 ```
 
 ---
