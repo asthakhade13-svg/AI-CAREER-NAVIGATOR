@@ -1,4 +1,4 @@
-﻿# BUILD: 2026-06-25-v6 — option shuffle + top career paths + FutureWarning fix
+# BUILD: 2026-06-25-v6 — option shuffle + top career paths + FutureWarning fix
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -196,7 +196,7 @@ def serve_service_worker():
 @app.get("/icons/{icon_name}")
 def serve_icon_file(icon_name: str):
     """Serves PWA icons."""
-    return _serve_page(os.path.join("icons", icon_name))
+    return _serve_page(f"icons/{icon_name}")
 
 # Include API routers
 app.include_router(dashboard_routes.router)
