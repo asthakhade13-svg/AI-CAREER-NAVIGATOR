@@ -1,4 +1,4 @@
-﻿import os
+import os
 import shutil
 import hashlib
 import logging
@@ -165,6 +165,9 @@ def resolve_newest_file(filename: str, candidate_paths: List[str]) -> Optional[s
 def verify_parity(root_dir: Optional[str] = None, frontend_dir: Optional[str] = None) -> Tuple[bool, List[str]]:
     """
     Verifies that all corresponding web assets in root and frontend/ match identically.
+    Checks BOTH directions:
+      - Files in frontend/ that are missing or differ in root/
+      - Files in root/ that are missing in frontend/ (previously unchecked)
     Returns (True, []) if in complete parity, or (False, [mismatches...]).
     """
     this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -176,18 +179,36 @@ def verify_parity(root_dir: Optional[str] = None, frontend_dir: Optional[str] = 
 
     mismatches = []
 
-    frontend_files = [
+    # Collect tracked files from BOTH directories
+    root_files = set(
+        f for f in os.listdir(root_dir)
+        if os.path.isfile(os.path.join(root_dir, f))
+        and os.path.splitext(f)[1].lower() in SYNC_EXTENSIONS
+        and f not in EXCLUDED_FILENAMES
+    )
+
+    frontend_files = set(
         f for f in os.listdir(frontend_dir)
         if os.path.isfile(os.path.join(frontend_dir, f))
         and os.path.splitext(f)[1].lower() in SYNC_EXTENSIONS
-    ]
+    )
 
-    for f in sorted(frontend_files):
+    # Union: check every file that appears in either directory
+    all_files = root_files | frontend_files
+
+    for f in sorted(all_files):
         r_path = os.path.join(root_dir, f)
         f_path = os.path.join(frontend_dir, f)
 
-        if not os.path.isfile(r_path):
-            mismatches.append(f"{f} exists in frontend/ but is missing in root")
+        r_exists = os.path.isfile(r_path)
+        f_exists = os.path.isfile(f_path)
+
+        if r_exists and not f_exists:
+            mismatches.append(f"{f} exists in root/ but is missing in frontend/")
+            continue
+
+        if f_exists and not r_exists:
+            mismatches.append(f"{f} exists in frontend/ but is missing in root/")
             continue
 
         r_hash = get_file_hash(r_path)
