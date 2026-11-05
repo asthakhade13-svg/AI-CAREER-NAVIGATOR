@@ -18,8 +18,10 @@ def run_tests():
 
     # 1. Health Check
     total_tests += 1
-    res = client.get("/health")
+    res = client.get("/health", headers={"Origin": "https://asthakhade13-svg.github.io"})
     assert res.status_code == 200, f"Health check failed: {res.text}"
+    assert res.headers.get("access-control-allow-origin") == "https://asthakhade13-svg.github.io", "CORS allow-origin mismatch"
+    assert res.headers.get("access-control-allow-credentials") == "true", "CORS allow-credentials mismatch"
     print("[PASS] 1. Root & Health API Check")
     tests_passed += 1
 
@@ -1545,12 +1547,14 @@ def run_tests():
     assert 'id="scoreConfidence"' in html_text, "Missing scoreConfidence in interview.html"
 
     # 52.9 InterviewAPI in api.js Validation
+    res_api = client.get("/api.js")
     assert "InterviewAPI" in res_api.text, "InterviewAPI missing from api.js"
     assert "getTracksAndCompanies" in res_api.text, "getTracksAndCompanies missing from api.js"
     assert "startSession" in res_api.text, "startSession missing from api.js"
     assert "submitResponse" in res_api.text, "submitResponse missing from api.js"
     assert "getScorecard" in res_api.text, "getScorecard missing from api.js"
     assert "getHistory" in res_api.text, "getHistory missing from api.js"
+    assert "deleteHistory" in res_api.text, "deleteHistory missing from api.js"
 
     # Cleanup test interview records after completion
     res_cleanup = client.delete("/api/v1/interview/history/test_user_int_52")

@@ -1,4 +1,4 @@
-# BUILD: 2026-06-25-v6 — option shuffle + top career paths + FutureWarning fix
+﻿# BUILD: 2026-06-25-v6 — option shuffle + top career paths + FutureWarning fix
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -76,10 +76,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS — allow all origins for local development
+# CORS — Allow specific origins and regex patterns for production (GitHub Pages / Railway) and local dev.
+# allow_origins=["*\"] with allow_credentials=True violates the W3C CORS specification and causes browsers
+# to reject credentialed requests in production.
+_ALLOWED_ORIGINS = [
+    "https://asthakhade13-svg.github.io",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.github\.io|https://.*\.railway\.app|http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

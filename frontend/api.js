@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // API.JS — Central API Configuration
 // All API calls go through this file
 // ============================================
@@ -3132,6 +3132,16 @@ const InterviewAPI = {
             if (res.status === 200 && res.data) return res.data;
         } catch(e) {}
         return { success: false, history: [] };
+    },
+
+    deleteHistory: async (studentId = null) => {
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const sid = studentId || user.email || user.id || 'user_001';
+        try {
+            const res = await mlApiCall(`/interview/history/${encodeURIComponent(sid)}`, 'DELETE');
+            if (res.status === 200 && res.data) return res.data;
+        } catch(e) {}
+        return { success: false };
     }
 };
 
