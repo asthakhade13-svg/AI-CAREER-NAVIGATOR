@@ -1547,6 +1547,12 @@ def run_tests():
     assert 'id="scoreProblemSolving"' in html_text, "Missing scoreProblemSolving in interview.html"
     assert 'id="scoreConfidence"' in html_text, "Missing scoreConfidence in interview.html"
 
+    # 52.8b Dashboard Mock Interview Performance Widget Validation
+    res_dash_page = client.get("/dashboard.html")
+    assert res_dash_page.status_code == 200, "dashboard.html retrieval failed"
+    assert 'id="interviewPerformanceCard"' in res_dash_page.text, "Missing interviewPerformanceCard in dashboard.html"
+    assert 'id="dashInterviewList"' in res_dash_page.text, "Missing dashInterviewList in dashboard.html"
+
     # 52.9 InterviewAPI in api.js Validation
     res_api = client.get("/api.js")
     assert "InterviewAPI" in res_api.text, "InterviewAPI missing from api.js"
