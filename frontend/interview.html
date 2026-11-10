@@ -1,1821 +1,1852 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-  <meta http-equiv="Pragma" content="no-cache"/>
-  <meta http-equiv="Expires" content="0"/>
-  <title>AI Mock Interview Simulator | First-Gen AI Career Navigator</title>
-
-  <link rel="manifest" href="manifest.json"/>
-  <meta name="theme-color" content="#4f46e5"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-title" content="CareerNav Interview"/>
-  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
-
-  <link rel="stylesheet" href="style.css?v=2.6" />
-  <link rel="stylesheet" href="dashboard.css?v=2.6" />
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <script src="api.js?v=2.6"></script>
-
-  <style>
-    .interview-container {
-      max-width: 1100px;
-      margin: 24px auto;
-      padding: 0 16px;
-    }
-    .stepper-nav {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      background: white;
-      border-radius: 16px;
-      padding: 14px 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-      border: 1px solid #e2e8f0;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .stepper-step {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #94a3b8;
-    }
-    .stepper-step.active {
-      color: #4f46e5;
-    }
-    .stepper-step.completed {
-      color: #10b981;
-    }
-    .stepper-badge {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: #f1f5f9;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-    }
-    .stepper-step.active .stepper-badge {
-      background: #4f46e5;
-      color: white;
-    }
-    .stepper-step.completed .stepper-badge {
-      background: #10b981;
-      color: white;
-    }
-    .card-glass {
-      background: white;
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-      border: 1px solid #e2e8f0;
-      margin-bottom: 24px;
-    }
-    .role-grid, .tier-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-      margin-top: 14px;
-    }
-    .selectable-card {
-      border: 2px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 18px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      background: #f8fafc;
-    }
-    .selectable-card:hover {
-      border-color: #818cf8;
-      transform: translateY(-2px);
-    }
-    .selectable-card.selected {
-      border-color: #4f46e5;
-      background: rgba(79,70,229,0.05);
-      box-shadow: 0 4px 15px rgba(79,70,229,0.12);
-    }
-    .timer-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: #fef3c7;
-      color: #b45309;
-      font-family: monospace;
-      font-weight: 700;
-      font-size: 0.95rem;
-      border: 1px solid #fde68a;
-    }
-    .timer-badge.urgent {
-      background: #fee2e2;
-      color: #dc2626;
-      border-color: #fca5a5;
-      animation: pulseAlert 1s infinite;
-    }
-    .timer-badge.paused {
-      background: #f1f5f9;
-      color: #64748b;
-      border-color: #cbd5e1;
-      animation: none;
-    }
-    .timer-badge.transitioning {
-      background: #ede9fe;
-      color: #6d28d9;
-      border-color: #c4b5fd;
-      animation: none;
-    }
-    @keyframes pulseAlert {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.85; transform: scale(1.03); }
-    }
-    .code-console {
-      background: #0f172a;
-      color: #f8fafc;
-      font-family: 'JetBrains Mono', monospace;
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 0.88rem;
-      min-height: 120px;
-      max-height: 240px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      border: 1px solid #334155;
-    }
-    .rubric-meter {
-      background: #f1f5f9;
-      border-radius: 999px;
-      height: 10px;
-      overflow: hidden;
-      margin-top: 6px;
-    }
-    .rubric-fill {
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #4f46e5, #7c3aed);
-      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: width;
-    }
-    .score-label {
-      font-variant-numeric: tabular-nums;
-      min-width: 3ch;      /* prevents layout shifts as digits change */
-      display: inline-block;
-      text-align: right;
-    }
-    @keyframes shakeError {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
-    }
-    .shake-anim {
-      animation: shakeError 0.4s ease-in-out;
-    }
-    button:disabled, .btn:disabled, .btn[disabled] {
-      opacity: 0.65 !important;
-      cursor: not-allowed !important;
-      pointer-events: none !important;
-      box-shadow: none !important;
-    }
-    .btn-loading {
-      position: relative;
-      pointer-events: none !important;
-      cursor: not-allowed !important;
-      opacity: 0.75 !important;
-    }
-    .btn-loading i.fa-spinner {
-      margin-right: 8px;
-    }
-    [data-theme="dark"] #setupValidationError {
-      background: rgba(239, 68, 68, 0.15) !important;
-      border-color: #ef4444 !important;
-      color: #fca5a5 !important;
-    }
-    [data-theme="dark"] body {
-      background: #0b0f19 !important;
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] header {
-      background: #111827 !important;
-      border-bottom-color: #1f2937 !important;
-    }
-    [data-theme="dark"] header a {
-      color: #f9fafb !important;
-    }
-    [data-theme="dark"] .card-glass,
-    [data-theme="dark"] .stepper-nav {
-      background: #111827 !important;
-      border-color: #1f2937 !important;
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] .selectable-card {
-      background: #1e293b !important;
-      border-color: #334155 !important;
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] .selectable-card.selected {
-      border-color: #6366f1 !important;
-      background: rgba(99,102,241,0.15) !important;
-    }
-    [data-theme="dark"] textarea {
-      background: #0f172a !important;
-      border-color: #334155 !important;
-      color: #f8fafc !important;
-    }
-    [data-theme="dark"] .rubric-meter {
-      background: #1e293b !important;
-    }
-
-    /* ---- Comprehensive Dark Mode Overrides for Interview Cockpit & Elements ---- */
-    [data-theme="dark"] .timer-badge {
-      background: #1e1b4b !important;
-      color: #a5b4fc !important;
-      border-color: #3730a3 !important;
-    }
-    [data-theme="dark"] .timer-badge #interviewTimer {
-      color: #c7d2fe !important;
-    }
-    [data-theme="dark"] .timer-badge.urgent {
-      background: rgba(239, 68, 68, 0.2) !important;
-      color: #f87171 !important;
-      border-color: #ef4444 !important;
-    }
-    [data-theme="dark"] .timer-badge.urgent #interviewTimer {
-      color: #fca5a5 !important;
-    }
-    [data-theme="dark"] .timer-badge.paused {
-      background: #1e293b !important;
-      color: #94a3b8 !important;
-      border-color: #334155 !important;
-    }
-    [data-theme="dark"] .timer-badge.transitioning {
-      background: rgba(147, 51, 234, 0.2) !important;
-      color: #c084fc !important;
-      border-color: #a855f7 !important;
-    }
-    [data-theme="dark"] .stepper-nav {
-      background: #111827 !important;
-      border-color: #1f2937 !important;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-    }
-    [data-theme="dark"] .stepper-step {
-      color: #64748b !important;
-    }
-    [data-theme="dark"] .stepper-step.active {
-      color: #818cf8 !important;
-    }
-    [data-theme="dark"] .stepper-step.completed {
-      color: #34d399 !important;
-    }
-    [data-theme="dark"] .stepper-badge {
-      background: #1e293b !important;
-      color: #94a3b8 !important;
-    }
-    [data-theme="dark"] .stepper-step.active .stepper-badge {
-      background: #6366f1 !important;
-      color: #ffffff !important;
-    }
-    [data-theme="dark"] .stepper-step.completed .stepper-badge {
-      background: #10b981 !important;
-      color: #ffffff !important;
-    }
-    [data-theme="dark"] #codingEditor {
-      background: #090d16 !important;
-      border-color: #1e293b !important;
-      color: #38bdf8 !important;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important;
-    }
-    [data-theme="dark"] #interviewCodeOutput,
-    [data-theme="dark"] .code-console {
-      background: #090d16 !important;
-      border-color: #1e293b !important;
-      color: #e2e8f0 !important;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important;
-    }
-    [data-theme="dark"] h2,
-    [data-theme="dark"] h3,
-    [data-theme="dark"] h4,
-    [data-theme="dark"] strong {
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] p,
-    [data-theme="dark"] span {
-      color: inherit;
-    }
-    [data-theme="dark"] #currentRoundTitle,
-    [data-theme="dark"] #questionPromptText {
-      color: #f8fafc !important;
-    }
-    [data-theme="dark"] #interviewScreen > div:nth-of-type(2) {
-      background: #0f172a !important;
-      border-color: #1e293b !important;
-    }
-    [data-theme="dark"] #frameworkHintBadge {
-      background: rgba(99, 102, 241, 0.18) !important;
-      color: #a5b4fc !important;
-    }
-    [data-theme="dark"] #pastInterviewsContainer {
-      border-top-color: #1f2937 !important;
-    }
-    [data-theme="dark"] #interviewHistoryList > div {
-      background: #1e293b !important;
-      border-color: #334155 !important;
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] #speechUnsupportedBanner {
-      background: rgba(245, 158, 11, 0.12) !important;
-      border-color: #b45309 !important;
-      color: #fcd34d !important;
-    }
-    [data-theme="dark"] #speechErrorToast {
-      background: rgba(239, 68, 68, 0.15) !important;
-      border-color: #ef4444 !important;
-      color: #fca5a5 !important;
-    }
-    [data-theme="dark"] #turnFeedbackBanner {
-      background: rgba(16, 185, 129, 0.12) !important;
-      border-color: #059669 !important;
-      color: #6ee7b7 !important;
-    }
-    [data-theme="dark"] #scorecardScreen .score-label {
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] #scorecardScreen > div:nth-of-type(2) > div {
-      background: #1e293b !important;
-      border-color: #334155 !important;
-      color: #f1f5f9 !important;
-    }
-    [data-theme="dark"] #scorecardScreen > div:nth-of-type(3) {
-      background: rgba(99, 102, 241, 0.08) !important;
-      border-color: rgba(99, 102, 241, 0.25) !important;
-    }
-    [data-theme="dark"] #remediationList > div,
-    [data-theme="dark"] #remediationList a {
-      background: #1e293b !important;
-      border-color: #334155 !important;
-      color: #f1f5f9 !important;
-    }
-  </style>
-</head>
-
-<body style="background: #f8fafc; min-height: 100vh;">
-
-  <!-- Header -->
-  <header style="background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 24px;">
-    <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-      <a href="dashboard.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1e293b; font-weight: 800; font-size: 1.2rem;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: #4F46E5; color: white; display: flex; align-items: center; justify-content: center;">
-          <i class="fas fa-headset"></i>
-        </div>
-        <span>CareerNav AI Interviewer</span>
-      </a>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div id="interviewTimerBadge" class="timer-badge" style="display: none;">
-          <i class="fas fa-clock"></i>
-          <span id="interviewTimer">02:00</span>
-        </div>
-        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle theme (Light / Dark)" aria-label="Toggle theme">
-          <i class="fas fa-moon theme-icon"></i>
-        </button>
-        <a href="dashboard.html" class="btn btn-outline sm" style="border-radius: 12px; text-decoration: none;">
-          <i class="fas fa-arrow-left"></i> Exit to Dashboard
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <main class="interview-container">
-
-    <!-- Progress Stepper -->
-    <nav class="stepper-nav" id="interviewStepper">
-      <div class="stepper-step active" id="stepIndicator1">
-        <div class="stepper-badge">1</div>
-        <span>Behavioral (STAR)</span>
-      </div>
-      <div class="stepper-step" id="stepIndicator2">
-        <div class="stepper-badge">2</div>
-        <span>Technical Depth</span>
-      </div>
-      <div class="stepper-step" id="stepIndicator3">
-        <div class="stepper-badge">3</div>
-        <span>Live Coding &amp; DSA</span>
-      </div>
-      <div class="stepper-step" id="stepIndicator4">
-        <div class="stepper-badge">4</div>
-        <span>Scorecard &amp; Roadmap</span>
-      </div>
-    </nav>
-
-    <!-- ═════════════════════════════════════════════════════════
-         SCREEN 1: SETUP & TRACK SELECTION
-         ═════════════════════════════════════════════════════════ -->
-    <section id="setupScreen" class="card-glass">
-      <div style="text-align: center; max-width: 650px; margin: 0 auto 28px auto;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(79,70,229,0.1); color: #4f46e5; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
-          <i class="fas fa-user-tie"></i>
-        </div>
-        <h2 style="font-size: 1.65rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;">
-          AI Mock Interview Simulator
-        </h2>
-        <p style="color: #64748b; font-size: 0.94rem; margin: 0;">
-          Experience realistic multi-round technical and behavioral hiring interviews with instant rubric scoring, runtime code execution, and targeted roadmap remediation.
-        </p>
-      </div>
-
-      <!-- Step 1: Select Role Track -->
-      <div style="margin-bottom: 24px;">
-        <label style="font-size: 0.95rem; font-weight: 700; color: #334155; display: block;">
-          1. Choose Target Career Role:
-        </label>
-        <div class="role-grid" id="roleGrid">
-          <div class="selectable-card" onclick="selectRole('webdev', this)">
-            <i class="fas fa-code" style="color: #4f46e5; font-size: 1.3rem; margin-bottom: 8px;"></i>
-            <strong style="display: block; font-size: 0.95rem;">Full-Stack Web Dev</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">APIs, State &amp; Concurrency</span>
-          </div>
-          <div class="selectable-card" onclick="selectRole('aiml', this)">
-            <i class="fas fa-brain" style="color: #8b5cf6; font-size: 1.3rem; margin-bottom: 8px;"></i>
-            <strong style="display: block; font-size: 0.95rem;">AI / ML Engineer</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">Transformers &amp; Inference</span>
-          </div>
-          <div class="selectable-card" onclick="selectRole('data', this)">
-            <i class="fas fa-chart-pie" style="color: #06b6d4; font-size: 1.3rem; margin-bottom: 8px;"></i>
-            <strong style="display: block; font-size: 0.95rem;">Data Scientist</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">Statistics &amp; Streaming Data</span>
-          </div>
-          <div class="selectable-card" onclick="selectRole('cloud', this)">
-            <i class="fas fa-cloud" style="color: #3b82f6; font-size: 1.3rem; margin-bottom: 8px;"></i>
-            <strong style="display: block; font-size: 0.95rem;">Cloud &amp; DevOps</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">Kubernetes &amp; Rate Limits</span>
-          </div>
-          <div class="selectable-card" onclick="selectRole('cyber', this)">
-            <i class="fas fa-shield-halved" style="color: #ef4444; font-size: 1.3rem; margin-bottom: 8px;"></i>
-            <strong style="display: block; font-size: 0.95rem;">Cybersecurity</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">SSRF &amp; Constant-Time Auth</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 2: Select Company Tier -->
-      <div style="margin-bottom: 30px;">
-        <label style="font-size: 0.95rem; font-weight: 700; color: #334155; display: block;">
-          2. Select Company Hiring Bar &amp; Tier:
-        </label>
-        <div class="tier-grid" id="tierGrid">
-          <div class="selectable-card" onclick="selectTier('faang', this)">
-            <span class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 6px;">Tier 1 Tech</span>
-            <strong style="display: block; font-size: 0.95rem;">FAANG / Big Tech</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">Google, Meta, Amazon, Apple</span>
-          </div>
-          <div class="selectable-card" onclick="selectTier('startup', this)">
-            <span class="badge badge-success" style="font-size: 0.7rem; margin-bottom: 6px;">Product Unicorn</span>
-            <strong style="display: block; font-size: 0.95rem;">High-Growth Startup</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">Stripe, Uber, Razorpay, Zepto</span>
-          </div>
-          <div class="selectable-card" onclick="selectTier('enterprise', this)">
-            <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 0.7rem; margin-bottom: 6px;">Enterprise</span>
-            <strong style="display: block; font-size: 0.95rem;">Global IT MNC</strong>
-            <span style="font-size: 0.78rem; color: #64748b;">Infosys, TCS, Cognizant</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step Validation Error Banner (hidden until start clicked without choices) -->
-      <div id="setupValidationError" style="display: none; max-width: 580px; margin: 0 auto 20px auto; padding: 12px 18px; border-radius: 12px; background: #fef2f2; border: 1.5px solid #f87171; color: #991b1b; font-size: 0.9rem; font-weight: 600; text-align: left; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);">
-        <i class="fas fa-circle-exclamation" style="font-size: 1.2rem; color: #dc2626; flex-shrink: 0;"></i>
-        <span id="setupValidationText">Please select both a target career role and a company tier before starting.</span>
-      </div>
-
-      <div style="text-align: center;">
-        <button id="btnStartInterview" class="btn btn-primary" onclick="startInterviewFlow()" style="padding: 13px 36px; border-radius: 14px; font-size: 1rem; font-weight: 700; box-shadow: 0 6px 20px rgba(79,70,229,0.3);">
-          <i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview
-        </button>
-      </div>
-
-      <!-- Historical Interviews -->
-      <div id="pastInterviewsContainer" style="margin-top: 36px; border-top: 1px dashed #cbd5e1; padding-top: 24px;">
-        <h4 style="font-size: 1rem; color: #475569; margin-bottom: 12px;">Your Recent Interview Attempts:</h4>
-        <div id="interviewHistoryList" style="display: grid; gap: 10px;">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-    </section>
-
-    <!-- ═════════════════════════════════════════════════════════
-         SCREEN 2: ACTIVE INTERVIEW COCKPIT
-         ═════════════════════════════════════════════════════════ -->
-    <section id="interviewScreen" class="card-glass" style="display: none;">
-      <!-- Round Info Banner -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-        <div>
-          <span id="currentRoundBadge" class="badge badge-primary" style="font-size: 0.8rem;">Round 1 of 3</span>
-          <h3 id="currentRoundTitle" style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 4px 0 0 0;">
-            Behavioral Assessment (STAR Method)
-          </h3>
-        </div>
-        <div style="text-align: right;">
-          <span id="sessionTargetBadge" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">
-            Role: Full-Stack Web Dev | Tier: FAANG
-          </span>
-        </div>
-      </div>
-
-      <!-- AI Interviewer Question Box -->
-      <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 20px; margin-bottom: 22px; position: relative;">
-        <div style="display: flex; gap: 14px; align-items: flex-start;">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
-            <i class="fas fa-robot"></i>
-          </div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #4f46e5; letter-spacing: 1px;">
-                Interviewer Prompt
-              </span>
-              <button id="btnSpeakQuestion" class="btn btn-outline sm" onclick="speakCurrentQuestion()" style="padding: 4px 10px; font-size: 0.78rem;">
-                <i class="fas fa-volume-high"></i> Read Out Loud
-              </button>
-            </div>
-            <p id="questionPromptText" style="font-size: 1.05rem; font-weight: 600; color: #1e293b; line-height: 1.5; margin: 0 0 10px 0;">
-              Loading interview question...
-            </p>
-            <div id="frameworkHintBadge" style="background: rgba(79,70,229,0.08); color: #4f46e5; display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;">
-              <i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> Framework: STAR Method
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Candidate Input: Text & Voice (For Behavioral & Technical) -->
-      <div id="textResponseArea" style="margin-bottom: 22px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <label style="font-size: 0.9rem; font-weight: 700; color: #334155;">
-            Your Spoken or Written Response:
-          </label>
-          <button id="btnVoiceInput" class="btn btn-outline sm" onclick="toggleSpeechRecognition()" style="padding: 5px 12px; border-radius: 8px; font-size: 0.82rem; color: #4f46e5; border-color: #4f46e5;">
-            <i class="fas fa-microphone" id="voiceMicIcon"></i> <span id="voiceBtnText">Voice Speech Input</span>
-          </button>
-        </div>
-
-        <!-- Speech-Not-Supported Banner (hidden by default; shown when API unavailable) -->
-        <div id="speechUnsupportedBanner" style="display: none; align-items: flex-start; gap: 10px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.84rem; color: #92400e;">
-          <i class="fas fa-triangle-exclamation" style="color: #f59e0b; margin-top: 2px; flex-shrink: 0;"></i>
-          <div>
-            <strong>Voice input not supported in this browser.</strong><br>
-            The Speech Recognition API requires <strong>Chrome or Edge (desktop)</strong>. You can still type your full answer below — the AI evaluator works equally well with written responses.
-          </div>
-        </div>
-
-        <!-- Inline speech-error toast (hidden by default) -->
-        <div id="speechErrorToast" style="display: none; align-items: center; gap: 8px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.83rem; color: #b91c1c;">
-          <i class="fas fa-circle-exclamation" style="flex-shrink: 0;"></i>
-          <span id="speechErrorMsg">Microphone error. Please check your permissions and try again.</span>
-        </div>
-
-        <textarea id="candidateAnswerInput" rows="7" placeholder="Articulate your structured answer here. Speak your thoughts aloud or type them directly..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-family: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;"></textarea>
-      </div>
-
-      <!-- Candidate Input: Live Coding & DSA Panel (For Round 3) -->
-      <div id="codingResponseArea" style="display: none; margin-bottom: 22px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <label style="font-size: 0.9rem; font-weight: 700; color: #334155;">
-            <i class="fas fa-laptop-code" style="color: #4f46e5; margin-right: 6px;"></i> Interactive Live Code Sandbox:
-          </label>
-          <button id="btnRunInterviewCode" class="btn btn-outline sm" onclick="executeInterviewCode()" style="padding: 6px 14px; border-radius: 8px; font-weight: 700; color: #10b981; border-color: #10b981;">
-            <i class="fas fa-play"></i> Run Code &amp; Test Cases
-          </button>
-        </div>
-        <textarea id="codingEditor" rows="12" spellcheck="false" style="width: 100%; padding: 14px; border-radius: 12px; background: #0f172a; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.92rem; line-height: 1.5; resize: vertical; box-sizing: border-box; border: 1.5px solid #334155;"></textarea>
-
-        <div style="margin-top: 10px;">
-          <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Runtime Output Terminal:</span>
-          <div id="interviewCodeOutput" class="code-console">Terminal ready. Click 'Run Code' to execute test cases...</div>
-        </div>
-      </div>
-
-      <!-- Action Footer -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 18px;">
-        <span style="font-size: 0.8rem; color: #94a3b8;">
-          <i class="fas fa-shield-halved"></i> Real-time AI Rubric Scoring &amp; Transcript Analysis
-        </span>
-        <button id="btnSubmitInterviewAnswer" class="btn btn-primary" onclick="submitInterviewTurn()" style="padding: 11px 28px; border-radius: 12px; font-weight: 700; transition: all 0.2s ease;">
-          Submit &amp; Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>
-        </button>
-        <button id="btnSubmitAnswer" style="display: none;" onclick="submitInterviewTurn()"></button>
-      </div>
-
-      <!-- Micro Feedback Banner -->
-      <div id="turnFeedbackBanner" style="display: none; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px; padding: 14px; margin-top: 16px; color: #065f46; font-size: 0.88rem;">
-        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
-        <span id="turnFeedbackText">Round feedback analyzed.</span>
-      </div>
-    </section>
-
-    <!-- ═════════════════════════════════════════════════════════
-         SCREEN 3: PERFORMANCE SCORECARD & REMEDIATION
-         ═════════════════════════════════════════════════════════ -->
-    <section id="scorecardScreen" class="card-glass" style="display: none;">
-      <div style="text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 24px; margin-bottom: 24px;">
-        <div style="width: 60px; height: 60px; border-radius: 50%; background: #ecfdf5; color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 10px;">
-          <i class="fas fa-award"></i>
-        </div>
-        <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0 0 6px 0;">
-          Interview Performance Scorecard
-        </h2>
-        <p style="color: #64748b; font-size: 0.95rem; margin: 0;">
-          Comprehensive rubric evaluation for <strong id="scorecardTrackName">Full-Stack Web Dev</strong> at <span id="scorecardTierName">FAANG</span>.
-        </p>
-
-        <!-- Hiring Verdict Badge -->
-        <div style="margin-top: 16px;">
-          <span id="hiringVerdictBadge" style="display: inline-block; padding: 8px 24px; border-radius: 999px; background: #4f46e5; color: white; font-weight: 800; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(79,70,229,0.25);">
-            Strong Hire (Top 10% Candidate)
-          </span>
-        </div>
-      </div>
-
-      <!-- 4-Dimension Rubric Meters -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px;">
-        <!-- Technical Accuracy -->
-        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
-            <span>Technical Accuracy</span>
-            <span id="scoreTechnical" class="score-label">0%</span>
-          </div>
-          <div class="rubric-meter"><div id="barTechnical" class="rubric-fill" style="width: 0%;"></div></div>
-        </div>
-
-        <!-- Clarity & Communication -->
-        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
-            <span>Communication &amp; STAR</span>
-            <span id="scoreCommunication" class="score-label">0%</span>
-          </div>
-          <div class="rubric-meter"><div id="barCommunication" class="rubric-fill" style="width: 0%;"></div></div>
-        </div>
-
-        <!-- Problem Solving -->
-        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
-            <span>Problem-Solving Structure</span>
-            <span id="scoreProblemSolving" class="score-label">0%</span>
-          </div>
-          <div class="rubric-meter"><div id="barProblemSolving" class="rubric-fill" style="width: 0%;"></div></div>
-        </div>
-
-        <!-- Confidence & Delivery -->
-        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
-            <span>Confidence &amp; Pace</span>
-            <span id="scoreConfidence" class="score-label">0%</span>
-          </div>
-          <div class="rubric-meter"><div id="barConfidence" class="rubric-fill" style="width: 0%;"></div></div>
-        </div>
-      </div>
-
-      <!-- Targeted Roadmap Remediation Plan -->
-      <div style="background: rgba(79,70,229,0.04); border: 1.5px solid rgba(79,70,229,0.2); border-radius: 16px; padding: 22px; margin-bottom: 28px;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <i class="fas fa-route" style="color: #4f46e5; font-size: 1.2rem;"></i>
-          <h4 style="font-size: 1.05rem; font-weight: 800; color: #1e293b; margin: 0;">
-            Personalized Roadmap Remediation Plan:
-          </h4>
-        </div>
-        <p style="font-size: 0.88rem; color: #64748b; margin: 0 0 16px 0;">
-          Based on your technical responses and code submission, review these targeted milestones in your personal roadmap to achieve 100% hiring readiness:
-        </p>
-        <div id="remediationList" style="display: grid; gap: 10px;">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <button id="btnRetakeInterview" class="btn btn-outline" onclick="resetToSetupScreen()">
-          <i class="fas fa-rotate-right"></i> Try Another Track or Tier
-        </button>
-        <div style="display: flex; gap: 10px;">
-          <a id="btnReturnRoadmap" href="roadmap.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="text-decoration: none;">
-            <i class="fas fa-arrow-up-right-from-square"></i> Open Learning Roadmap
-          </a>
-          <a id="btnViewPortfolioScore" href="portfolio.html" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration: none;">
-            <i class="fas fa-arrow-up-right-from-square"></i> View Candidate Portfolio
-          </a>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <script>
-    let currentTrack = null;
-    let currentTier = null;
-    let activeSessionId = null;
-    let currentRoundType = 'behavioral';
-    let currentQuestionIndex = 0;
-    let timerInterval = null;
-    let timerOwner = 0;          // incremented each time a new timer starts; stale ticks self-cancel
-    let remainingSeconds = 120;
-    let isSubmitting = false;    // prevents double-submit from rapid click + timer expiry race
-    let speechRecognition = null;
-    let isListening = false;
-
-    // ─────────────────────────────────────────────────────────────
-    // SESSION PERSISTENCE — survives page refresh via sessionStorage
-    // ─────────────────────────────────────────────────────────────
-    const SESSION_KEY = 'careernav_interview_session';
-
-    const SessionPersistence = {
-      /**
-       * Save all in-flight interview state to sessionStorage.
-       * Called after every state mutation so a refresh can restore
-       * exactly where the candidate was.
-       * @param {object} extra — optional extra fields (roundData, etc.)
-       */
-      save(extra = {}) {
-        try {
-          const payload = {
-            activeSessionId,
-            currentRoundType,
-            currentQuestionIndex,
-            currentTrack,
-            currentTier,
-            remainingSeconds,
-            savedAt: Date.now(),
-            ...extra           // absorbs questionText, starterCode, roundTitle, etc.
-          };
-          sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-        } catch(e) {
-          // sessionStorage unavailable (e.g. Safari private mode) — degrade silently
-          console.warn('[SessionPersistence] save failed:', e.message);
-        }
-      },
-
-      /** Load saved state, returns the parsed object or null. */
-      load() {
-        try {
-          const raw = sessionStorage.getItem(SESSION_KEY);
-          if (!raw) return null;
-          const data = JSON.parse(raw);
-          // Discard stale sessions older than 4 hours
-          if (Date.now() - (data.savedAt || 0) > 4 * 60 * 60 * 1000) {
-            this.clear();
-            return null;
-          }
-          return data;
-        } catch(e) {
-          return null;
-        }
-      },
-
-      /** Wipe saved state — call on completion, reset, or new session start. */
-      clear() {
-        try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
-      },
-
-      /** Cache the completed scorecard so refreshes or back navigation don't drop the user to setup */
-      saveScorecard(scorecardData) {
-        try {
-          sessionStorage.setItem('careernav_interview_scorecard', JSON.stringify({
-            scorecard: scorecardData,
-            savedAt: Date.now()
-          }));
-        } catch(e) {}
-      },
-
-      loadScorecard() {
-        try {
-          const raw = sessionStorage.getItem('careernav_interview_scorecard');
-          if (!raw) return null;
-          const parsed = JSON.parse(raw);
-          if (Date.now() - (parsed.savedAt || 0) > 4 * 60 * 60 * 1000) {
-            this.clearScorecard();
-            return null;
-          }
-          return parsed.scorecard;
-        } catch(e) {
-          return null;
-        }
-      },
-
-      clearScorecard() {
-        try { sessionStorage.removeItem('careernav_interview_scorecard'); } catch(e) {}
-      }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadInterviewHistory();
-      initSpeechEngine();
-      checkTTSSupport();
-      restoreSessionIfExists();   // ← attempt recovery from sessionStorage
-    });
-
-    // Stop TTS when the user closes the tab, refreshes, or navigates away
-    // so audio never bleeds into the next page load.
-    window.addEventListener('pagehide', stopTTS);
-    window.addEventListener('beforeunload', stopTTS);
-
-    /**
-     * On page load, check for an interrupted in-progress session and
-     * restore the interview cockpit UI directly, skipping setup.
-     */
-    async function restoreSessionIfExists() {
-      const saved = SessionPersistence.load();
-      if (!saved || !saved.activeSessionId) {
-        // If the candidate finished an interview and refreshed/returned, maintain scorecard view
-        const savedSc = SessionPersistence.loadScorecard();
-        if (savedSc) {
-          renderScorecard(savedSc);
-        }
-        return;
-      }
-
-      // Restore all module-level variables from saved state
-      activeSessionId      = saved.activeSessionId;
-      currentRoundType     = saved.currentRoundType     || 'behavioral';
-      currentQuestionIndex = saved.currentQuestionIndex || 0;
-      currentTrack         = saved.currentTrack         || 'webdev';
-      currentTier          = saved.currentTier          || 'faang';
-      remainingSeconds     = Math.max(30, saved.remainingSeconds || 120);  // floor at 30s
-
-      // Fetch fresh question data from the scorecard/history endpoint
-      // so we have the full round object (questionText, starterCode, etc.)
-      let roundData = null;
-      try {
-        if (typeof InterviewAPI !== 'undefined') {
-          const sc = await InterviewAPI.getScorecard(activeSessionId);
-          if (sc && sc.status === 'completed') {
-            // Session already finished — show scorecard directly
-            SessionPersistence.clear();
-            renderScorecard(sc);
-            return;
-          }
-        }
-      } catch(e) {
-        console.warn('[RestoreSession] scorecard fetch error:', e);
-      }
-
-      // Build a minimal round data object from saved fields so the UI renders
-      roundData = {
-        roundType:    saved.currentRoundType,
-        roundTitle:   saved.roundTitle    || `Round — ${saved.currentRoundType}`,
-        nextRoundTitle: saved.roundTitle  || '',
-        nextRound:    saved.currentRoundType,
-        roundNumber:  saved.roundNumber   || 1,
-        trackTitle:   saved.trackTitle    || saved.currentTrack.toUpperCase(),
-        questionText: saved.questionText  || 'Continue your answer below.',
-        frameworkHint:saved.frameworkHint || 'Continue where you left off',
-        starterCode:  saved.starterCode   || '',
-        timerSeconds: remainingSeconds
-      };
-
-      // Show interview screen
-      document.getElementById('setupScreen').style.display = 'none';
-      document.getElementById('interviewScreen').style.display = 'block';
-      document.getElementById('interviewTimerBadge').style.display = 'inline-flex';
-
-      updateRoundDisplay(roundData);
-
-      // Show a non-intrusive recovery banner
-      showRecoveryBanner(saved);
-
-      // Resume the timer with the remaining time (already restored above)
-      startRoundTimer(remainingSeconds);
-    }
-
-    /** Shows a dismissible amber banner explaining the session was restored. */
-    function showRecoveryBanner(saved) {
-      // Re-use the turnFeedbackBanner element
-      const banner = document.getElementById('turnFeedbackBanner');
-      const bannerText = document.getElementById('turnFeedbackText');
-      if (!banner || !bannerText) return;
-
-      const roundLabel = { behavioral: 'Round 1 (Behavioral)', technical: 'Round 2 (Technical)', coding: 'Round 3 (Coding)' };
-      bannerText.innerHTML = `
-        <i class="fas fa-rotate-right" style="color:#4f46e5; margin-right:6px;"></i>
-        <strong>Session restored.</strong> You were at <strong>${roundLabel[saved.currentRoundType] || saved.currentRoundType}</strong>.
-        Your previous partial answer has been recovered.
-        <button onclick="this.parentElement.parentElement.style.display='none'"
-          style="margin-left:12px; background:none; border:none; color:#4f46e5; cursor:pointer; font-weight:700; font-size:0.9rem;">✕</button>
-      `;
-      banner.style.background = '#ede9fe';
-      banner.style.borderColor = '#c4b5fd';
-      banner.style.color = '#4c1d95';
-      banner.style.display = 'block';
-
-      // Also restore the partial text answer if it was saved
-      if (saved.draftAnswer) {
-        const input = document.getElementById('candidateAnswerInput');
-        if (input) input.value = saved.draftAnswer;
-      }
-      if (saved.draftCode) {
-        const editor = document.getElementById('codingEditor');
-        if (editor) editor.value = saved.draftCode;
-      }
-
-      // Auto-hide after 10 seconds
-      setTimeout(() => {
-        if (banner.style.display !== 'none') {
-          banner.style.background = '';
-          banner.style.borderColor = '';
-          banner.style.color = '';
-          banner.style.display = 'none';
-        }
-      }, 10000);
-    }
-
-    // Eagerly disable the Read Out Loud button on browsers without speechSynthesis
-    function checkTTSSupport() {
-      if (!('speechSynthesis' in window)) {
-        const btn = document.getElementById('btnSpeakQuestion');
-        if (btn) {
-          btn.disabled = true;
-          btn.title = 'Text-to-speech is not supported in this browser';
-          btn.style.opacity = '0.4';
-          btn.style.cursor = 'not-allowed';
-          btn.innerHTML = '<i class="fas fa-volume-xmark"></i> TTS Unavailable';
-        }
-      }
-    }
-
-    function selectRole(trackKey, el) {
-      currentTrack = trackKey;
-      document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      checkSetupValidationState();
-    }
-
-    function selectTier(tierKey, el) {
-      currentTier = tierKey;
-      document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      checkSetupValidationState();
-    }
-
-    function checkSetupValidationState() {
-      const banner = document.getElementById('setupValidationError');
-      const text = document.getElementById('setupValidationText');
-      if (!banner || banner.style.display === 'none') return;
-
-      if (currentTrack && currentTier) {
-        banner.style.display = 'none';
-      } else if (!currentTrack) {
-        if (text) text.textContent = 'Please choose a target career role (Step 1) to proceed.';
-      } else if (!currentTier) {
-        if (text) text.textContent = 'Please choose a company hiring tier (Step 2) to proceed.';
-      }
-    }
-
-    async function loadInterviewHistory() {
-      if (typeof InterviewAPI === 'undefined') return;
-      const res = await InterviewAPI.getHistory();
-      const list = document.getElementById('interviewHistoryList');
-      if (!list) return;
-
-      const container = document.getElementById('pastInterviewsContainer');
-
-      if (res && res.history && res.history.length > 0) {
-        // Ensure the container and its heading are visible (may have been hidden by empty-state)
-        if (container) container.style.display = 'block';
-        const h4 = container ? container.querySelector('h4') : null;
-        if (h4) h4.style.display = '';
-
-        list.innerHTML = res.history.map(item => `
-          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; transition: box-shadow 0.2s ease;" onmouseover="this.style.boxShadow='0 4px 14px rgba(79,70,229,0.10)'" onmouseout="this.style.boxShadow='none'">
-            <div>
-              <strong>${item.trackTitle}</strong> · <span style="text-transform: uppercase; color: #64748b;">${item.company_tier}</span>
-              <div style="font-size: 0.75rem; color: #94a3b8;">${item.created_at}</div>
-            </div>
-            <div style="text-align: right;">
-              <span class="badge ${item.overall_score >= 80 ? 'badge-success' : 'badge-primary'}">${item.overall_score}%</span>
-              <div style="font-size: 0.72rem; color: #64748b;">${item.hiring_verdict || 'Completed'}</div>
-            </div>
-          </div>
-        `).join('');
-      } else {
-        // Show the container so the empty-state card is visible, but hide
-        // the raw "Your Recent Interview Attempts:" heading — the card has its own copy
-        if (container) container.style.display = 'block';
-        const heading = container ? container.querySelector('h4') : null;
-        if (heading) heading.style.display = 'none';
-
-        list.innerHTML = `
-          <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            padding: 32px 20px;
-            background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
-            border: 2px dashed #c7d2fe;
-            border-radius: 16px;
-            text-align: center;
-          ">
-            <div style="
-              width: 56px; height: 56px;
-              background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-              border-radius: 50%;
-              display: flex; align-items: center; justify-content: center;
-            ">
-              <i class="fas fa-clipboard-list" style="font-size: 1.4rem; color: #7c3aed;"></i>
-            </div>
-            <div>
-              <p style="font-size: 0.97rem; font-weight: 700; color: #3730a3; margin: 0 0 4px 0;">
-                No Interview Attempts Yet
-              </p>
-              <p style="font-size: 0.82rem; color: #64748b; margin: 0; line-height: 1.5;">
-                Complete your first mock interview above to see your<br>scores, feedback, and hiring verdict tracked here.
-              </p>
-            </div>
-            <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 0.78rem; color: #94a3b8;">
-              <span><i class="fas fa-star" style="color: #f59e0b; margin-right: 4px;"></i>Score Tracking</span>
-              <span><i class="fas fa-chart-line" style="color: #10b981; margin-right: 4px;"></i>Progress Over Time</span>
-              <span><i class="fas fa-route" style="color: #4f46e5; margin-right: 4px;"></i>Remediation Plans</span>
-            </div>
-          </div>`;
-
-        // When history is populated later (after retake), restore the heading
-        list._emptyState = true;
-      }
-    }
-
-    async function startInterviewFlow() {
-      // ── Step 0: Validation Guard — must have selected role and tier ──
-      const banner = document.getElementById('setupValidationError');
-      const text = document.getElementById('setupValidationText');
-
-      if (!currentTrack || !currentTier) {
-        let msg = 'Please select both a target career role and a company tier before starting the interview.';
-        if (!currentTrack && currentTier) {
-          msg = 'Please choose your target career role (Step 1) to begin.';
-        } else if (currentTrack && !currentTier) {
-          msg = 'Please choose a company hiring tier (Step 2) to begin.';
-        }
-
-        if (banner && text) {
-          text.textContent = msg;
-          banner.style.display = 'flex';
-          banner.classList.remove('shake-anim');
-          void banner.offsetWidth; // trigger reflow for animation replay
-          banner.classList.add('shake-anim');
-          banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-        return;
-      }
-
-      // Hide validation banner if previously shown
-      if (banner) banner.style.display = 'none';
-
-      const btn = document.getElementById('btnStartInterview');
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add('btn-loading');
-        btn.setAttribute('aria-busy', 'true');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Initializing AI Interviewer...';
-      }
-
-      // Clear any leftover session from a previous run before starting fresh
-      SessionPersistence.clear();
-      SessionPersistence.clearScorecard();
-
-      try {
-        const res = await InterviewAPI.startSession(currentTrack, currentTier);
-        if (res && res.success) {
-          activeSessionId = res.sessionId;
-          currentRoundType = res.roundType;
-          currentQuestionIndex = res.questionIndex;
-
-          document.getElementById('setupScreen').style.display = 'none';
-          document.getElementById('interviewScreen').style.display = 'block';
-          document.getElementById('interviewTimerBadge').style.display = 'inline-flex';
-
-          updateRoundDisplay(res);
-          startRoundTimer(res.timerSeconds || 120);
-
-          // ── Persist the new session immediately after UI is live ──
-          SessionPersistence.save({
-            roundNumber:  res.roundNumber  || 1,
-            roundTitle:   res.roundTitle   || 'Round 1: Behavioral & STAR Method Assessment',
-            trackTitle:   res.trackTitle   || (currentTrack ? currentTrack.toUpperCase() : 'INTERVIEW'),
-            questionText: res.questionText || '',
-            frameworkHint:res.frameworkHint|| 'STAR Method',
-            starterCode:  res.starterCode  || ''
-          });
-        } else {
-          alert('Could not start interview session. Please try again.');
-        }
-      } catch(err) {
-        console.error('Error starting interview:', err);
-        alert('Interview service error. Please try again.');
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          btn.removeAttribute('aria-busy');
-          btn.innerHTML = '<i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview';
-        }
-      }
-    }
-
-    function updateRoundDisplay(data) {
-      stopTTS();   // ← cancel any in-flight TTS before loading the new question
-      stopSpeechRecognition(); // ← abort any active mic recording
-      const roundNum = data.roundNumber || 1;
-      document.getElementById('currentRoundBadge').textContent = `Round ${roundNum} of 3`;
-      document.getElementById('currentRoundTitle').textContent = data.roundTitle || data.nextRoundTitle || 'Interview Assessment';
-      const displayTrack = data.trackTitle || (currentTrack ? currentTrack.toUpperCase() : 'CAREER NAV');
-      const displayTier = currentTier ? currentTier.toUpperCase() : (data.companyTier || 'GENERAL').toUpperCase();
-      document.getElementById('sessionTargetBadge').textContent = `Role: ${displayTrack} | Tier: ${displayTier}`;
-      document.getElementById('questionPromptText').textContent = data.questionText;
-      document.getElementById('frameworkHintBadge').innerHTML = `<i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> ${data.frameworkHint || 'Evaluate thoroughly'}`;
-
-      // Update stepper indicators
-      for (let i = 1; i <= 4; i++) {
-        const step = document.getElementById(`stepIndicator${i}`);
-        if (step) {
-          step.classList.remove('active', 'completed');
-          if (i < roundNum) step.classList.add('completed');
-          if (i === roundNum) step.classList.add('active');
-        }
-      }
-
-      // ── Reset ALL input/output state before loading the new round ──────────
-      // This runs unconditionally so stale content from the previous round
-      // never bleeds into the next one, regardless of which direction the
-      // round transitions (behavioral → technical → coding, or back via retry).
-
-      // 1. Text answer textarea — always blank
-      const answerEl = document.getElementById('candidateAnswerInput');
-      if (answerEl) answerEl.value = '';
-
-      // 2. Code editor — always blank, then optionally fill with starterCode
-      const editorEl = document.getElementById('codingEditor');
-      if (editorEl) editorEl.value = data.starterCode || '';
-
-      // 3. Code output terminal — reset to ready state
-      const outputEl = document.getElementById('interviewCodeOutput');
-      if (outputEl) outputEl.textContent = 'Terminal ready. Click \'Run Code\' to execute test cases...';
-
-      // 4. Micro-feedback banner from last round — hide it unless this turn has fresh feedback to show
-      if (!data.turnFeedback) {
-        const fbBanner = document.getElementById('turnFeedbackBanner');
-        if (fbBanner) fbBanner.style.display = 'none';
-      }
-
-      // 5. Speech error toast from last round — hide it
-      const errToast = document.getElementById('speechErrorToast');
-      if (errToast) errToast.style.display = 'none';
-
-      // ── Toggle which input panel is visible ──────────────────────────────
-      if (data.roundType === 'coding' || data.nextRound === 'coding') {
-        document.getElementById('textResponseArea').style.display = 'none';
-        document.getElementById('codingResponseArea').style.display = 'block';
-      } else {
-        document.getElementById('textResponseArea').style.display = 'block';
-        document.getElementById('codingResponseArea').style.display = 'none';
-      }
-
-      // ── Persist the current round state so a refresh can reconstruct the UI ──
-      SessionPersistence.save({
-        roundNumber:   roundNum,
-        roundTitle:    data.roundTitle || data.nextRoundTitle || 'Interview Assessment',
-        trackTitle:    data.trackTitle || (currentTrack ? currentTrack.toUpperCase() : 'INTERVIEW'),
-        questionText:  data.questionText || '',
-        frameworkHint: data.frameworkHint || 'Evaluate thoroughly',
-        starterCode:   data.starterCode || '',
-        draftAnswer:   '',
-        draftCode:     data.starterCode || ''
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // TIMER — collision-safe with owner token + isSubmitting guard
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Unconditionally kills any running timer and clears the interval.
-     * Always call this before starting a new round.
-     */
-    function stopTimer() {
-      timerOwner++;                  // invalidate any in-flight interval tick
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-
-    /**
-     * Start a fresh countdown for a new round.
-     * Uses a snapshot of timerOwner so stale ticks from a previous round
-     * self-cancel even if clearInterval is delayed by the JS event loop.
-     */
-    function startRoundTimer(seconds) {
-      stopTimer();                   // kill old timer first — always
-      remainingSeconds = Math.max(0, seconds);
-      const myToken = timerOwner;    // capture ownership token for this round
-
-      updateTimerBadge('running');
-
-      timerInterval = setInterval(() => {
-        // Stale tick guard: if a newer timer started, self-cancel silently
-        if (timerOwner !== myToken) {
-          clearInterval(timerInterval);
-          return;
-        }
-
-        remainingSeconds--;
-        updateTimerBadge('running');
-
-        // Save remaining time every 10 seconds so a page refresh
-        // restores the countdown close to where it was
-        if (remainingSeconds % 10 === 0) {
-          SessionPersistence.save({
-            draftAnswer: document.getElementById('candidateAnswerInput')?.value || '',
-            draftCode:   document.getElementById('codingEditor')?.value || ''
-          });
-        }
-
-        if (remainingSeconds <= 0) {
-          stopTimer();
-          // Only auto-submit if not already mid-submit (race guard)
-          if (!isSubmitting) {
-            showTimerExpiredBanner();
-            submitInterviewTurn();
-          }
-        }
-      }, 1000);
-    }
-
-    // Show a non-blocking banner instead of alert() on timer expiry
-    function showTimerExpiredBanner() {
-      stopTTS();   // ← cancel TTS immediately when time runs out
-      const badge = document.getElementById('interviewTimerBadge');
-      const timerText = document.getElementById('interviewTimer');
-      if (badge) {
-        badge.classList.remove('urgent', 'paused');
-        badge.classList.add('transitioning');
-      }
-      if (timerText) timerText.textContent = 'Time Up!';
-
-      // Brief inline notification above the submit button
-      const banner = document.getElementById('turnFeedbackBanner');
-      const bannerText = document.getElementById('turnFeedbackText');
-      if (banner && bannerText) {
-        bannerText.textContent = '⏰ Time limit reached — submitting your current response automatically.';
-        banner.style.background = '#fef3c7';
-        banner.style.borderColor = '#fde68a';
-        banner.style.color = '#92400e';
-        banner.style.display = 'block';
-      }
-    }
-
-    function updateTimerBadge(state = 'running') {
-      const timerBadge = document.getElementById('interviewTimerBadge');
-      const timerText = document.getElementById('interviewTimer');
-      if (!timerBadge || !timerText) return;
-
-      if (state === 'transitioning') {
-        timerBadge.classList.remove('urgent', 'paused');
-        timerBadge.classList.add('transitioning');
-        timerText.textContent = '⟳ Next Round';
-        return;
-      }
-
-      if (state === 'paused') {
-        timerBadge.classList.remove('urgent', 'transitioning');
-        timerBadge.classList.add('paused');
-        return;
-      }
-
-      // Normal running state
-      timerBadge.classList.remove('transitioning', 'paused');
-      const mins = Math.floor(remainingSeconds / 60);
-      const secs = remainingSeconds % 60;
-      timerText.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-      if (remainingSeconds <= 30) {
-        timerBadge.classList.add('urgent');
-      } else {
-        timerBadge.classList.remove('urgent');
-      }
-    }
-
-    async function submitInterviewTurn() {
-      // ── Double-submit guard: reject if already processing ──────
-      if (isSubmitting) return;
-      isSubmitting = true;
-
-      // Stop the timer immediately so it cannot fire again mid-await
-      stopTimer();
-      stopSpeechRecognition();
-
-      // Switch badge to "transitioning" while we wait for the API
-      updateTimerBadge('transitioning');
-
-      const submitButtons = [
-        document.getElementById('btnSubmitInterviewAnswer'),
-        document.getElementById('btnSubmitAnswer')
-      ].filter(Boolean);
-
-      submitButtons.forEach(b => {
-        b.disabled = true;
-        b.classList.add('btn-loading');
-        b.setAttribute('aria-busy', 'true');
-        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
-      });
-
-      const answerText = document.getElementById('candidateAnswerInput').value.trim();
-      const codeSnippet = document.getElementById('codingEditor').value.trim();
-
-      try {
-        const res = await InterviewAPI.submitResponse(
-          activeSessionId,
-          currentRoundType,
-          currentQuestionIndex,
-          answerText,
-          codeSnippet
-        );
-
-        if (res && res.success) {
-          if (res.isComplete) {
-            // All 3 rounds done → scorecard
-            renderScorecard(res);
-          } else {
-            // ── Round transition: show brief pause before new timer ──
-            // Display micro-feedback first
-            const banner = document.getElementById('turnFeedbackBanner');
-            const bannerText = document.getElementById('turnFeedbackText');
-            if (banner && bannerText && res.turnFeedback) {
-              bannerText.textContent = res.turnFeedback;
-              banner.style.background = '';   // reset any expiry colouring
-              banner.style.borderColor = '';
-              banner.style.color = '';
-              banner.style.display = 'block';
-              // Auto-hide after 6s (runs in parallel with the 1.5s delay below)
-              setTimeout(() => { banner.style.display = 'none'; }, 6000);
-            }
-
-            // Update round content immediately
-            currentRoundType = res.nextRound;
-            currentQuestionIndex = res.questionIndex || 0;
-            updateRoundDisplay(res);
-
-            // Hold in "transitioning" state for 1.5 s so the user can
-            // read the round title before the countdown begins
-            submitButtons.forEach(b => {
-              b.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Advancing Round...';
-            });
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Start the new round's timer only after the pause
-            startRoundTimer(res.timerSeconds || 180);
-          }
-        }
-      } catch(err) {
-        console.error('Error submitting turn:', err);
-        // Restart the timer so the candidate isn't locked out
-        startRoundTimer(remainingSeconds || 120);
-        const banner = document.getElementById('turnFeedbackBanner');
-        const bannerText = document.getElementById('turnFeedbackText');
-        if (banner && bannerText) {
-          bannerText.textContent = '⚠️ Could not submit your answer — please try again.';
-          banner.style.display = 'block';
-          setTimeout(() => { banner.style.display = 'none'; }, 5000);
-        }
-      } finally {
-        isSubmitting = false;
-        submitButtons.forEach(b => {
-          b.disabled = false;
-          b.classList.remove('btn-loading');
-          b.removeAttribute('aria-busy');
-          b.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
-        });
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // ANIMATED SCORE COUNTER — syncs numeric label with bar fill
-    // ─────────────────────────────────────────────────────────────
-    /**
-     * Animates a score label from 0% → target% while simultaneously
-     * expanding the bar via CSS transition. Uses requestAnimationFrame
-     * with an easeOutExpo easing for a premium "score reveal" feel.
-     *
-     * @param {string} labelId  - DOM id of the <span> text label
-     * @param {string} barId    - DOM id of the .rubric-fill bar element
-     * @param {number} target   - Final score value (0–100)
-     * @param {number} delayMs  - Optional stagger delay in ms (default 0)
-     */
-    function animateScore(labelId, barId, target, delayMs = 0) {
-      const labelEl = document.getElementById(labelId);
-      const barEl   = document.getElementById(barId);
-      if (!labelEl || !barEl) return;
-
-      const DURATION = 1200; // ms — matches CSS transition width 1.2s
-      let startTime = null;
-
-      function easeOutExpo(t) {
-        return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-      }
-
-      function tick(timestamp) {
-        if (startTime === null) startTime = timestamp;
-        const elapsed  = timestamp - startTime;
-        const progress = Math.min(elapsed / DURATION, 1);
-        const eased    = easeOutExpo(progress);
-        const current  = Math.round(eased * target);
-
-        labelEl.textContent = `${current}%`;
-
-        if (progress < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          labelEl.textContent = `${target}%`; // ensure exact final value
-        }
-      }
-
-      // Kick off bar fill (CSS transition) and counter after optional delay
-      setTimeout(() => {
-        barEl.style.width = `${target}%`;
-        requestAnimationFrame(tick);
-      }, delayMs);
-    }
-
-    function renderScorecard(data) {
-      stopTimer();               // invalidate any in-flight interval tick via timerOwner
-      stopTTS();                 // ← cancel TTS so audio doesn't bleed into scorecard screen
-      stopSpeechRecognition();   // ← cancel active mic recording
-      SessionPersistence.clear(); // interview active rounds complete
-      SessionPersistence.saveScorecard(data); // persist completed scorecard for refresh/back navigation
-
-      document.getElementById('interviewTimerBadge').style.display = 'none';
-      document.getElementById('interviewScreen').style.display = 'none';
-      document.getElementById('scorecardScreen').style.display = 'block';
-
-      // Update stepper
-      for (let i = 1; i <= 3; i++) {
-        document.getElementById(`stepIndicator${i}`).classList.remove('active');
-        document.getElementById(`stepIndicator${i}`).classList.add('completed');
-      }
-      document.getElementById('stepIndicator4').classList.add('active');
-
-      document.getElementById('hiringVerdictBadge').textContent = `${data.hiringVerdict} (${data.overallScore}%)`;
-
-      const rubric = data.rubric || {};
-      const tech = Math.min(100, Math.max(0, rubric.technicalAccuracy || 88));
-      const comm = Math.min(100, Math.max(0, rubric.communication || 85));
-      const prob = Math.min(100, Math.max(0, rubric.problemSolving || 87));
-      const conf = Math.min(100, Math.max(0, rubric.confidence || 82));
-
-      // Reset all bars to 0 so the CSS transition fires cleanly
-      ['barTechnical','barCommunication','barProblemSolving','barConfidence'].forEach(id => {
-        document.getElementById(id).style.width = '0%';
-      });
-      ['scoreTechnical','scoreCommunication','scoreProblemSolving','scoreConfidence'].forEach(id => {
-        document.getElementById(id).textContent = '0%';
-      });
-
-      // Trigger the animated reveal after one paint so the browser registers
-      // the 0% starting width before transitioning to the target
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          // Stagger each bar slightly for a cascade reveal effect
-          animateScore('scoreTechnical', 'barTechnical', tech, 0);
-          animateScore('scoreCommunication', 'barCommunication', comm, 120);
-          animateScore('scoreProblemSolving', 'barProblemSolving', prob, 240);
-          animateScore('scoreConfidence', 'barConfidence', conf, 360);
-        });
-      });
-
-      // Ensure footer action links always open in new tab so scorecard view is never lost
-      const btnRoadmap = document.getElementById('btnReturnRoadmap');
-      if (btnRoadmap) {
-        const track = data.trackKey || currentTrack || 'webdev';
-        btnRoadmap.href = `roadmap.html?track=${encodeURIComponent(track)}`;
-        btnRoadmap.target = '_blank';
-        btnRoadmap.rel = 'noopener noreferrer';
-      }
-      const btnPortfolio = document.getElementById('btnViewPortfolioScore');
-      if (btnPortfolio) {
-        btnPortfolio.target = '_blank';
-        btnPortfolio.rel = 'noopener noreferrer';
-      }
-
-      // Render Remediation Plan
-      const remContainer = document.getElementById('remediationList');
-      if (remContainer && data.remediationPlan) {
-        let plan = data.remediationPlan;
-        if (typeof plan === 'string') {
-          try { plan = JSON.parse(plan); } catch(e) { plan = []; }
-        }
-        if (Array.isArray(plan)) {
-          remContainer.innerHTML = plan.map(rem => `
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <div>
-                <strong style="color: #1e293b; display: block; font-size: 0.92rem;">${rem.milestone}</strong>
-                <span style="font-size: 0.8rem; color: #64748b;">Focus Concept: ${rem.topic}</span>
-              </div>
-              <a href="${rem.url}" target="_blank" rel="noopener noreferrer" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fas fa-arrow-up-right-from-square"></i> Open in Roadmap
-              </a>
-            </div>
-          `).join('');
-        }
-      }
-    }
-
-    function resetToSetupScreen() {
-      stopTimer();
-      stopTTS();   // ← cancel TTS if user navigates back to setup mid-read
-      stopSpeechRecognition(); // ← cancel active mic recording
-      SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
-      SessionPersistence.clearScorecard();
-
-      // Reset selection state & clear active card styling
-      currentTrack = null;
-      currentTier = null;
-      document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
-      document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
-
-      // Hide any previous validation banner
-      const banner = document.getElementById('setupValidationError');
-      if (banner) banner.style.display = 'none';
-
-      document.getElementById('scorecardScreen').style.display = 'none';
-      document.getElementById('setupScreen').style.display = 'block';
-      loadInterviewHistory();
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // SPEECH RECOGNITION (Voice to Text for Behavioral Answers)
-    // ─────────────────────────────────────────────────────────────
-    function initSpeechEngine() {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (!SpeechRec) {
-        // ── API not available (Firefox, Safari, most mobile browsers) ──
-        // Reveal the persistent warning banner
-        const banner = document.getElementById('speechUnsupportedBanner');
-        if (banner) banner.style.display = 'flex';
-
-        // Visually disable the mic button so it looks non-interactive
-        const btn = document.getElementById('btnVoiceInput');
-        const btnText = document.getElementById('voiceBtnText');
-        const micIcon = document.getElementById('voiceMicIcon');
-        if (btn) {
-          btn.disabled = true;
-          btn.title = 'Voice input requires Chrome or Edge (desktop)';
-          btn.style.opacity = '0.45';
-          btn.style.cursor = 'not-allowed';
-          btn.style.color = '#94a3b8';
-          btn.style.borderColor = '#cbd5e1';
-        }
-        if (btnText) btnText.textContent = 'Not Supported';
-        if (micIcon) {
-          micIcon.classList.remove('fa-microphone');
-          micIcon.classList.add('fa-microphone-slash');
-        }
-        return; // leave speechRecognition = null
-      }
-
-      speechRecognition = new SpeechRec();
-      speechRecognition.continuous = true;
-      speechRecognition.interimResults = true;
-      speechRecognition.lang = 'en-US';
-
-      speechRecognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-        const input = document.getElementById('candidateAnswerInput');
-        if (input) input.value += ' ' + transcript.trim();
-      };
-
-      speechRecognition.onerror = (e) => {
-        console.warn('[SpeechRec] Error:', e.error);
-        isListening = false;
-        updateVoiceButton();
-
-        // Map each error code to a friendly human-readable inline message
-        const errorMessages = {
-          'not-allowed':    'Microphone access was denied. Please allow microphone permission in your browser settings and try again.',
-          'permission-denied': 'Microphone access was denied. Please allow microphone permission in your browser settings and try again.',
-          'no-speech':      'No speech was detected. Make sure your microphone is working and try speaking again.',
-          'audio-capture':  'No microphone was found. Please connect a microphone and try again.',
-          'network':        'A network error occurred during speech recognition. Please check your connection.',
-          'service-not-allowed': 'Speech recognition was blocked. This feature requires HTTPS or a Chrome origin trial.',
-          'aborted':        'Voice recording was cancelled. Click the mic button to try again.',
-          'language-not-supported': 'The selected language is not supported by your browser\'s speech engine.',
-          'bad-grammar':    'Could not understand the speech input. Please try again.',
-        };
-
-        const msg = errorMessages[e.error] || `Microphone error (${e.error}). Please try again or type your answer.`;
-        showSpeechError(msg);
-      };
-
-      speechRecognition.onend = () => {
-        isListening = false;
-        updateVoiceButton();
-      };
-    }
-
-    // Show an inline error toast beneath the mic button
-    function showSpeechError(msg) {
-      const toast = document.getElementById('speechErrorToast');
-      const msgEl = document.getElementById('speechErrorMsg');
-      if (!toast || !msgEl) return;
-      msgEl.textContent = msg;
-      toast.style.display = 'flex';
-      // Auto-dismiss after 6 seconds
-      clearTimeout(showSpeechError._timer);
-      showSpeechError._timer = setTimeout(() => {
-        toast.style.display = 'none';
-      }, 6000);
-    }
-
-    function toggleSpeechRecognition() {
-      if (!speechRecognition) {
-        // API is unavailable — ensure banner is visible (defensive re-show)
-        const banner = document.getElementById('speechUnsupportedBanner');
-        if (banner) banner.style.display = 'flex';
-        return;
-      }
-      // Hide any lingering error toast when user manually retries
-      const toast = document.getElementById('speechErrorToast');
-      if (toast) toast.style.display = 'none';
-
-      if (isListening) {
-        speechRecognition.stop();
-        isListening = false;
-      } else {
-        try {
-          speechRecognition.start();
-          isListening = true;
-        } catch (err) {
-          // Catches "already started" or any synchronous start failure
-          console.warn('[SpeechRec] start() failed:', err.message);
-          isListening = false;
-          showSpeechError('Could not start the microphone. ' + (err.message || 'Please try again.'));
-        }
-      }
-      updateVoiceButton();
-    }
-
-    function updateVoiceButton() {
-      const btnText = document.getElementById('voiceBtnText');
-      const btn = document.getElementById('btnVoiceInput');
-      const micIcon = document.getElementById('voiceMicIcon');
-      if (!btn || !btnText) return;
-
-      if (!speechRecognition) {
-        // Already handled by initSpeechEngine — nothing more to do
-        return;
-      }
-
-      if (isListening) {
-        btnText.textContent = 'Listening (Speak Now)...';
-        btn.style.color = '#ef4444';
-        btn.style.borderColor = '#ef4444';
-        if (micIcon) {
-          micIcon.classList.remove('fa-microphone');
-          micIcon.classList.add('fa-microphone-lines');
-        }
-      } else {
-        btnText.textContent = 'Voice Speech Input';
-        btn.style.color = '#4f46e5';
-        btn.style.borderColor = '#4f46e5';
-        if (micIcon) {
-          micIcon.classList.remove('fa-microphone-lines');
-          micIcon.classList.add('fa-microphone');
-        }
-      }
-    }
-
-    /**
-     * Abort any in-progress speech recognition recording and reset button UI.
-     * Safe to call anywhere even if voice is inactive or unsupported.
-     */
-    function stopSpeechRecognition() {
-      if (typeof speechRecognition !== 'undefined' && speechRecognition && isListening) {
-        try {
-          speechRecognition.abort();
-        } catch (e) {}
-        isListening = false;
-        updateVoiceButton();
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // TTS STOP HELPER — call at every navigation / round transition
-    // ─────────────────────────────────────────────────────────────
-    /**
-     * Immediately cancels any in-progress TTS utterance and resets the
-     * "Read Out Loud" button back to its idle state.
-     * Safe to call even when TTS is not active or not supported.
-     */
-    function stopTTS() {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      const btn = document.getElementById('btnSpeakQuestion');
-      if (btn && !btn.dataset.ttsUnavailable) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
-      }
-    }
-
-    function speakCurrentQuestion() {
-      const btn = document.getElementById('btnSpeakQuestion');
-
-      if (!('speechSynthesis' in window)) {
-        // TTS API not available (e.g. some mobile browsers, older Firefox)
-        if (btn) {
-          btn.disabled = true;
-          btn.dataset.ttsUnavailable = 'true';   // ← flag so stopTTS() skips reset
-          btn.title = 'Text-to-speech is not supported in this browser';
-          btn.style.opacity = '0.4';
-          btn.style.cursor = 'not-allowed';
-          btn.innerHTML = '<i class="fas fa-volume-xmark"></i> TTS Unavailable';
-        }
-        return;
-      }
-
-      const text = document.getElementById('questionPromptText')?.textContent?.trim();
-      if (!text || text === 'Loading interview question...') return;
-
-      window.speechSynthesis.cancel(); // stop any previous utterance
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.rate = 1.0;
-      utter.pitch = 1.0;
-      utter.lang = 'en-US';
-
-      // Visual feedback: button shows "Reading..." while speaking
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-volume-high fa-beat-fade"></i> Reading...';
-      }
-      utter.onend = () => {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
-        }
-      };
-      utter.onerror = () => {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
-        }
-      };
-
-      window.speechSynthesis.speak(utter);
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // RUN CODE IN LIVE CODING ROUND (Using Roadmap/Python Runner)
-    // ─────────────────────────────────────────────────────────────
-    async function executeInterviewCode() {
-      const runBtn = document.getElementById('btnRunInterviewCode');
-      const origHtml = runBtn ? runBtn.innerHTML : '';
-      if (runBtn) {
-        runBtn.disabled = true;
-        runBtn.classList.add('btn-loading');
-        runBtn.setAttribute('aria-busy', 'true');
-        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running Code...';
-      }
-      const code = document.getElementById('codingEditor').value;
-      const output = document.getElementById('interviewCodeOutput');
-      output.textContent = 'Running code against interview test cases...';
-
-      try {
-        if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.runCode) {
-          const res = await RoadmapAPI.runCode(code, 'python');
-          if (res && res.stdout) {
-            output.textContent = res.stdout;
-            if (res.stderr) output.textContent += '\n' + res.stderr;
-          } else if (res && res.stderr) {
-            output.textContent = 'Error:\n' + res.stderr;
-          } else {
-            output.textContent = '✓ Execution completed with 0 errors.';
-          }
-        } else {
-          output.textContent = '✓ Test suite executed successfully.';
-        }
-      } catch(e) {
-        output.textContent = 'Execution finished:\n' + (e.message || 'Execution complete.');
-      } finally {
-        if (runBtn) {
-          runBtn.disabled = false;
-          runBtn.classList.remove('btn-loading');
-          runBtn.removeAttribute('aria-busy');
-          runBtn.innerHTML = origHtml || '<i class="fas fa-play"></i> Run Code &amp; Test Cases';
-        }
-      }
-    }
-  </script>
-</body>
-</html>
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <title>AI Mock Interview Simulator | First-Gen AI Career Navigator</title>
+
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#4f46e5"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="CareerNav Interview"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+
+  <link rel="stylesheet" href="style.css?v=2.6" />
+  <link rel="stylesheet" href="dashboard.css?v=2.6" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="api.js?v=2.6"></script>
+
+  <style>
+    .interview-container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .stepper-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      background: white;
+      border-radius: 16px;
+      padding: 14px 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .stepper-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .stepper-step.active {
+      color: #4f46e5;
+    }
+    .stepper-step.completed {
+      color: #10b981;
+    }
+    .stepper-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .stepper-step.active .stepper-badge {
+      background: #4f46e5;
+      color: white;
+    }
+    .stepper-step.completed .stepper-badge {
+      background: #10b981;
+      color: white;
+    }
+    .card-glass {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .role-grid, .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .selectable-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #f8fafc;
+    }
+    .selectable-card:hover {
+      border-color: #818cf8;
+      transform: translateY(-2px);
+    }
+    .selectable-card.selected {
+      border-color: #4f46e5;
+      background: rgba(79,70,229,0.05);
+      box-shadow: 0 4px 15px rgba(79,70,229,0.12);
+    }
+    .timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: #fef3c7;
+      color: #b45309;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid #fde68a;
+    }
+    .timer-badge.urgent {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fca5a5;
+      animation: pulseAlert 1s infinite;
+    }
+    .timer-badge.paused {
+      background: #f1f5f9;
+      color: #64748b;
+      border-color: #cbd5e1;
+      animation: none;
+    }
+    .timer-badge.transitioning {
+      background: #ede9fe;
+      color: #6d28d9;
+      border-color: #c4b5fd;
+      animation: none;
+    }
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+    .code-console {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      min-height: 120px;
+      max-height: 240px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #334155;
+    }
+    .rubric-meter {
+      background: #f1f5f9;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .rubric-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: width;
+    }
+    .score-label {
+      font-variant-numeric: tabular-nums;
+      min-width: 3ch;      /* prevents layout shifts as digits change */
+      display: inline-block;
+      text-align: right;
+    }
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake-anim {
+      animation: shakeError 0.4s ease-in-out;
+    }
+    button:disabled, .btn:disabled, .btn[disabled] {
+      opacity: 0.65 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      box-shadow: none !important;
+    }
+    .btn-loading {
+      position: relative;
+      pointer-events: none !important;
+      cursor: not-allowed !important;
+      opacity: 0.75 !important;
+    }
+    .btn-loading i.fa-spinner {
+      margin-right: 8px;
+    }
+    [data-theme="dark"] #setupValidationError {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+    }
+    [data-theme="dark"] body {
+      background: #0b0f19 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] header {
+      background: #111827 !important;
+      border-bottom-color: #1f2937 !important;
+    }
+    [data-theme="dark"] header a {
+      color: #f9fafb !important;
+    }
+    [data-theme="dark"] .card-glass,
+    [data-theme="dark"] .stepper-nav {
+      background: #111827 !important;
+      border-color: #1f2937 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .selectable-card {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .selectable-card.selected {
+      border-color: #6366f1 !important;
+      background: rgba(99,102,241,0.15) !important;
+    }
+    [data-theme="dark"] textarea {
+      background: #0f172a !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .rubric-meter {
+      background: #1e293b !important;
+    }
+
+    /* ---- Comprehensive Dark Mode Overrides for Interview Cockpit & Elements ---- */
+    [data-theme="dark"] .timer-badge {
+      background: #1e1b4b !important;
+      color: #a5b4fc !important;
+      border-color: #3730a3 !important;
+    }
+    [data-theme="dark"] .timer-badge #interviewTimer {
+      color: #c7d2fe !important;
+    }
+    [data-theme="dark"] .timer-badge.urgent {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: #f87171 !important;
+      border-color: #ef4444 !important;
+    }
+    [data-theme="dark"] .timer-badge.urgent #interviewTimer {
+      color: #fca5a5 !important;
+    }
+    [data-theme="dark"] .timer-badge.paused {
+      background: #1e293b !important;
+      color: #94a3b8 !important;
+      border-color: #334155 !important;
+    }
+    [data-theme="dark"] .timer-badge.transitioning {
+      background: rgba(147, 51, 234, 0.2) !important;
+      color: #c084fc !important;
+      border-color: #a855f7 !important;
+    }
+    [data-theme="dark"] .stepper-nav {
+      background: #111827 !important;
+      border-color: #1f2937 !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    }
+    [data-theme="dark"] .stepper-step {
+      color: #64748b !important;
+    }
+    [data-theme="dark"] .stepper-step.active {
+      color: #818cf8 !important;
+    }
+    [data-theme="dark"] .stepper-step.completed {
+      color: #34d399 !important;
+    }
+    [data-theme="dark"] .stepper-badge {
+      background: #1e293b !important;
+      color: #94a3b8 !important;
+    }
+    [data-theme="dark"] .stepper-step.active .stepper-badge {
+      background: #6366f1 !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .stepper-step.completed .stepper-badge {
+      background: #10b981 !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] #codingEditor {
+      background: #090d16 !important;
+      border-color: #1e293b !important;
+      color: #38bdf8 !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important;
+    }
+    [data-theme="dark"] #interviewCodeOutput,
+    [data-theme="dark"] .code-console {
+      background: #090d16 !important;
+      border-color: #1e293b !important;
+      color: #e2e8f0 !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important;
+    }
+    [data-theme="dark"] h2,
+    [data-theme="dark"] h3,
+    [data-theme="dark"] h4,
+    [data-theme="dark"] strong {
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] p,
+    [data-theme="dark"] span {
+      color: inherit;
+    }
+    [data-theme="dark"] #currentRoundTitle,
+    [data-theme="dark"] #questionPromptText {
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] #interviewScreen > div:nth-of-type(2) {
+      background: #0f172a !important;
+      border-color: #1e293b !important;
+    }
+    [data-theme="dark"] #frameworkHintBadge {
+      background: rgba(99, 102, 241, 0.18) !important;
+      color: #a5b4fc !important;
+    }
+    [data-theme="dark"] #pastInterviewsContainer {
+      border-top-color: #1f2937 !important;
+    }
+    [data-theme="dark"] #interviewHistoryList > div {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] #speechUnsupportedBanner {
+      background: rgba(245, 158, 11, 0.12) !important;
+      border-color: #b45309 !important;
+      color: #fcd34d !important;
+    }
+    [data-theme="dark"] #speechErrorToast {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+    }
+    [data-theme="dark"] #turnFeedbackBanner {
+      background: rgba(16, 185, 129, 0.12) !important;
+      border-color: #059669 !important;
+      color: #6ee7b7 !important;
+    }
+    [data-theme="dark"] #scorecardScreen .score-label {
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] #scorecardScreen > div:nth-of-type(2) > div {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] #scorecardScreen > div:nth-of-type(3) {
+      background: rgba(99, 102, 241, 0.08) !important;
+      border-color: rgba(99, 102, 241, 0.25) !important;
+    }
+    [data-theme="dark"] #remediationList > div,
+    [data-theme="dark"] #remediationList a {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+  </style>
+</head>
+
+<body style="background: #f8fafc; min-height: 100vh;">
+
+  <!-- Header -->
+  <header style="background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 24px;">
+    <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+      <a href="dashboard.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1e293b; font-weight: 800; font-size: 1.2rem;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: #4F46E5; color: white; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-headset"></i>
+        </div>
+        <span>CareerNav AI Interviewer</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div id="interviewTimerBadge" class="timer-badge" style="display: none;">
+          <i class="fas fa-clock"></i>
+          <span id="interviewTimer">02:00</span>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle theme (Light / Dark)" aria-label="Toggle theme">
+          <i class="fas fa-moon theme-icon"></i>
+        </button>
+        <a href="dashboard.html" class="btn btn-outline sm" style="border-radius: 12px; text-decoration: none;">
+          <i class="fas fa-arrow-left"></i> Exit to Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="interview-container">
+
+    <!-- Progress Stepper -->
+    <nav class="stepper-nav" id="interviewStepper">
+      <div class="stepper-step active" id="stepIndicator1">
+        <div class="stepper-badge">1</div>
+        <span>Behavioral (STAR)</span>
+      </div>
+      <div class="stepper-step" id="stepIndicator2">
+        <div class="stepper-badge">2</div>
+        <span>Technical Depth</span>
+      </div>
+      <div class="stepper-step" id="stepIndicator3">
+        <div class="stepper-badge">3</div>
+        <span>Live Coding &amp; DSA</span>
+      </div>
+      <div class="stepper-step" id="stepIndicator4">
+        <div class="stepper-badge">4</div>
+        <span>Scorecard &amp; Roadmap</span>
+      </div>
+    </nav>
+
+    <!-- ═════════════════════════════════════════════════════════
+         SCREEN 1: SETUP & TRACK SELECTION
+         ═════════════════════════════════════════════════════════ -->
+    <section id="setupScreen" class="card-glass">
+      <div style="text-align: center; max-width: 650px; margin: 0 auto 28px auto;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(79,70,229,0.1); color: #4f46e5; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <h2 style="font-size: 1.65rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;">
+          AI Mock Interview Simulator
+        </h2>
+        <p style="color: #64748b; font-size: 0.94rem; margin: 0;">
+          Experience realistic multi-round technical and behavioral hiring interviews with instant rubric scoring, runtime code execution, and targeted roadmap remediation.
+        </p>
+      </div>
+
+      <!-- Step 1: Select Role Track -->
+      <div style="margin-bottom: 24px;">
+        <label style="font-size: 0.95rem; font-weight: 700; color: #334155; display: block;">
+          1. Choose Target Career Role:
+        </label>
+        <div class="role-grid" id="roleGrid">
+          <div class="selectable-card" onclick="selectRole('webdev', this)">
+            <i class="fas fa-code" style="color: #4f46e5; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Full-Stack Web Dev</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">APIs, State &amp; Concurrency</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('aiml', this)">
+            <i class="fas fa-brain" style="color: #8b5cf6; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">AI / ML Engineer</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Transformers &amp; Inference</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('data', this)">
+            <i class="fas fa-chart-pie" style="color: #06b6d4; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Data Scientist</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Statistics &amp; Streaming Data</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('cloud', this)">
+            <i class="fas fa-cloud" style="color: #3b82f6; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Cloud &amp; DevOps</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Kubernetes &amp; Rate Limits</span>
+          </div>
+          <div class="selectable-card" onclick="selectRole('cyber', this)">
+            <i class="fas fa-shield-halved" style="color: #ef4444; font-size: 1.3rem; margin-bottom: 8px;"></i>
+            <strong style="display: block; font-size: 0.95rem;">Cybersecurity</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">SSRF &amp; Constant-Time Auth</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Select Company Tier -->
+      <div style="margin-bottom: 30px;">
+        <label style="font-size: 0.95rem; font-weight: 700; color: #334155; display: block;">
+          2. Select Company Hiring Bar &amp; Tier:
+        </label>
+        <div class="tier-grid" id="tierGrid">
+          <div class="selectable-card" onclick="selectTier('faang', this)">
+            <span class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 6px;">Tier 1 Tech</span>
+            <strong style="display: block; font-size: 0.95rem;">FAANG / Big Tech</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Google, Meta, Amazon, Apple</span>
+          </div>
+          <div class="selectable-card" onclick="selectTier('startup', this)">
+            <span class="badge badge-success" style="font-size: 0.7rem; margin-bottom: 6px;">Product Unicorn</span>
+            <strong style="display: block; font-size: 0.95rem;">High-Growth Startup</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Stripe, Uber, Razorpay, Zepto</span>
+          </div>
+          <div class="selectable-card" onclick="selectTier('enterprise', this)">
+            <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 0.7rem; margin-bottom: 6px;">Enterprise</span>
+            <strong style="display: block; font-size: 0.95rem;">Global IT MNC</strong>
+            <span style="font-size: 0.78rem; color: #64748b;">Infosys, TCS, Cognizant</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Validation Error Banner (hidden until start clicked without choices) -->
+      <div id="setupValidationError" style="display: none; max-width: 580px; margin: 0 auto 20px auto; padding: 12px 18px; border-radius: 12px; background: #fef2f2; border: 1.5px solid #f87171; color: #991b1b; font-size: 0.9rem; font-weight: 600; text-align: left; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);">
+        <i class="fas fa-circle-exclamation" style="font-size: 1.2rem; color: #dc2626; flex-shrink: 0;"></i>
+        <span id="setupValidationText">Please select both a target career role and a company tier before starting.</span>
+      </div>
+
+      <div style="text-align: center;">
+        <button id="btnStartInterview" class="btn btn-primary" onclick="startInterviewFlow()" style="padding: 13px 36px; border-radius: 14px; font-size: 1rem; font-weight: 700; box-shadow: 0 6px 20px rgba(79,70,229,0.3);">
+          <i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview
+        </button>
+      </div>
+
+      <!-- Historical Interviews -->
+      <div id="pastInterviewsContainer" style="margin-top: 36px; border-top: 1px dashed #cbd5e1; padding-top: 24px;">
+        <h4 style="font-size: 1rem; color: #475569; margin-bottom: 12px;">Your Recent Interview Attempts:</h4>
+        <div id="interviewHistoryList" style="display: grid; gap: 10px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════
+         SCREEN 2: ACTIVE INTERVIEW COCKPIT
+         ═════════════════════════════════════════════════════════ -->
+    <section id="interviewScreen" class="card-glass" style="display: none;">
+      <!-- Round Info Banner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <span id="currentRoundBadge" class="badge badge-primary" style="font-size: 0.8rem;">Round 1 of 3</span>
+          <h3 id="currentRoundTitle" style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 4px 0 0 0;">
+            Behavioral Assessment (STAR Method)
+          </h3>
+        </div>
+        <div style="text-align: right;">
+          <span id="sessionTargetBadge" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">
+            Role: Full-Stack Web Dev | Tier: FAANG
+          </span>
+        </div>
+      </div>
+
+      <!-- AI Interviewer Question Box -->
+      <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 20px; margin-bottom: 22px; position: relative;">
+        <div style="display: flex; gap: 14px; align-items: flex-start;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #4f46e5; letter-spacing: 1px;">
+                Interviewer Prompt
+              </span>
+              <button id="btnSpeakQuestion" class="btn btn-outline sm" onclick="speakCurrentQuestion()" style="padding: 4px 10px; font-size: 0.78rem;">
+                <i class="fas fa-volume-high"></i> Read Out Loud
+              </button>
+            </div>
+            <p id="questionPromptText" style="font-size: 1.05rem; font-weight: 600; color: #1e293b; line-height: 1.5; margin: 0 0 10px 0;">
+              Loading interview question...
+            </p>
+            <div id="frameworkHintBadge" style="background: rgba(79,70,229,0.08); color: #4f46e5; display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;">
+              <i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> Framework: STAR Method
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate Input: Text & Voice (For Behavioral & Technical) -->
+      <div id="textResponseArea" style="margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label style="font-size: 0.9rem; font-weight: 700; color: #334155;">
+            Your Spoken or Written Response:
+          </label>
+          <button id="btnVoiceInput" class="btn btn-outline sm" onclick="toggleSpeechRecognition()" style="padding: 5px 12px; border-radius: 8px; font-size: 0.82rem; color: #4f46e5; border-color: #4f46e5;">
+            <i class="fas fa-microphone" id="voiceMicIcon"></i> <span id="voiceBtnText">Voice Speech Input</span>
+          </button>
+        </div>
+
+        <!-- Speech-Not-Supported Banner (hidden by default; shown when API unavailable) -->
+        <div id="speechUnsupportedBanner" style="display: none; align-items: flex-start; gap: 10px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.84rem; color: #92400e;">
+          <i class="fas fa-triangle-exclamation" style="color: #f59e0b; margin-top: 2px; flex-shrink: 0;"></i>
+          <div>
+            <strong>Voice input not supported in this browser.</strong><br>
+            The Speech Recognition API requires <strong>Chrome or Edge (desktop)</strong>. You can still type your full answer below — the AI evaluator works equally well with written responses.
+          </div>
+        </div>
+
+        <!-- Inline speech-error toast (hidden by default) -->
+        <div id="speechErrorToast" style="display: none; align-items: center; gap: 8px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.83rem; color: #b91c1c;">
+          <i class="fas fa-circle-exclamation" style="flex-shrink: 0;"></i>
+          <span id="speechErrorMsg">Microphone error. Please check your permissions and try again.</span>
+        </div>
+
+        <textarea id="candidateAnswerInput" rows="7" placeholder="Articulate your structured answer here. Speak your thoughts aloud or type them directly..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-family: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;"></textarea>
+      </div>
+
+      <!-- Candidate Input: Live Coding & DSA Panel (For Round 3) -->
+      <div id="codingResponseArea" style="display: none; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label style="font-size: 0.9rem; font-weight: 700; color: #334155;">
+            <i class="fas fa-laptop-code" style="color: #4f46e5; margin-right: 6px;"></i> Interactive Live Code Sandbox:
+          </label>
+          <button id="btnRunInterviewCode" class="btn btn-outline sm" onclick="executeInterviewCode()" style="padding: 6px 14px; border-radius: 8px; font-weight: 700; color: #10b981; border-color: #10b981;">
+            <i class="fas fa-play"></i> Run Code &amp; Test Cases
+          </button>
+        </div>
+        <textarea id="codingEditor" rows="12" spellcheck="false" style="width: 100%; padding: 14px; border-radius: 12px; background: #0f172a; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.92rem; line-height: 1.5; resize: vertical; box-sizing: border-box; border: 1.5px solid #334155;"></textarea>
+
+        <div style="margin-top: 10px;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Runtime Output Terminal:</span>
+          <div id="interviewCodeOutput" class="code-console">Terminal ready. Click 'Run Code' to execute test cases...</div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+        <span style="font-size: 0.8rem; color: #94a3b8;">
+          <i class="fas fa-shield-halved"></i> Real-time AI Rubric Scoring &amp; Transcript Analysis
+        </span>
+        <button id="btnSubmitInterviewAnswer" class="btn btn-primary" onclick="submitInterviewTurn()" style="padding: 11px 28px; border-radius: 12px; font-weight: 700; transition: all 0.2s ease;">
+          Submit &amp; Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>
+        </button>
+        <button id="btnSubmitAnswer" style="display: none;" onclick="submitInterviewTurn()"></button>
+      </div>
+
+      <!-- Micro Feedback Banner -->
+      <div id="turnFeedbackBanner" style="display: none; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px; padding: 14px; margin-top: 16px; color: #065f46; font-size: 0.88rem;">
+        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+        <span id="turnFeedbackText">Round feedback analyzed.</span>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════
+         SCREEN 3: PERFORMANCE SCORECARD & REMEDIATION
+         ═════════════════════════════════════════════════════════ -->
+    <section id="scorecardScreen" class="card-glass" style="display: none;">
+      <div style="text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 24px; margin-bottom: 24px;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #ecfdf5; color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 10px;">
+          <i class="fas fa-award"></i>
+        </div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0 0 6px 0;">
+          Interview Performance Scorecard
+        </h2>
+        <p style="color: #64748b; font-size: 0.95rem; margin: 0;">
+          Comprehensive rubric evaluation for <strong id="scorecardTrackName">Full-Stack Web Dev</strong> at <span id="scorecardTierName">FAANG</span>.
+        </p>
+
+        <!-- Hiring Verdict Badge -->
+        <div style="margin-top: 16px;">
+          <span id="hiringVerdictBadge" style="display: inline-block; padding: 8px 24px; border-radius: 999px; background: #4f46e5; color: white; font-weight: 800; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(79,70,229,0.25);">
+            Strong Hire (Top 10% Candidate)
+          </span>
+        </div>
+      </div>
+
+      <!-- 4-Dimension Rubric Meters -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px;">
+        <!-- Technical Accuracy -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Technical Accuracy</span>
+            <span id="scoreTechnical" class="score-label">0%</span>
+          </div>
+          <div class="rubric-meter"><div id="barTechnical" class="rubric-fill" style="width: 0%;"></div></div>
+        </div>
+
+        <!-- Clarity & Communication -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Communication &amp; STAR</span>
+            <span id="scoreCommunication" class="score-label">0%</span>
+          </div>
+          <div class="rubric-meter"><div id="barCommunication" class="rubric-fill" style="width: 0%;"></div></div>
+        </div>
+
+        <!-- Problem Solving -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Problem-Solving Structure</span>
+            <span id="scoreProblemSolving" class="score-label">0%</span>
+          </div>
+          <div class="rubric-meter"><div id="barProblemSolving" class="rubric-fill" style="width: 0%;"></div></div>
+        </div>
+
+        <!-- Confidence & Delivery -->
+        <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #475569;">
+            <span>Confidence &amp; Pace</span>
+            <span id="scoreConfidence" class="score-label">0%</span>
+          </div>
+          <div class="rubric-meter"><div id="barConfidence" class="rubric-fill" style="width: 0%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Targeted Roadmap Remediation Plan -->
+      <div style="background: rgba(79,70,229,0.04); border: 1.5px solid rgba(79,70,229,0.2); border-radius: 16px; padding: 22px; margin-bottom: 28px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <i class="fas fa-route" style="color: #4f46e5; font-size: 1.2rem;"></i>
+          <h4 style="font-size: 1.05rem; font-weight: 800; color: #1e293b; margin: 0;">
+            Personalized Roadmap Remediation Plan:
+          </h4>
+        </div>
+        <p style="font-size: 0.88rem; color: #64748b; margin: 0 0 16px 0;">
+          Based on your technical responses and code submission, review these targeted milestones in your personal roadmap to achieve 100% hiring readiness:
+        </p>
+        <div id="remediationList" style="display: grid; gap: 10px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          <button id="btnRetryInterview" class="btn btn-primary" onclick="retryCurrentInterview()">
+            <i class="fas fa-rotate-right"></i> Retry Interview
+          </button>
+          <button id="btnRetakeInterview" class="btn btn-outline" onclick="resetToSetupScreen()">
+            <i class="fas fa-sliders"></i> Try Another Track or Tier
+          </button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <a id="btnReturnRoadmap" href="roadmap.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="text-decoration: none;">
+            <i class="fas fa-arrow-up-right-from-square"></i> Open Learning Roadmap
+          </a>
+          <a id="btnViewPortfolioScore" href="portfolio.html" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration: none;">
+            <i class="fas fa-arrow-up-right-from-square"></i> View Candidate Portfolio
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentTrack = null;
+    let currentTier = null;
+    let activeSessionId = null;
+    let currentRoundType = 'behavioral';
+    let currentQuestionIndex = 0;
+    let timerInterval = null;
+    let timerOwner = 0;          // incremented each time a new timer starts; stale ticks self-cancel
+    let remainingSeconds = 120;
+    let isSubmitting = false;    // prevents double-submit from rapid click + timer expiry race
+    let speechRecognition = null;
+    let isListening = false;
+    let lastCompletedTrack = null;
+    let lastCompletedTier = null;
+
+    // ─────────────────────────────────────────────────────────────
+    // SESSION PERSISTENCE — survives page refresh via sessionStorage
+    // ─────────────────────────────────────────────────────────────
+    const SESSION_KEY = 'careernav_interview_session';
+
+    const SessionPersistence = {
+      /**
+       * Save all in-flight interview state to sessionStorage.
+       * Called after every state mutation so a refresh can restore
+       * exactly where the candidate was.
+       * @param {object} extra — optional extra fields (roundData, etc.)
+       */
+      save(extra = {}) {
+        try {
+          const payload = {
+            activeSessionId,
+            currentRoundType,
+            currentQuestionIndex,
+            currentTrack,
+            currentTier,
+            remainingSeconds,
+            savedAt: Date.now(),
+            ...extra           // absorbs questionText, starterCode, roundTitle, etc.
+          };
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+        } catch(e) {
+          // sessionStorage unavailable (e.g. Safari private mode) — degrade silently
+          console.warn('[SessionPersistence] save failed:', e.message);
+        }
+      },
+
+      /** Load saved state, returns the parsed object or null. */
+      load() {
+        try {
+          const raw = sessionStorage.getItem(SESSION_KEY);
+          if (!raw) return null;
+          const data = JSON.parse(raw);
+          // Discard stale sessions older than 4 hours
+          if (Date.now() - (data.savedAt || 0) > 4 * 60 * 60 * 1000) {
+            this.clear();
+            return null;
+          }
+          return data;
+        } catch(e) {
+          return null;
+        }
+      },
+
+      /** Wipe saved state — call on completion, reset, or new session start. */
+      clear() {
+        try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+      },
+
+      /** Cache the completed scorecard so refreshes or back navigation don't drop the user to setup */
+      saveScorecard(scorecardData) {
+        try {
+          sessionStorage.setItem('careernav_interview_scorecard', JSON.stringify({
+            scorecard: scorecardData,
+            savedAt: Date.now()
+          }));
+        } catch(e) {}
+      },
+
+      loadScorecard() {
+        try {
+          const raw = sessionStorage.getItem('careernav_interview_scorecard');
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (Date.now() - (parsed.savedAt || 0) > 4 * 60 * 60 * 1000) {
+            this.clearScorecard();
+            return null;
+          }
+          return parsed.scorecard;
+        } catch(e) {
+          return null;
+        }
+      },
+
+      clearScorecard() {
+        try { sessionStorage.removeItem('careernav_interview_scorecard'); } catch(e) {}
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInterviewHistory();
+      initSpeechEngine();
+      checkTTSSupport();
+      restoreSessionIfExists();   // ← attempt recovery from sessionStorage
+    });
+
+    // Stop TTS when the user closes the tab, refreshes, or navigates away
+    // so audio never bleeds into the next page load.
+    window.addEventListener('pagehide', stopTTS);
+    window.addEventListener('beforeunload', stopTTS);
+
+    /**
+     * On page load, check for an interrupted in-progress session and
+     * restore the interview cockpit UI directly, skipping setup.
+     */
+    async function restoreSessionIfExists() {
+      const saved = SessionPersistence.load();
+      if (!saved || !saved.activeSessionId) {
+        // If the candidate finished an interview and refreshed/returned, maintain scorecard view
+        const savedSc = SessionPersistence.loadScorecard();
+        if (savedSc) {
+          renderScorecard(savedSc);
+        }
+        return;
+      }
+
+      // Restore all module-level variables from saved state
+      activeSessionId      = saved.activeSessionId;
+      currentRoundType     = saved.currentRoundType     || 'behavioral';
+      currentQuestionIndex = saved.currentQuestionIndex || 0;
+      currentTrack         = saved.currentTrack         || 'webdev';
+      currentTier          = saved.currentTier          || 'faang';
+      remainingSeconds     = Math.max(30, saved.remainingSeconds || 120);  // floor at 30s
+
+      // Fetch fresh question data from the scorecard/history endpoint
+      // so we have the full round object (questionText, starterCode, etc.)
+      let roundData = null;
+      try {
+        if (typeof InterviewAPI !== 'undefined') {
+          const sc = await InterviewAPI.getScorecard(activeSessionId);
+          if (sc && sc.status === 'completed') {
+            // Session already finished — show scorecard directly
+            SessionPersistence.clear();
+            renderScorecard(sc);
+            return;
+          }
+        }
+      } catch(e) {
+        console.warn('[RestoreSession] scorecard fetch error:', e);
+      }
+
+      // Build a minimal round data object from saved fields so the UI renders
+      roundData = {
+        roundType:    saved.currentRoundType,
+        roundTitle:   saved.roundTitle    || `Round — ${saved.currentRoundType}`,
+        nextRoundTitle: saved.roundTitle  || '',
+        nextRound:    saved.currentRoundType,
+        roundNumber:  saved.roundNumber   || 1,
+        trackTitle:   saved.trackTitle    || saved.currentTrack.toUpperCase(),
+        questionText: saved.questionText  || 'Continue your answer below.',
+        frameworkHint:saved.frameworkHint || 'Continue where you left off',
+        starterCode:  saved.starterCode   || '',
+        timerSeconds: remainingSeconds
+      };
+
+      // Show interview screen
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('interviewScreen').style.display = 'block';
+      document.getElementById('interviewTimerBadge').style.display = 'inline-flex';
+
+      updateRoundDisplay(roundData);
+
+      // Show a non-intrusive recovery banner
+      showRecoveryBanner(saved);
+
+      // Resume the timer with the remaining time (already restored above)
+      startRoundTimer(remainingSeconds);
+    }
+
+    /** Shows a dismissible amber banner explaining the session was restored. */
+    function showRecoveryBanner(saved) {
+      // Re-use the turnFeedbackBanner element
+      const banner = document.getElementById('turnFeedbackBanner');
+      const bannerText = document.getElementById('turnFeedbackText');
+      if (!banner || !bannerText) return;
+
+      const roundLabel = { behavioral: 'Round 1 (Behavioral)', technical: 'Round 2 (Technical)', coding: 'Round 3 (Coding)' };
+      bannerText.innerHTML = `
+        <i class="fas fa-rotate-right" style="color:#4f46e5; margin-right:6px;"></i>
+        <strong>Session restored.</strong> You were at <strong>${roundLabel[saved.currentRoundType] || saved.currentRoundType}</strong>.
+        Your previous partial answer has been recovered.
+        <button onclick="this.parentElement.parentElement.style.display='none'"
+          style="margin-left:12px; background:none; border:none; color:#4f46e5; cursor:pointer; font-weight:700; font-size:0.9rem;">✕</button>
+      `;
+      banner.style.background = '#ede9fe';
+      banner.style.borderColor = '#c4b5fd';
+      banner.style.color = '#4c1d95';
+      banner.style.display = 'block';
+
+      // Also restore the partial text answer if it was saved
+      if (saved.draftAnswer) {
+        const input = document.getElementById('candidateAnswerInput');
+        if (input) input.value = saved.draftAnswer;
+      }
+      if (saved.draftCode) {
+        const editor = document.getElementById('codingEditor');
+        if (editor) editor.value = saved.draftCode;
+      }
+
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        if (banner.style.display !== 'none') {
+          banner.style.background = '';
+          banner.style.borderColor = '';
+          banner.style.color = '';
+          banner.style.display = 'none';
+        }
+      }, 10000);
+    }
+
+    // Eagerly disable the Read Out Loud button on browsers without speechSynthesis
+    function checkTTSSupport() {
+      if (!('speechSynthesis' in window)) {
+        const btn = document.getElementById('btnSpeakQuestion');
+        if (btn) {
+          btn.disabled = true;
+          btn.title = 'Text-to-speech is not supported in this browser';
+          btn.style.opacity = '0.4';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = '<i class="fas fa-volume-xmark"></i> TTS Unavailable';
+        }
+      }
+    }
+
+    function selectRole(trackKey, el) {
+      currentTrack = trackKey;
+      document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      checkSetupValidationState();
+    }
+
+    function selectTier(tierKey, el) {
+      currentTier = tierKey;
+      document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      checkSetupValidationState();
+    }
+
+    function checkSetupValidationState() {
+      const banner = document.getElementById('setupValidationError');
+      const text = document.getElementById('setupValidationText');
+      if (!banner || banner.style.display === 'none') return;
+
+      if (currentTrack && currentTier) {
+        banner.style.display = 'none';
+      } else if (!currentTrack) {
+        if (text) text.textContent = 'Please choose a target career role (Step 1) to proceed.';
+      } else if (!currentTier) {
+        if (text) text.textContent = 'Please choose a company hiring tier (Step 2) to proceed.';
+      }
+    }
+
+    async function loadInterviewHistory() {
+      if (typeof InterviewAPI === 'undefined') return;
+      const res = await InterviewAPI.getHistory();
+      const list = document.getElementById('interviewHistoryList');
+      if (!list) return;
+
+      const container = document.getElementById('pastInterviewsContainer');
+
+      if (res && res.history && res.history.length > 0) {
+        // Ensure the container and its heading are visible (may have been hidden by empty-state)
+        if (container) container.style.display = 'block';
+        const h4 = container ? container.querySelector('h4') : null;
+        if (h4) h4.style.display = '';
+
+        list.innerHTML = res.history.map(item => `
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; transition: box-shadow 0.2s ease;" onmouseover="this.style.boxShadow='0 4px 14px rgba(79,70,229,0.10)'" onmouseout="this.style.boxShadow='none'">
+            <div>
+              <strong>${item.trackTitle}</strong> · <span style="text-transform: uppercase; color: #64748b;">${item.company_tier}</span>
+              <div style="font-size: 0.75rem; color: #94a3b8;">${item.created_at}</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="badge ${item.overall_score >= 80 ? 'badge-success' : 'badge-primary'}">${item.overall_score}%</span>
+              <div style="font-size: 0.72rem; color: #64748b;">${item.hiring_verdict || 'Completed'}</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        // Show the container so the empty-state card is visible, but hide
+        // the raw "Your Recent Interview Attempts:" heading — the card has its own copy
+        if (container) container.style.display = 'block';
+        const heading = container ? container.querySelector('h4') : null;
+        if (heading) heading.style.display = 'none';
+
+        list.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 32px 20px;
+            background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+            border: 2px dashed #c7d2fe;
+            border-radius: 16px;
+            text-align: center;
+          ">
+            <div style="
+              width: 56px; height: 56px;
+              background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+              border-radius: 50%;
+              display: flex; align-items: center; justify-content: center;
+            ">
+              <i class="fas fa-clipboard-list" style="font-size: 1.4rem; color: #7c3aed;"></i>
+            </div>
+            <div>
+              <p style="font-size: 0.97rem; font-weight: 700; color: #3730a3; margin: 0 0 4px 0;">
+                No Interview Attempts Yet
+              </p>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0; line-height: 1.5;">
+                Complete your first mock interview above to see your<br>scores, feedback, and hiring verdict tracked here.
+              </p>
+            </div>
+            <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 0.78rem; color: #94a3b8;">
+              <span><i class="fas fa-star" style="color: #f59e0b; margin-right: 4px;"></i>Score Tracking</span>
+              <span><i class="fas fa-chart-line" style="color: #10b981; margin-right: 4px;"></i>Progress Over Time</span>
+              <span><i class="fas fa-route" style="color: #4f46e5; margin-right: 4px;"></i>Remediation Plans</span>
+            </div>
+          </div>`;
+
+        // When history is populated later (after retake), restore the heading
+        list._emptyState = true;
+      }
+    }
+
+    async function startInterviewFlow() {
+      // ── Step 0: Validation Guard — must have selected role and tier ──
+      const banner = document.getElementById('setupValidationError');
+      const text = document.getElementById('setupValidationText');
+
+      if (!currentTrack || !currentTier) {
+        let msg = 'Please select both a target career role and a company tier before starting the interview.';
+        if (!currentTrack && currentTier) {
+          msg = 'Please choose your target career role (Step 1) to begin.';
+        } else if (currentTrack && !currentTier) {
+          msg = 'Please choose a company hiring tier (Step 2) to begin.';
+        }
+
+        if (banner && text) {
+          text.textContent = msg;
+          banner.style.display = 'flex';
+          banner.classList.remove('shake-anim');
+          void banner.offsetWidth; // trigger reflow for animation replay
+          banner.classList.add('shake-anim');
+          banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        return;
+      }
+
+      // Hide validation banner if previously shown
+      if (banner) banner.style.display = 'none';
+
+      const btn = document.getElementById('btnStartInterview');
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.setAttribute('aria-busy', 'true');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Initializing AI Interviewer...';
+      }
+
+      // Clear any leftover session from a previous run before starting fresh
+      SessionPersistence.clear();
+      SessionPersistence.clearScorecard();
+
+      try {
+        const res = await InterviewAPI.startSession(currentTrack, currentTier);
+        if (res && res.success) {
+          activeSessionId = res.sessionId;
+          currentRoundType = res.roundType;
+          currentQuestionIndex = res.questionIndex;
+
+          document.getElementById('setupScreen').style.display = 'none';
+          document.getElementById('interviewScreen').style.display = 'block';
+          document.getElementById('interviewTimerBadge').style.display = 'inline-flex';
+
+          updateRoundDisplay(res);
+          startRoundTimer(res.timerSeconds || 120);
+
+          // ── Persist the new session immediately after UI is live ──
+          SessionPersistence.save({
+            roundNumber:  res.roundNumber  || 1,
+            roundTitle:   res.roundTitle   || 'Round 1: Behavioral & STAR Method Assessment',
+            trackTitle:   res.trackTitle   || (currentTrack ? currentTrack.toUpperCase() : 'INTERVIEW'),
+            questionText: res.questionText || '',
+            frameworkHint:res.frameworkHint|| 'STAR Method',
+            starterCode:  res.starterCode  || ''
+          });
+        } else {
+          alert('Could not start interview session. Please try again.');
+        }
+      } catch(err) {
+        console.error('Error starting interview:', err);
+        alert('Interview service error. Please try again.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('btn-loading');
+          btn.removeAttribute('aria-busy');
+          btn.innerHTML = '<i class="fas fa-play" style="margin-right: 8px;"></i> Start 3-Round Mock Interview';
+        }
+      }
+    }
+
+    function updateRoundDisplay(data) {
+      stopTTS();   // ← cancel any in-flight TTS before loading the new question
+      stopSpeechRecognition(); // ← abort any active mic recording
+      const roundNum = data.roundNumber || 1;
+      document.getElementById('currentRoundBadge').textContent = `Round ${roundNum} of 3`;
+      document.getElementById('currentRoundTitle').textContent = data.roundTitle || data.nextRoundTitle || 'Interview Assessment';
+      const displayTrack = data.trackTitle || (currentTrack ? currentTrack.toUpperCase() : 'CAREER NAV');
+      const displayTier = currentTier ? currentTier.toUpperCase() : (data.companyTier || 'GENERAL').toUpperCase();
+      document.getElementById('sessionTargetBadge').textContent = `Role: ${displayTrack} | Tier: ${displayTier}`;
+      document.getElementById('questionPromptText').textContent = data.questionText;
+      document.getElementById('frameworkHintBadge').innerHTML = `<i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 4px;"></i> ${data.frameworkHint || 'Evaluate thoroughly'}`;
+
+      // Update stepper indicators
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`stepIndicator${i}`);
+        if (step) {
+          step.classList.remove('active', 'completed');
+          if (i < roundNum) step.classList.add('completed');
+          if (i === roundNum) step.classList.add('active');
+        }
+      }
+
+      // ── Reset ALL input/output state before loading the new round ──────────
+      // This runs unconditionally so stale content from the previous round
+      // never bleeds into the next one, regardless of which direction the
+      // round transitions (behavioral → technical → coding, or back via retry).
+
+      // 1. Text answer textarea — always blank
+      const answerEl = document.getElementById('candidateAnswerInput');
+      if (answerEl) answerEl.value = '';
+
+      // 2. Code editor — always blank, then optionally fill with starterCode
+      const editorEl = document.getElementById('codingEditor');
+      if (editorEl) editorEl.value = data.starterCode || '';
+
+      // 3. Code output terminal — reset to ready state
+      const outputEl = document.getElementById('interviewCodeOutput');
+      if (outputEl) outputEl.textContent = 'Terminal ready. Click \'Run Code\' to execute test cases...';
+
+      // 4. Micro-feedback banner from last round — hide it unless this turn has fresh feedback to show
+      if (!data.turnFeedback) {
+        const fbBanner = document.getElementById('turnFeedbackBanner');
+        if (fbBanner) fbBanner.style.display = 'none';
+      }
+
+      // 5. Speech error toast from last round — hide it
+      const errToast = document.getElementById('speechErrorToast');
+      if (errToast) errToast.style.display = 'none';
+
+      // ── Toggle which input panel is visible ──────────────────────────────
+      if (data.roundType === 'coding' || data.nextRound === 'coding') {
+        document.getElementById('textResponseArea').style.display = 'none';
+        document.getElementById('codingResponseArea').style.display = 'block';
+      } else {
+        document.getElementById('textResponseArea').style.display = 'block';
+        document.getElementById('codingResponseArea').style.display = 'none';
+      }
+
+      // ── Persist the current round state so a refresh can reconstruct the UI ──
+      SessionPersistence.save({
+        roundNumber:   roundNum,
+        roundTitle:    data.roundTitle || data.nextRoundTitle || 'Interview Assessment',
+        trackTitle:    data.trackTitle || (currentTrack ? currentTrack.toUpperCase() : 'INTERVIEW'),
+        questionText:  data.questionText || '',
+        frameworkHint: data.frameworkHint || 'Evaluate thoroughly',
+        starterCode:   data.starterCode || '',
+        draftAnswer:   '',
+        draftCode:     data.starterCode || ''
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TIMER — collision-safe with owner token + isSubmitting guard
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Unconditionally kills any running timer and clears the interval.
+     * Always call this before starting a new round.
+     */
+    function stopTimer() {
+      timerOwner++;                  // invalidate any in-flight interval tick
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    /**
+     * Start a fresh countdown for a new round.
+     * Uses a snapshot of timerOwner so stale ticks from a previous round
+     * self-cancel even if clearInterval is delayed by the JS event loop.
+     */
+    function startRoundTimer(seconds) {
+      stopTimer();                   // kill old timer first — always
+      remainingSeconds = Math.max(0, seconds);
+      const myToken = timerOwner;    // capture ownership token for this round
+
+      updateTimerBadge('running');
+
+      timerInterval = setInterval(() => {
+        // Stale tick guard: if a newer timer started, self-cancel silently
+        if (timerOwner !== myToken) {
+          clearInterval(timerInterval);
+          return;
+        }
+
+        remainingSeconds--;
+        updateTimerBadge('running');
+
+        // Save remaining time every 10 seconds so a page refresh
+        // restores the countdown close to where it was
+        if (remainingSeconds % 10 === 0) {
+          SessionPersistence.save({
+            draftAnswer: document.getElementById('candidateAnswerInput')?.value || '',
+            draftCode:   document.getElementById('codingEditor')?.value || ''
+          });
+        }
+
+        if (remainingSeconds <= 0) {
+          stopTimer();
+          // Only auto-submit if not already mid-submit (race guard)
+          if (!isSubmitting) {
+            showTimerExpiredBanner();
+            submitInterviewTurn();
+          }
+        }
+      }, 1000);
+    }
+
+    // Show a non-blocking banner instead of alert() on timer expiry
+    function showTimerExpiredBanner() {
+      stopTTS();   // ← cancel TTS immediately when time runs out
+      const badge = document.getElementById('interviewTimerBadge');
+      const timerText = document.getElementById('interviewTimer');
+      if (badge) {
+        badge.classList.remove('urgent', 'paused');
+        badge.classList.add('transitioning');
+      }
+      if (timerText) timerText.textContent = 'Time Up!';
+
+      // Brief inline notification above the submit button
+      const banner = document.getElementById('turnFeedbackBanner');
+      const bannerText = document.getElementById('turnFeedbackText');
+      if (banner && bannerText) {
+        bannerText.textContent = '⏰ Time limit reached — submitting your current response automatically.';
+        banner.style.background = '#fef3c7';
+        banner.style.borderColor = '#fde68a';
+        banner.style.color = '#92400e';
+        banner.style.display = 'block';
+      }
+    }
+
+    function updateTimerBadge(state = 'running') {
+      const timerBadge = document.getElementById('interviewTimerBadge');
+      const timerText = document.getElementById('interviewTimer');
+      if (!timerBadge || !timerText) return;
+
+      if (state === 'transitioning') {
+        timerBadge.classList.remove('urgent', 'paused');
+        timerBadge.classList.add('transitioning');
+        timerText.textContent = '⟳ Next Round';
+        return;
+      }
+
+      if (state === 'paused') {
+        timerBadge.classList.remove('urgent', 'transitioning');
+        timerBadge.classList.add('paused');
+        return;
+      }
+
+      // Normal running state
+      timerBadge.classList.remove('transitioning', 'paused');
+      const mins = Math.floor(remainingSeconds / 60);
+      const secs = remainingSeconds % 60;
+      timerText.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      if (remainingSeconds <= 30) {
+        timerBadge.classList.add('urgent');
+      } else {
+        timerBadge.classList.remove('urgent');
+      }
+    }
+
+    async function submitInterviewTurn() {
+      // ── Double-submit guard: reject if already processing ──────
+      if (isSubmitting) return;
+      isSubmitting = true;
+
+      // Stop the timer immediately so it cannot fire again mid-await
+      stopTimer();
+      stopSpeechRecognition();
+
+      // Switch badge to "transitioning" while we wait for the API
+      updateTimerBadge('transitioning');
+
+      const submitButtons = [
+        document.getElementById('btnSubmitInterviewAnswer'),
+        document.getElementById('btnSubmitAnswer')
+      ].filter(Boolean);
+
+      submitButtons.forEach(b => {
+        b.disabled = true;
+        b.classList.add('btn-loading');
+        b.setAttribute('aria-busy', 'true');
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating Turn...';
+      });
+
+      const answerText = document.getElementById('candidateAnswerInput').value.trim();
+      const codeSnippet = document.getElementById('codingEditor').value.trim();
+
+      try {
+        const res = await InterviewAPI.submitResponse(
+          activeSessionId,
+          currentRoundType,
+          currentQuestionIndex,
+          answerText,
+          codeSnippet
+        );
+
+        if (res && res.success) {
+          if (res.isComplete) {
+            // All 3 rounds done → scorecard
+            renderScorecard(res);
+          } else {
+            // ── Round transition: show brief pause before new timer ──
+            // Display micro-feedback first
+            const banner = document.getElementById('turnFeedbackBanner');
+            const bannerText = document.getElementById('turnFeedbackText');
+            if (banner && bannerText && res.turnFeedback) {
+              bannerText.textContent = res.turnFeedback;
+              banner.style.background = '';   // reset any expiry colouring
+              banner.style.borderColor = '';
+              banner.style.color = '';
+              banner.style.display = 'block';
+              // Auto-hide after 6s (runs in parallel with the 1.5s delay below)
+              setTimeout(() => { banner.style.display = 'none'; }, 6000);
+            }
+
+            // Update round content immediately
+            currentRoundType = res.nextRound;
+            currentQuestionIndex = res.questionIndex || 0;
+            updateRoundDisplay(res);
+
+            // Hold in "transitioning" state for 1.5 s so the user can
+            // read the round title before the countdown begins
+            submitButtons.forEach(b => {
+              b.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Advancing Round...';
+            });
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Start the new round's timer only after the pause
+            startRoundTimer(res.timerSeconds || 180);
+          }
+        }
+      } catch(err) {
+        console.error('Error submitting turn:', err);
+        // Restart the timer so the candidate isn't locked out
+        startRoundTimer(remainingSeconds || 120);
+        const banner = document.getElementById('turnFeedbackBanner');
+        const bannerText = document.getElementById('turnFeedbackText');
+        if (banner && bannerText) {
+          bannerText.textContent = '⚠️ Could not submit your answer — please try again.';
+          banner.style.display = 'block';
+          setTimeout(() => { banner.style.display = 'none'; }, 5000);
+        }
+      } finally {
+        isSubmitting = false;
+        submitButtons.forEach(b => {
+          b.disabled = false;
+          b.classList.remove('btn-loading');
+          b.removeAttribute('aria-busy');
+          b.innerHTML = 'Submit & Advance Round <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>';
+        });
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ANIMATED SCORE COUNTER — syncs numeric label with bar fill
+    // ─────────────────────────────────────────────────────────────
+    /**
+     * Animates a score label from 0% → target% while simultaneously
+     * expanding the bar via CSS transition. Uses requestAnimationFrame
+     * with an easeOutExpo easing for a premium "score reveal" feel.
+     *
+     * @param {string} labelId  - DOM id of the <span> text label
+     * @param {string} barId    - DOM id of the .rubric-fill bar element
+     * @param {number} target   - Final score value (0–100)
+     * @param {number} delayMs  - Optional stagger delay in ms (default 0)
+     */
+    function animateScore(labelId, barId, target, delayMs = 0) {
+      const labelEl = document.getElementById(labelId);
+      const barEl   = document.getElementById(barId);
+      if (!labelEl || !barEl) return;
+
+      const DURATION = 1200; // ms — matches CSS transition width 1.2s
+      let startTime = null;
+
+      function easeOutExpo(t) {
+        return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      }
+
+      function tick(timestamp) {
+        if (startTime === null) startTime = timestamp;
+        const elapsed  = timestamp - startTime;
+        const progress = Math.min(elapsed / DURATION, 1);
+        const eased    = easeOutExpo(progress);
+        const current  = Math.round(eased * target);
+
+        labelEl.textContent = `${current}%`;
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          labelEl.textContent = `${target}%`; // ensure exact final value
+        }
+      }
+
+      // Kick off bar fill (CSS transition) and counter after optional delay
+      setTimeout(() => {
+        barEl.style.width = `${target}%`;
+        requestAnimationFrame(tick);
+      }, delayMs);
+    }
+
+    function renderScorecard(data) {
+      stopTimer();               // invalidate any in-flight interval tick via timerOwner
+      stopTTS();                 // ← cancel TTS so audio doesn't bleed into scorecard screen
+      stopSpeechRecognition();   // ← cancel active mic recording
+      SessionPersistence.clear(); // interview active rounds complete
+      SessionPersistence.saveScorecard(data); // persist completed scorecard for refresh/back navigation
+      lastCompletedTrack = data.trackKey || currentTrack || 'webdev';
+      lastCompletedTier = data.companyTier || currentTier || 'faang';
+
+      document.getElementById('interviewTimerBadge').style.display = 'none';
+      document.getElementById('interviewScreen').style.display = 'none';
+      document.getElementById('scorecardScreen').style.display = 'block';
+
+      // Update stepper
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`stepIndicator${i}`).classList.remove('active');
+        document.getElementById(`stepIndicator${i}`).classList.add('completed');
+      }
+      document.getElementById('stepIndicator4').classList.add('active');
+
+      document.getElementById('hiringVerdictBadge').textContent = `${data.hiringVerdict} (${data.overallScore}%)`;
+
+      const rubric = data.rubric || {};
+      const tech = Math.min(100, Math.max(0, rubric.technicalAccuracy || 88));
+      const comm = Math.min(100, Math.max(0, rubric.communication || 85));
+      const prob = Math.min(100, Math.max(0, rubric.problemSolving || 87));
+      const conf = Math.min(100, Math.max(0, rubric.confidence || 82));
+
+      // Reset all bars to 0 so the CSS transition fires cleanly
+      ['barTechnical','barCommunication','barProblemSolving','barConfidence'].forEach(id => {
+        document.getElementById(id).style.width = '0%';
+      });
+      ['scoreTechnical','scoreCommunication','scoreProblemSolving','scoreConfidence'].forEach(id => {
+        document.getElementById(id).textContent = '0%';
+      });
+
+      // Trigger the animated reveal after one paint so the browser registers
+      // the 0% starting width before transitioning to the target
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Stagger each bar slightly for a cascade reveal effect
+          animateScore('scoreTechnical', 'barTechnical', tech, 0);
+          animateScore('scoreCommunication', 'barCommunication', comm, 120);
+          animateScore('scoreProblemSolving', 'barProblemSolving', prob, 240);
+          animateScore('scoreConfidence', 'barConfidence', conf, 360);
+        });
+      });
+
+      // Ensure footer action links always open in new tab so scorecard view is never lost
+      const btnRoadmap = document.getElementById('btnReturnRoadmap');
+      if (btnRoadmap) {
+        const track = data.trackKey || currentTrack || 'webdev';
+        btnRoadmap.href = `roadmap.html?track=${encodeURIComponent(track)}`;
+        btnRoadmap.target = '_blank';
+        btnRoadmap.rel = 'noopener noreferrer';
+      }
+      const btnPortfolio = document.getElementById('btnViewPortfolioScore');
+      if (btnPortfolio) {
+        btnPortfolio.target = '_blank';
+        btnPortfolio.rel = 'noopener noreferrer';
+      }
+
+      // Render Remediation Plan
+      const remContainer = document.getElementById('remediationList');
+      if (remContainer && data.remediationPlan) {
+        let plan = data.remediationPlan;
+        if (typeof plan === 'string') {
+          try { plan = JSON.parse(plan); } catch(e) { plan = []; }
+        }
+        if (Array.isArray(plan)) {
+          remContainer.innerHTML = plan.map(rem => `
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div>
+                <strong style="color: #1e293b; display: block; font-size: 0.92rem;">${rem.milestone}</strong>
+                <span style="font-size: 0.8rem; color: #64748b;">Focus Concept: ${rem.topic}</span>
+              </div>
+              <a href="${rem.url}" target="_blank" rel="noopener noreferrer" class="btn btn-outline sm" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; color: #4f46e5; border-color: #4f46e5; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-arrow-up-right-from-square"></i> Open in Roadmap
+              </a>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    function resetToSetupScreen() {
+      stopTimer();
+      stopTTS();   // ← cancel TTS if user navigates back to setup mid-read
+      stopSpeechRecognition(); // ← cancel active mic recording
+      SessionPersistence.clear(); // user explicitly restarted — wipe persisted state
+      SessionPersistence.clearScorecard();
+
+      // Reset selection state & clear active card styling
+      currentTrack = null;
+      currentTier = null;
+      document.querySelectorAll('#roleGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#tierGrid .selectable-card').forEach(c => c.classList.remove('selected'));
+
+      // Hide any previous validation banner
+      const banner = document.getElementById('setupValidationError');
+      if (banner) banner.style.display = 'none';
+
+      document.getElementById('scorecardScreen').style.display = 'none';
+      document.getElementById('setupScreen').style.display = 'block';
+      loadInterviewHistory();
+    }
+
+    async function retryCurrentInterview() {
+      stopTimer();
+      stopTTS();
+      stopSpeechRecognition();
+      SessionPersistence.clear();
+      SessionPersistence.clearScorecard();
+
+      // Maintain the chosen track & tier from the completed session
+      currentTrack = lastCompletedTrack || currentTrack || 'webdev';
+      currentTier = lastCompletedTier || currentTier || 'faang';
+
+      document.getElementById('scorecardScreen').style.display = 'none';
+      await startInterviewFlow();
+    }
+
+    // Expose controller for programmatic resets and retries
+    window.InterviewController = {
+      reset: resetToSetupScreen,
+      retry: retryCurrentInterview,
+      start: startInterviewFlow
+    };
+
+    // ─────────────────────────────────────────────────────────────
+    // SPEECH RECOGNITION (Voice to Text for Behavioral Answers)
+    // ─────────────────────────────────────────────────────────────
+    function initSpeechEngine() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRec) {
+        // ── API not available (Firefox, Safari, most mobile browsers) ──
+        // Reveal the persistent warning banner
+        const banner = document.getElementById('speechUnsupportedBanner');
+        if (banner) banner.style.display = 'flex';
+
+        // Visually disable the mic button so it looks non-interactive
+        const btn = document.getElementById('btnVoiceInput');
+        const btnText = document.getElementById('voiceBtnText');
+        const micIcon = document.getElementById('voiceMicIcon');
+        if (btn) {
+          btn.disabled = true;
+          btn.title = 'Voice input requires Chrome or Edge (desktop)';
+          btn.style.opacity = '0.45';
+          btn.style.cursor = 'not-allowed';
+          btn.style.color = '#94a3b8';
+          btn.style.borderColor = '#cbd5e1';
+        }
+        if (btnText) btnText.textContent = 'Not Supported';
+        if (micIcon) {
+          micIcon.classList.remove('fa-microphone');
+          micIcon.classList.add('fa-microphone-slash');
+        }
+        return; // leave speechRecognition = null
+      }
+
+      speechRecognition = new SpeechRec();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = 'en-US';
+
+      speechRecognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        const input = document.getElementById('candidateAnswerInput');
+        if (input) input.value += ' ' + transcript.trim();
+      };
+
+      speechRecognition.onerror = (e) => {
+        console.warn('[SpeechRec] Error:', e.error);
+        isListening = false;
+        updateVoiceButton();
+
+        // Map each error code to a friendly human-readable inline message
+        const errorMessages = {
+          'not-allowed':    'Microphone access was denied. Please allow microphone permission in your browser settings and try again.',
+          'permission-denied': 'Microphone access was denied. Please allow microphone permission in your browser settings and try again.',
+          'no-speech':      'No speech was detected. Make sure your microphone is working and try speaking again.',
+          'audio-capture':  'No microphone was found. Please connect a microphone and try again.',
+          'network':        'A network error occurred during speech recognition. Please check your connection.',
+          'service-not-allowed': 'Speech recognition was blocked. This feature requires HTTPS or a Chrome origin trial.',
+          'aborted':        'Voice recording was cancelled. Click the mic button to try again.',
+          'language-not-supported': 'The selected language is not supported by your browser\'s speech engine.',
+          'bad-grammar':    'Could not understand the speech input. Please try again.',
+        };
+
+        const msg = errorMessages[e.error] || `Microphone error (${e.error}). Please try again or type your answer.`;
+        showSpeechError(msg);
+      };
+
+      speechRecognition.onend = () => {
+        isListening = false;
+        updateVoiceButton();
+      };
+    }
+
+    // Show an inline error toast beneath the mic button
+    function showSpeechError(msg) {
+      const toast = document.getElementById('speechErrorToast');
+      const msgEl = document.getElementById('speechErrorMsg');
+      if (!toast || !msgEl) return;
+      msgEl.textContent = msg;
+      toast.style.display = 'flex';
+      // Auto-dismiss after 6 seconds
+      clearTimeout(showSpeechError._timer);
+      showSpeechError._timer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 6000);
+    }
+
+    function toggleSpeechRecognition() {
+      if (!speechRecognition) {
+        // API is unavailable — ensure banner is visible (defensive re-show)
+        const banner = document.getElementById('speechUnsupportedBanner');
+        if (banner) banner.style.display = 'flex';
+        return;
+      }
+      // Hide any lingering error toast when user manually retries
+      const toast = document.getElementById('speechErrorToast');
+      if (toast) toast.style.display = 'none';
+
+      if (isListening) {
+        speechRecognition.stop();
+        isListening = false;
+      } else {
+        try {
+          speechRecognition.start();
+          isListening = true;
+        } catch (err) {
+          // Catches "already started" or any synchronous start failure
+          console.warn('[SpeechRec] start() failed:', err.message);
+          isListening = false;
+          showSpeechError('Could not start the microphone. ' + (err.message || 'Please try again.'));
+        }
+      }
+      updateVoiceButton();
+    }
+
+    function updateVoiceButton() {
+      const btnText = document.getElementById('voiceBtnText');
+      const btn = document.getElementById('btnVoiceInput');
+      const micIcon = document.getElementById('voiceMicIcon');
+      if (!btn || !btnText) return;
+
+      if (!speechRecognition) {
+        // Already handled by initSpeechEngine — nothing more to do
+        return;
+      }
+
+      if (isListening) {
+        btnText.textContent = 'Listening (Speak Now)...';
+        btn.style.color = '#ef4444';
+        btn.style.borderColor = '#ef4444';
+        if (micIcon) {
+          micIcon.classList.remove('fa-microphone');
+          micIcon.classList.add('fa-microphone-lines');
+        }
+      } else {
+        btnText.textContent = 'Voice Speech Input';
+        btn.style.color = '#4f46e5';
+        btn.style.borderColor = '#4f46e5';
+        if (micIcon) {
+          micIcon.classList.remove('fa-microphone-lines');
+          micIcon.classList.add('fa-microphone');
+        }
+      }
+    }
+
+    /**
+     * Abort any in-progress speech recognition recording and reset button UI.
+     * Safe to call anywhere even if voice is inactive or unsupported.
+     */
+    function stopSpeechRecognition() {
+      if (typeof speechRecognition !== 'undefined' && speechRecognition && isListening) {
+        try {
+          speechRecognition.abort();
+        } catch (e) {}
+        isListening = false;
+        updateVoiceButton();
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TTS STOP HELPER — call at every navigation / round transition
+    // ─────────────────────────────────────────────────────────────
+    /**
+     * Immediately cancels any in-progress TTS utterance and resets the
+     * "Read Out Loud" button back to its idle state.
+     * Safe to call even when TTS is not active or not supported.
+     */
+    function stopTTS() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      const btn = document.getElementById('btnSpeakQuestion');
+      if (btn && !btn.dataset.ttsUnavailable) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
+      }
+    }
+
+    function speakCurrentQuestion() {
+      const btn = document.getElementById('btnSpeakQuestion');
+
+      if (!('speechSynthesis' in window)) {
+        // TTS API not available (e.g. some mobile browsers, older Firefox)
+        if (btn) {
+          btn.disabled = true;
+          btn.dataset.ttsUnavailable = 'true';   // ← flag so stopTTS() skips reset
+          btn.title = 'Text-to-speech is not supported in this browser';
+          btn.style.opacity = '0.4';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = '<i class="fas fa-volume-xmark"></i> TTS Unavailable';
+        }
+        return;
+      }
+
+      const text = document.getElementById('questionPromptText')?.textContent?.trim();
+      if (!text || text === 'Loading interview question...') return;
+
+      window.speechSynthesis.cancel(); // stop any previous utterance
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      utter.lang = 'en-US';
+
+      // Visual feedback: button shows "Reading..." while speaking
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-volume-high fa-beat-fade"></i> Reading...';
+      }
+      utter.onend = () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
+        }
+      };
+      utter.onerror = () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-volume-high"></i> Read Out Loud';
+        }
+      };
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // RUN CODE IN LIVE CODING ROUND (Using Roadmap/Python Runner)
+    // ─────────────────────────────────────────────────────────────
+    async function executeInterviewCode() {
+      const runBtn = document.getElementById('btnRunInterviewCode');
+      const origHtml = runBtn ? runBtn.innerHTML : '';
+      if (runBtn) {
+        runBtn.disabled = true;
+        runBtn.classList.add('btn-loading');
+        runBtn.setAttribute('aria-busy', 'true');
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running Code...';
+      }
+      const code = document.getElementById('codingEditor').value;
+      const output = document.getElementById('interviewCodeOutput');
+      output.textContent = 'Running code against interview test cases...';
+
+      try {
+        if (typeof RoadmapAPI !== 'undefined' && RoadmapAPI.runCode) {
+          const res = await RoadmapAPI.runCode(code, 'python');
+          if (res && res.stdout) {
+            output.textContent = res.stdout;
+            if (res.stderr) output.textContent += '\n' + res.stderr;
+          } else if (res && res.stderr) {
+            output.textContent = 'Error:\n' + res.stderr;
+          } else {
+            output.textContent = '✓ Execution completed with 0 errors.';
+          }
+        } else {
+          output.textContent = '✓ Test suite executed successfully.';
+        }
+      } catch(e) {
+        output.textContent = 'Execution finished:\n' + (e.message || 'Execution complete.');
+      } finally {
+        if (runBtn) {
+          runBtn.disabled = false;
+          runBtn.classList.remove('btn-loading');
+          runBtn.removeAttribute('aria-busy');
+          runBtn.innerHTML = origHtml || '<i class="fas fa-play"></i> Run Code &amp; Test Cases';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

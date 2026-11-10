@@ -1540,6 +1540,7 @@ def run_tests():
     assert 'id="codingEditor"' in html_text, "Missing codingEditor in interview.html"
     assert 'id="btnVoiceInput"' in html_text, "Missing btnVoiceInput in interview.html"
     assert 'id="scorecardScreen"' in html_text, "Missing scorecardScreen in interview.html"
+    assert 'id="btnRetryInterview"' in html_text, "Missing btnRetryInterview in interview.html"
     assert 'id="remediationList"' in html_text, "Missing remediationList in interview.html"
     assert 'id="scoreTechnical"' in html_text, "Missing scoreTechnical in interview.html"
     assert 'id="scoreCommunication"' in html_text, "Missing scoreCommunication in interview.html"
