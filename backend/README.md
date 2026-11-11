@@ -62,7 +62,18 @@
 
 ---
 
-### 4. 🏆 Gamification, Analytics & Productivity
+### 4. 🎤 AI Mock Interview Simulator
+* **3-Round Structured Interview Cockpit**: Configurable sessions across **Behavioral**, **Technical / DSA**, and **System Design** rounds (`POST /api/v1/interview/start`).
+* **Role & Company-Tier Selection**: Choose from industry tracks (AI/ML, Web Dev, Cloud, etc.) and company tiers (FAANG, Unicorn, Series A) for realistic simulation.
+* **AI-Powered Answer Evaluator**: Each answer is rated across a **4-dimension rubric** — *Clarity, Depth, Problem-Solving, Communication* — using the LLM backend.
+* **Comprehensive Scorecard**: Full post-interview report with per-round scores, weak area diagnosis, and a remediation milestone plan (`GET /api/v1/interview/scorecard/{session_id}`).
+* **Retry Interview Button**: Scorecards surface a one-click **"Retry Interview"** action to immediately re-initiate a fresh session in the same track/tier.
+* **Interview History Log**: Searchable session history with score trends (`GET /api/v1/interview/history/{student_id}`).
+* **Dashboard Performance Widget**: The student dashboard now displays a live **Interview Performance** panel showing latest scorecard metrics, round-by-round breakdown, and trend vs. previous session.
+
+---
+
+### 5. 🏆 Gamification, Analytics & Productivity
 * **Dynamic Real-User Leaderboard**: Real-time ranking based on curriculum progress, quiz scores, and study streak percentiles.
 * **Study Stopwatch & Pomodoro Logger**: Integrated study timer logging session duration, sub-topic categorization (Coding, Projects, Reading, Assessments), and personal study notes.
 * **Weekly Study Target Tracker**: Set customized weekly hour targets with live completion percentage visualizers.
@@ -77,7 +88,7 @@
 
 ---
 
-### 5. 📄 Resume ATS Scanner & Tech Internships Portal
+### 6. 📄 Resume ATS Scanner & Tech Internships Portal
 * **Resume ATS Scanner**:
   * Semantic keyword density and industry gap detection.
   * Instant ATS compatibility score (0–100%) and actionable formatting suggestions.
@@ -91,7 +102,7 @@
 
 ---
 
-### 6. 👤 Public Student Showcase & Recruiter Portfolio (`portfolio.html`)
+### 7. 👤 Public Student Showcase & Recruiter Portfolio (`portfolio.html`)
 * **Shareable Candidate URL** (`/portfolio/{student_id}`): Publicly accessible showcase designed specifically for talent recruiters and hiring managers.
 * **Verified Credentials Showcase**: Live verification status, score percentiles, and issuing authority.
 * **Mentor-Reviewed GitHub Capstones**: Displays student repositories with mentor review notes and technical stack badges.
@@ -100,7 +111,7 @@
 
 ---
 
-### 7. 🛡️ Recruiter Verification & Official LinkedIn Certification (`verify.html`)
+### 8. 🛡️ Recruiter Verification & Official LinkedIn Certification (`verify.html`)
 * **Tamper-Proof Cryptographic Ledger**: Every certificate is stamped with an immutable **SHA-256 cryptographic verification hash**.
 * **1-Click "Add to LinkedIn Profile"**:
   * Direct integration launching LinkedIn's official Certification flow pre-filled with:
@@ -119,7 +130,7 @@
 
 ---
 
-### 8. 🔒 Security, Identity & Accessibility
+### 9. 🔒 Security, Identity & Accessibility
 * **Authentication Engine**: JWT Bearer token authentication, registration, login, and profile management.
 * **Google One-Tap & OAuth 2.0**: Seamless single-click Google authentication with automated profile creation (`GET /api/v1/auth/google/url`, `POST /api/v1/auth/google/callback`).
 * **Interactive Forgot Password Flow**: Outbound SMTP email delivery of 6-digit OTP codes with 60-second live cooldown timer.
@@ -130,6 +141,17 @@
 * **Universal Dark Mode Theme Toggle**: Sun/moon toggle in the topbar across all pages with high-contrast `[data-theme="dark"]` CSS variables and multi-device cloud preference sync.
 * **Server-Side Omnisearch Index**: Unified global search across roadmap milestones, career domains, internships, and tools.
 * **Tech Hackathons & Events**: Upcoming hackathons calendar with `.ics` calendar exports and automated reminders.
+
+---
+
+## 🔧 Recent Bug Fixes & Improvements
+
+| ID | Area | Fix |
+| :--- | :--- | :--- |
+| **BUG-01** | CORS / Auth | Replaced `allow_origins=["*"] + allow_credentials=True` (W3C violation) with explicit origin allowlist + `allow_origin_regex` covering GitHub Pages, Railway, and local dev hosts — credentialed requests now work correctly in production. |
+| **BUG-05** | SQLite | All SQLite `get_db_connection()` call-sites now use `try/finally` (or `contextmanager`) patterns that guarantee `conn.close()` even when an exception fires mid-function — eliminates file-descriptor leaks under error conditions. |
+| **FEAT-01** | Mock Interview | Added **"Retry Interview"** button on the scorecard screen so students can immediately start a fresh session in the same track/tier without returning to the homepage. |
+| **FEAT-03** | Dashboard | Added an **Interview Performance widget** to the student dashboard — displays latest scorecard dimensions, round scores, and trend vs. previous session via `GET /api/v1/interview/history/{student_id}`. |
 
 ---
 
@@ -165,6 +187,9 @@
         │  ├────────────────────┼────────────────────┼──────────────────────────┤  │
         │  │  Gamification &    │  Public Recruiter  │  Cryptographic Verifier  │  │
         │  │  Leaderboard       │  Student Portfolio │  (LinkedIn 1-Click + PNG)│  │
+        │  ├────────────────────┼────────────────────┼──────────────────────────┤  │
+        │  │  AI Mock Interview │  Dashboard         │  CORS-Secure Auth Engine │  │
+        │  │  Simulator (3-Rnd) │  Performance Widget│  (JWT + 2FA + OAuth 2.0) │  │
         │  └────────────────────┴────────────────────┴──────────────────────────┘  │
         └─────────────────────────────────────────┬────────────────────────────────┘
                                                   │
@@ -188,7 +213,7 @@
 | **Security & Auth** | JWT (PyJWT), Passlib (Bcrypt), PyOTP (2FA TOTP), Google OAuth 2.0 |
 | **Databases** | SQLite3 (Zero-downtime local persistence), MongoDB / Atlas (pymongo) |
 | **Networking & Realtime** | WebSockets, Outbound SMTP (Email OTP & Digests), Feedparser (RSS) |
-| **Testing** | Comprehensive Automated Verification Suite (50 integration test suites) |
+| **Testing** | Comprehensive Automated Verification Suite (52 integration test suites) |
 | **Deployment** | GitHub Pages (Frontend), Railway / Render (Cloud API Backend) |
 
 ---
@@ -245,6 +270,16 @@
 | `GET`  | `/api/v1/chatbot/roadmap-context/{student_id}` | Retrieve student's current milestone context |
 | `POST` | `/api/v1/chatbot/run-code` | Execute code snippet inside chatbot sandbox |
 
+### 🎤 AI Mock Interview Simulator
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET`  | `/api/v1/interview/tracks-and-companies` | Supported roles, company tiers & round configs |
+| `POST` | `/api/v1/interview/start` | Initialize 3-round structured mock interview |
+| `POST` | `/api/v1/interview/submit-response` | Submit answer, get rating, advance round |
+| `GET`  | `/api/v1/interview/scorecard/{session_id}` | 4-dimension rubric scorecard & remediation plan |
+| `GET`  | `/api/v1/interview/history/{student_id}` | Retrieve previous mock interview sessions |
+| `DELETE`| `/api/v1/interview/history/{student_id}` | Delete all sessions for a student |
+
 ### 🛡️ Credential Verification & LinkedIn Accreditation
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -280,8 +315,12 @@
 | `GET`  | `/api/v1/progress/badges/{student_id}` | Retrieve unlocked achievement badges |
 | `POST` | `/api/v1/progress/weekly-target` | Set weekly study hours target |
 | `GET`  | `/api/v1/progress/export-csv/{student_id}` | Export study records as CSV |
+| `GET`  | `/api/v1/dashboard/summary/{student_id}` | Unified dashboard batch endpoint (profile, stats, interview widget) |
+| `POST` | `/api/v1/dashboard/track/switch` | Switch active specialization track |
 | `GET`  | `/api/v1/dashboard/search` | Unified global omnisearch index |
 | `GET`  | `/api/v1/dashboard/events` | Tech hackathons and developer events |
+| `POST` | `/api/v1/dashboard/events/reminder` | Set event reminder (notification + activity log) |
+| `GET`  | `/api/v1/dashboard/events/ics/{event_id}` | Download `.ics` calendar file for an event |
 
 ---
 
@@ -293,7 +332,6 @@ The backend contains a rigorous, end-to-end automated testing suite with **52 co
 # Run the complete test suite from the backend directory
 cd backend
 python test_all_features.py
-```
 ```
 
 ---
@@ -376,7 +414,7 @@ AI-CAREER-NAVIGATOR/
 ├── sync_frontend.py             # Standalone parity CLI (root <-> frontend/)
 │
 ├── backend/
-│   ├── app.py                   # FastAPI application & route mounting
+│   ├── app.py                   # FastAPI application, CORS config & route mounting
 │   ├── config.py                # Configuration settings & environment loader
 │   ├── database.py              # SQLite & MongoDB database interfaces
 │   ├── sync_frontend.py         # Backend-directory launcher for parity CLI
@@ -386,6 +424,7 @@ AI-CAREER-NAVIGATOR/
 │   │   ├── basic_info_routes.py # 19-Question assessment endpoints
 │   │   ├── certificate_routes.py# Verifiable credentials & LinkedIn payloads
 │   │   ├── chatbot_routes.py    # LLM conversation & voice transcription
+│   │   ├── dashboard_routes.py  # Dashboard aggregator, search, events & ICS
 │   │   ├── internship_routes.py # Internships, RSS scraper & cover letters
 │   │   ├── interview_routes.py  # AI Mock Interview: start, submit, scorecard
 │   │   ├── portfolio_routes.py  # Public recruiter showcase endpoints
