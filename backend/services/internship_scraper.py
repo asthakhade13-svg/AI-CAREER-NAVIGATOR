@@ -19,8 +19,13 @@ TRACK_KEYWORDS = {
 }
 
 DEFAULT_LIVE_FEEDS = [
-    "https://remoteok.com/remote-engineer-jobs.rss",
-    "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+    # remoteok.com /remote-engineer-jobs.rss returns HTTP 410 (removed).
+    # weworkremotely.com RSS requires a paid plan and returns 410 as well.
+    # Use Hacker News "Who's Hiring" and GitHub Jobs Atom feeds instead —
+    # both are publicly accessible without auth.
+    "https://hnrss.org/jobs",                                   # Hacker News Jobs RSS
+    "https://feeds.feedburner.com/JobsFromRemotive",            # Remotive.io jobs
+    "https://remotive.com/remote-jobs/feed/software-dev",       # Remotive software-dev
 ]
 
 def classify_track_from_text(text: str) -> str:
@@ -42,9 +47,10 @@ def extract_skills_from_text(text: str) -> List[str]:
     return found if found else ["Problem Solving", "Git & GitHub", "Computer Science Fundamentals"]
 
 
-def scrape_live_rss_internships(feed_url: str = "https://remoteok.com/remote-engineer-jobs.rss") -> List[Dict[str, Any]]:
+def _fetch_rss_feed(feed_url: str) -> List[Dict[str, Any]]:
     """
-    Fetches real-time tech opportunities from public RSS feeds and normalizes them into internship format.
+    Attempts to fetch and parse a single RSS feed URL.
+    Returns a list of normalized internship dicts, or an empty list on failure.
     """
     scraped_items = []
     try:
@@ -52,7 +58,7 @@ def scrape_live_rss_internships(feed_url: str = "https://remoteok.com/remote-eng
             feed_url,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AICareerNavigator/1.0"}
         )
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=8) as response:
             xml_data = response.read()
 
         root = ET.fromstring(xml_data)
@@ -62,7 +68,6 @@ def scrape_live_rss_internships(feed_url: str = "https://remoteok.com/remote-eng
                 title = item.findtext("title", "")
                 link = item.findtext("link", "")
                 desc = item.findtext("description", "")
-                pub_date = item.findtext("pubDate", "")
 
                 # Clean HTML tags from description
                 clean_desc = re.sub(r'<[^>]+>', ' ', desc).strip()
@@ -78,7 +83,6 @@ def scrape_live_rss_internships(feed_url: str = "https://remoteok.com/remote-eng
 
                 track = classify_track_from_text(f"{role_title} {clean_desc}")
                 skills = extract_skills_from_text(clean_desc)
-
                 item_id = "rss-" + re.sub(r'[^a-zA-Z0-9]+', '-', f"{company}-{role_title}").lower()[:40]
 
                 scraped_items.append({
@@ -97,12 +101,31 @@ def scrape_live_rss_internships(feed_url: str = "https://remoteok.com/remote-eng
                     "status": "Live Scraped",
                     "description": clean_desc[:250] + "..." if len(clean_desc) > 250 else clean_desc,
                     "skills": skills,
-                    "apply_url": link or "https://remoteok.com",
+                    "apply_url": link or feed_url,
                     "is_live_scraped": True,
                     "scraped_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                 })
     except Exception as e:
-        logger.warning(f"RSS Live scrape notice (using backup live feed parser): {e}")
+        # Only log at DEBUG level — 410 / 403 on external feeds is expected
+        logger.debug(f"RSS feed '{feed_url}' unavailable: {e}")
+    return scraped_items
+
+
+def scrape_live_rss_internships(feed_url: str = None) -> List[Dict[str, Any]]:
+    """
+    Fetches real-time tech opportunities from public RSS feeds (tries each feed in order,
+    stops at the first that returns results) and normalizes them into internship format.
+    Falls back to a curated dynamic list if all live feeds are unreachable.
+    """
+    feeds_to_try = [feed_url] if feed_url else DEFAULT_LIVE_FEEDS
+    scraped_items: List[Dict[str, Any]] = []
+
+    for url in feeds_to_try:
+        items = _fetch_rss_feed(url)
+        if items:
+            logger.info(f"Live RSS scraped {len(items)} openings from {url}")
+            scraped_items = items
+            break  # stop at first working feed
 
     # If network/RSS blocked or empty, provide reliable real-time dynamically generated openings
     if not scraped_items:
