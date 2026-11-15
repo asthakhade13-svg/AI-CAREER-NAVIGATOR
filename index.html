@@ -355,16 +355,15 @@ nav{
   100% { background-position: 200% center; }
 }
 .grad-pastel{
-  background: linear-gradient(90deg, #FFCD7F 0%, #C5FF7F 50%, #FFCD7F 100%);
-  background-size: 220% auto;
+  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 45%, #0284c7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: textSheen 10s linear infinite;
+  color: #1e1b4b;
+  font-weight: 800;
 }
 .text-glow{
-  filter:drop-shadow(0 2px 12px rgba(109,40,217,.18))
-         drop-shadow(0 0 28px rgba(14,116,144,.14));
+  filter:drop-shadow(0 2px 10px rgba(67,56,202,.18));
 }
 
 /* Hero title */
@@ -1424,39 +1423,31 @@ function animateHeroText(){
 
   gsap.set(menu, { opacity: 1 });
 
-  // ── Letter-by-letter word reveal ──
-  ['hero-word-1','hero-word-2','hero-word-3'].forEach((id, wi) => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const text = el.textContent;
-    el.innerHTML = text.split('').map(c =>
-      `<span class="letter-container" style="display:inline-block;will-change:transform,opacity">${c === ' ' ? '&nbsp;' : `<span class="letter-inner" style="display:inline-block;will-change:transform">${c}</span>`}</span>`
-    ).join('');
-    gsap.from(el.querySelectorAll('.letter-container'), {
-      opacity: 0,
-      y: 22,
-      filter: 'blur(8px)',
-      duration: 0.65,
-      stagger: 0.045,
-      ease: 'power3.out',
-      delay: 0.35 + wi * 0.28
-    });
+  // ── Smooth word reveal ──
+  gsap.from(['#hero-word-1','#hero-word-2','#hero-word-3'], {
+    opacity: 0,
+    y: 20,
+    filter: 'blur(6px)',
+    duration: 0.75,
+    stagger: 0.16,
+    ease: 'power3.out',
+    delay: 0.35
   });
 
   // ── Quote float in (above image, after title) ──
-  gsap.to('#hero-quote', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 1.35 });
+  gsap.to('#hero-quote', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 1.0 });
 
   // ── Hero image reveal ──
-  gsap.to('.hero-img-container', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: 1.50 });
-  gsap.from('.hero-img-container', { y: 15, filter: 'blur(4px)', duration: 0.8, ease: 'power2.out', delay: 1.50 });
+  gsap.to('.hero-img-container', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: 1.25 });
+  gsap.from('.hero-img-container', { y: 15, filter: 'blur(4px)', duration: 0.8, ease: 'power2.out', delay: 1.25 });
 
   // ── Subtitle rise & reveal ──
-  gsap.to('#hero-sub', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out', delay: 1.70 });
-  gsap.from('#hero-sub', { y: 18, filter: 'blur(5px)', duration: 0.85, ease: 'power2.out', delay: 1.70 });
+  gsap.to('#hero-sub', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out', delay: 1.45 });
+  gsap.from('#hero-sub', { y: 18, filter: 'blur(5px)', duration: 0.85, ease: 'power2.out', delay: 1.45 });
 
   // ── Journey button burst in ──
-  gsap.from('#journey-btn-wrap', { opacity: 0, y: 20, scale: 0.92, duration: 0.75, ease: 'back.out(1.6)', delay: 2.0 });
-  gsap.from('.journey-hint', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.4 });
+  gsap.from('#journey-btn-wrap', { opacity: 0, y: 20, scale: 0.92, duration: 0.75, ease: 'back.out(1.6)', delay: 1.7 });
+  gsap.from('.journey-hint', { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 2.0 });
 
 
 }
@@ -1469,51 +1460,10 @@ function startIdleFloat(){
     const el = document.getElementById(id);
     if(!el) return;
     gsap.to(el, {
-      y: gsap.utils.random(-8, 8),
-      x: gsap.utils.random(-3, 3),
-      rotation: gsap.utils.random(-0.5, 0.5),
-      duration: gsap.utils.random(7, 11),
+      y: gsap.utils.random(-4, 4),
+      duration: gsap.utils.random(5, 8),
       repeat: -1, yoyo: true, ease: 'sine.inOut',
-      delay: i * 0.9
-    });
-  });
-
-  // ── Individual letter micro-float & hover interaction ──
-  document.querySelectorAll('.intro-title .letter-container').forEach((container, i) => {
-    // 1. Parent container floats continuously
-    gsap.to(container, {
-      y: gsap.utils.random(-5, 5),
-      x: gsap.utils.random(-2, 2),
-      rotation: gsap.utils.random(-1, 1),
-      duration: gsap.utils.random(4, 6),
-      repeat: -1, yoyo: true, ease: 'sine.inOut',
-      delay: Math.random() * 2
-    });
-
-    // 2. Inner span animates scale/glow on hover (amber/peach glow: rgba(255, 205, 127, 0.85))
-    const inner = container.querySelector('.letter-inner');
-    if (!inner) return;
-
-    container.addEventListener('mouseenter', () => {
-      gsap.to(inner, {
-        y: -10,
-        scale: 1.25,
-        filter: 'drop-shadow(0 0 15px rgba(255, 205, 127, 0.85))',
-        duration: 0.3,
-        ease: 'power2.out',
-        overwrite: 'auto'
-      });
-    });
-
-    container.addEventListener('mouseleave', () => {
-      gsap.to(inner, {
-        y: 0,
-        scale: 1,
-        duration: 0.4,
-        ease: 'power2.out',
-        overwrite: 'auto',
-        clearProps: 'filter,scale,transform'
-      });
+      delay: i * 0.4
     });
   });
 

@@ -206,6 +206,26 @@ def serve_service_worker():
         res.headers["Service-Worker-Allowed"] = "/"
     return res
 
+@app.get("/hero-image.jpg")
+@app.get("/{img_name}.jpg")
+@app.get("/{img_name}.png")
+@app.get("/{img_name}.jpeg")
+@app.get("/{img_name}.webp")
+@app.get("/{img_name}.svg")
+def serve_image_file(img_name: str = "hero-image"):
+    """Serves root images like hero-image.jpg."""
+    for ext in ["jpg", "jpeg", "png", "webp", "svg"]:
+        fname = f"{img_name}.{ext}" if not img_name.endswith(f".{ext}") else img_name
+        res = _serve_page(fname)
+        if isinstance(res, FileResponse):
+            return res
+    return _serve_page(f"{img_name}.jpg")
+
+@app.get("/frontend/{asset_path:path}")
+def serve_frontend_subpath(asset_path: str):
+    """Serves frontend/ prefixed assets as fallback."""
+    return _serve_page(asset_path)
+
 @app.get("/icons/{icon_name}")
 def serve_icon_file(icon_name: str):
     """Serves PWA icons."""
