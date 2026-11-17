@@ -2464,10 +2464,12 @@ function updateSidebarUser() {
             el.textContent = user.fullName || user.full_name || 'Astha Khade';
         });
 
+    const avatarUrl = user.avatarUrl || user.avatar_url || localStorage.getItem('user_avatar') || localStorage.getItem('avatarUrl');
     document.querySelectorAll('.user-avatar')
         .forEach(function(el) {
-            if (user.avatarUrl && user.avatarUrl.startsWith('data:image')) {
-                el.innerHTML = `<img src="${user.avatarUrl}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            if (el.id === 'settingAvatarPreview' || el.classList.contains('bot-avatar')) return;
+            if (avatarUrl && (avatarUrl.startsWith('data:image') || avatarUrl.startsWith('http') || avatarUrl.startsWith('/'))) {
+                el.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             } else if (el.textContent.trim().length <= 2) {
                 const name = user.fullName || user.full_name || 'A';
                 el.textContent = name.charAt(0).toUpperCase();

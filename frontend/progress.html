@@ -935,7 +935,7 @@ async function loadBadges() {
                 grid.innerHTML = res.badges.map(b => {
                     const isEarned = !!b.isUnlocked;
                     return `
-                      <div class="badge-item ${isEarned ? 'earned' : 'locked'}" onclick="showBadgeDetailModal('${encodeURIComponent(JSON.stringify(b))}')" style="cursor:pointer; position:relative;" title="Click for badge details">
+                      <div class="badge-item ${isEarned ? 'earned' : 'locked'}" onclick="showBadgeDetailModal('${encodeURIComponent(JSON.stringify(b)).replace(/'/g, "%27")}')" style="cursor:pointer; position:relative;" title="Click for badge details">
                         <div class="badge-icon" style="filter:${isEarned ? 'none' : 'grayscale(1)'}">${isEarned ? (b.icon || '🏆') : '🔒'}</div>
                         <span style="font-size:0.68rem; font-weight:700; color:${isEarned ? '#1e293b' : '#64748b'};">${b.name}</span>
                         <span style="font-size:0.58rem; color:${isEarned ? '#10B981' : '#94a3b8'};">${isEarned ? 'Unlocked' : 'Locked'}</span>
@@ -1444,7 +1444,35 @@ function toggleSidebar() {
 }
 
 // Initialize
+
+function updateSidebarUser() {
+    try {
+        const rawUser = localStorage.getItem('user_data');
+        if (!rawUser) return;
+        const user = JSON.parse(rawUser);
+        const name = user.fullName || user.username || localStorage.getItem('user_fullname') || 'Student';
+        const year = user.currentYear ? `${user.currentYear} Year` : '1st Year';
+        const branch = user.branch || 'CSE';
+        const college = user.collegeName ? ` · ${user.collegeName}` : '';
+        const initial = name.charAt(0).toUpperCase() || 'S';
+        const avatarUrl = user.avatarUrl || localStorage.getItem('user_avatar') || localStorage.getItem('avatarUrl');
+
+        document.querySelectorAll('.user-avatar').forEach(av => {
+            if (avatarUrl && (avatarUrl.startsWith('data:image') || avatarUrl.startsWith('http') || avatarUrl.startsWith('/'))) {
+                av.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            } else {
+                av.textContent = initial;
+            }
+        });
+        const nameEl = document.querySelector('.user-info strong');
+        if (nameEl) nameEl.textContent = name;
+        const subEl = document.querySelector('.user-info p');
+        if (subEl) subEl.textContent = `${year} · ${branch}${college}`;
+    } catch(e) {}
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    updateSidebarUser();
     await loadProgress();
     renderGoals();
 });
