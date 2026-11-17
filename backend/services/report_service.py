@@ -106,12 +106,34 @@ def get_weekly_ai_report(student_id: str, track_key: str = "aiml", user_name: st
     active_days = (log_stats["days_active"] if log_stats and log_stats["days_active"] else 0)
     prog_hours = float(log_stats["total_hours"] or 0) if log_stats else 0.0
     study_hours = float(study_stats["total_study_hours"] or 0) if study_stats else 0.0
-    logged_hours = round(max(8.5, prog_hours + study_hours), 1)
-    milestones_done = (milestone_stats["completed_milestones"] if milestone_stats and milestone_stats["completed_milestones"] else 1)
+    logged_hours = round(prog_hours + study_hours, 1)
+    milestones_done = int(milestone_stats["completed_milestones"]) if milestone_stats and milestone_stats["completed_milestones"] is not None else 0
 
     target_hours = goal_row["target_hours"] if goal_row else 10.0
     target_milestones = goal_row["target_milestones"] if goal_row else 3
     pace_percentage = min(100, int((logged_hours / max(1.0, target_hours)) * 100))
+
+    if logged_hours > 0 or milestones_done > 0:
+        digest_text = (
+            f"Great work this week, {user_name}! You completed {logged_hours} hours of focused "
+            f"learning in the {track_key.upper()} track ({milestones_done} milestones completed). "
+            f"Keep up daily practice to maintain steady momentum toward placement readiness."
+        )
+        strengths_list = [
+            f"Active learning sessions ({active_days} out of 7 days active)",
+            f"Building core {config['key_skill']} competencies",
+            "Progressing on structured learning track"
+        ]
+    else:
+        digest_text = (
+            f"Welcome to your learning journey, {user_name}! Your personalized {track_key.upper()} curriculum is ready. "
+            f"Begin by exploring your milestone topics, logging study sessions, and completing practice challenges."
+        )
+        strengths_list = [
+            "Account setup complete and career track active",
+            "Structured curriculum roadmap available",
+            "Personalized daily tips and AI mentor ready"
+        ]
 
     return {
         "studentId": student_id,
@@ -119,23 +141,15 @@ def get_weekly_ai_report(student_id: str, track_key: str = "aiml", user_name: st
         "trackKey": track_key,
         "reportPeriod": f"{week_start.strftime('%b %d')} - {today.strftime('%b %d, %Y')}",
         "paceIndex": f"{pace_percentage}%",
-        "streakDays": max(7, active_days),
+        "streakDays": active_days,
         "hoursLearnedThisWeek": logged_hours,
         "targetHours": target_hours,
         "milestonesAchieved": milestones_done,
         "targetMilestones": target_milestones,
-        "velocityGrade": "A+ Elite Pace" if pace_percentage >= 80 else "B+ Steady Momentum",
+        "velocityGrade": "A+ Elite Pace" if pace_percentage >= 80 else ("B+ Steady Momentum" if pace_percentage >= 40 else "Getting Started 🌱"),
         "currentFocus": config["focus"],
-        "aiDigest": (
-            f"Exceptional dedication this week, {user_name}! You completed {logged_hours} hours of focused "
-            f"learning in the {track_key.upper()} track ({milestones_done} milestones completed). Your consistency score ranks in the top 5% of engineers. "
-            f"Maintaining this momentum will ensure you finish your foundational milestone 2 weeks ahead of schedule."
-        ),
-        "strengths": [
-            f"Consistent daily coding habits ({max(5, active_days)} out of 7 days active)",
-            f"Strong grasp of core {config['key_skill']} fundamentals",
-            "High problem-solving persistence on milestone assessments"
-        ],
+        "aiDigest": digest_text,
+        "strengths": strengths_list,
         "growthAreas": [
             "Deepen hands-on project documentation and Git commit hygiene",
             "Practice explaining your architectural trade-offs in technical mock sessions"

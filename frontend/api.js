@@ -783,10 +783,7 @@ const QuizAPI = {
             const sRes = await apiCall('/quiz/history', 'GET');
             if (sRes.status === 200 && sRes.data) return sRes.data;
         } catch(e) {}
-        return [
-            { id: 1, trackKey: 'aiml', score: 85, totalQuestions: 10, correctAnswers: 8, timeTakenSec: 180, attemptedAt: '2026-09-26' },
-            { id: 2, trackKey: 'webdev', score: 90, totalQuestions: 10, correctAnswers: 9, timeTakenSec: 150, attemptedAt: '2026-09-25' }
-        ];
+        return [];
     },
 
     resetQuiz: async (studentId = null) => {
@@ -1434,13 +1431,7 @@ const ProgressAPI = {
             const res = await mlApiCall(url, 'GET');
             if (res.status === 200 && res.data && res.data.activities) return res.data.activities;
         } catch(e) {}
-        return [
-            { id: 1, actionType: "milestone", title: "Completed: HTML & CSS Basics", description: "Roadmap milestone completed", icon: "fa-check", color: "green", timestamp: "Today" },
-            { id: 2, actionType: "quiz", title: "Took Skill Assessment Quiz", description: "Scored 85% — AI / ML pathway match", icon: "fa-brain", color: "purple", timestamp: "Yesterday" },
-            { id: 3, actionType: "bookmark", title: "Saved: Full-Stack Web Development", description: "Added to bookmarked career tracks", icon: "fa-bookmark", color: "blue", timestamp: "2 days ago" },
-            { id: 4, actionType: "badge", title: "Badge Earned: Quick Learner 🏅", description: "Completed 5 topics in one week", icon: "fa-trophy", color: "orange", timestamp: "3 days ago" },
-            { id: 5, actionType: "roadmap", title: "Started AI & Machine Learning Roadmap", description: "Began personalized learning path", icon: "fa-map", color: "green", timestamp: "1 week ago" }
-        ];
+        return [];
     },
 
     toggleResourceCompletion: async (resourceId, resourceTitle = '', trackKey = '', isCompleted = true) => {
@@ -1565,7 +1556,7 @@ const ProgressAPI = {
                 return res.data;
             }
         } catch(e) {}
-        return { success: true, targetHours: 15.0, currentWeekHours: 21.5, completionPercentage: 143.3 };
+        return { success: true, targetHours: 10.0, currentWeekHours: 0.0, completionPercentage: 0.0 };
     },
 
     setWeeklyTarget: async (targetHours, focusTopic = '', studentId = null) => {
@@ -1595,16 +1586,16 @@ const ProgressAPI = {
         } catch(e) {}
         return {
             success: true,
-            name: user.fullName || 'Astha Khade',
+            name: user.fullName || 'Student',
             track: user.careerTrack || 'AI / Machine Learning',
-            milestonesCompleted: 12,
-            studyHours: 34.0,
-            streakDays: 7,
-            readinessScore: 82,
-            badgeId: 'CN-PROG-USER01-82',
-            shareTitle: `🚀 ${user.fullName || 'Astha Khade'} achieved 82% Job Readiness in AI / Machine Learning!`,
-            linkedinText: `🎯 Milestone Unlocked on AI Career Navigator! 12 Milestones | 34 Study Hours | 82% Readiness Score. Continuous learning every day!`,
-            twitterText: `🚀 Just hit 82% Job Readiness on @CareerNavigatorAI! 12 Milestones · 34h Studied · 7d Streak.`,
+            milestonesCompleted: 0,
+            studyHours: 0.0,
+            streakDays: 0,
+            readinessScore: 0,
+            badgeId: 'CN-PROG-NEW-0',
+            shareTitle: `🚀 ${user.fullName || 'Student'} started their journey in AI / Machine Learning!`,
+            linkedinText: `🎯 Starting my learning journey on AI Career Navigator! Ready to build job-ready skills.`,
+            twitterText: `🚀 Starting my learning journey on @CareerNavigatorAI! Ready to build job-ready skills.`,
             shareUrl: 'https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html',
             linkedinUrl: 'https://www.linkedin.com/sharing/share-offsite/',
             twitterUrl: 'https://twitter.com/intent/tweet'
@@ -1626,7 +1617,7 @@ const ProgressAPI = {
             const res = await mlApiCall(`/progress/readiness/${encodeURIComponent(sid)}${track ? `?track=${encodeURIComponent(track)}` : ''}`, 'GET');
             if (res.status === 200 && res.data) return res.data;
         } catch(e){}
-        return { success: true, readinessScore: 82, readinessGrade: "Industry Ready 💼" };
+        return { success: true, readinessScore: 0, readinessGrade: "Getting Started 🌱" };
     },
 
     getDynamicSkills: async (studentId = null, track = 'aiml') => {
@@ -2017,12 +2008,8 @@ const NotificationAPI = {
             }
         } catch(e) {}
         return {
-            unreadCount: 2,
-            notifications: [
-                { id: 1, title: '🔥 7-Day Streak Active!', message: 'Keep up daily study check-ins.', isRead: false, createdAt: 'Just now' },
-                { id: 2, title: '📊 Weekly AI Digest Ready', message: 'Your performance report has been generated.', isRead: false, createdAt: '2h ago' },
-                { id: 3, title: '🏆 Milestone Unlocked', message: 'HTML & CSS Basics verified in database.', isRead: true, createdAt: 'Yesterday' }
-            ]
+            unreadCount: 0,
+            notifications: []
         };
     },
 
@@ -2104,28 +2091,27 @@ const ReportAPI = {
             studentName: name,
             trackKey: track,
             reportPeriod: 'Current Week',
-            paceIndex: '92%',
-            streakDays: 7,
-            hoursLearnedThisWeek: 8.5,
+            paceIndex: '0%',
+            streakDays: 0,
+            hoursLearnedThisWeek: 0.0,
             targetHours: 10.0,
-            milestonesAchieved: 2,
+            milestonesAchieved: 0,
             targetMilestones: 3,
-            velocityGrade: 'A+ Elite Pace',
-            currentFocus: 'Core Algorithms & Full-Stack Projects',
-            aiDigest: `Outstanding consistency this week, ${name}! You are on track in the ${track.toUpperCase()} specialization. Maintaining daily practice will keep you 2 weeks ahead of curriculum milestones.`,
+            velocityGrade: 'Getting Started 🌱',
+            currentFocus: 'Foundations & Practice',
+            aiDigest: `Welcome, ${name}! Start exploring your ${track.toUpperCase()} roadmap, logging study hours, and taking practice quizzes to build momentum.`,
             strengths: [
-                'Consistent daily check-ins (7 consecutive days active)',
-                'High problem retention in assessment quizzes',
-                'Proactive completion of foundational milestones'
+                'Account setup complete',
+                'Personalized learning pathway initialized'
             ],
             growthAreas: [
-                'Deepen hands-on project documentation and Git commit hygiene',
-                'Practice explaining architectural trade-offs in mock sessions'
+                'Begin your first milestone study session',
+                'Complete a technical skill assessment'
             ],
             recommendedGoals: [
-                'Complete 2 more track milestone projects',
-                'Invest 2 hours in system design and database indexing',
-                'Retake assessment quiz to boost readiness score above 85%'
+                'Complete your first roadmap milestone',
+                'Log 2 hours of focused study',
+                'Take an assessment quiz to gauge baseline skills'
             ]
         };
     },
@@ -2155,8 +2141,8 @@ const ReportAPI = {
             targetHours: 10.0,
             targetMilestones: 3,
             focusTopic: 'Data Structures & Full-Stack Engineering',
-            achievedHours: 8.5,
-            achievedMilestones: 2
+            achievedHours: 0.0,
+            achievedMilestones: 0
         };
     }
 };

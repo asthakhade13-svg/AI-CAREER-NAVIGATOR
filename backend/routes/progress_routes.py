@@ -9,19 +9,7 @@ from services.auth_service import get_db_connection
 router = APIRouter()
 
 # In-memory progress database store with persistence support
-_STUDENT_PROGRESS_DB: Dict[str, dict] = {
-    "user_001": {
-        "student_id": "user_001",
-        "streak_days": 7,
-        "hours_learned": 34,
-        "skills_learned": 5,
-        "completed_milestones": 12,
-        "total_milestones": 20,
-        "last_login_date": datetime.now().strftime("%Y-%m-%d"),
-        "completed_milestone_ids": ["m1", "m2", "m3"],
-        "readiness_score": 78
-    }
-}
+_STUDENT_PROGRESS_DB: Dict[str, dict] = {}
 
 class MilestoneToggleRequest(BaseModel):
     student_id: str = "user_001"
@@ -296,8 +284,8 @@ def get_goals(student_id: str = Query("user_001")):
                 "targetHours": 10.0,
                 "targetMilestones": 3,
                 "focusTopic": "Data Structures & Algorithms",
-                "achievedHours": 8.5,
-                "achievedMilestones": 2
+                "achievedHours": 0.0,
+                "achievedMilestones": 0
             }
         }
 
@@ -457,15 +445,10 @@ def get_study_logs_breakdown(student_id: str):
         }
         total_hours += hrs
 
-    # Provide realistic default baseline distribution if new student with 0 logs
+    # Provide clean baseline distribution if new student with 0 logs
     if not breakdown:
-        breakdown = {
-            "DSA & Problem Solving": {"category": "DSA & Problem Solving", "hours": 14.0, "sessionCount": 7},
-            "Coding Practice": {"category": "Coding Practice", "hours": 10.5, "sessionCount": 5},
-            "Project Work": {"category": "Project Work", "hours": 7.5, "sessionCount": 3},
-            "System Design": {"category": "System Design", "hours": 4.0, "sessionCount": 2}
-        }
-        total_hours = 36.0
+        breakdown = {}
+        total_hours = 0.0
 
     categories_list = []
     for cat_name, data in breakdown.items():
@@ -549,13 +532,43 @@ def get_student_skills_progress(student_id: str, track_key: str = "aiml"):
     """
     Calculates dynamic skill mastery percentages based on quizzes & milestones.
     """
-    skills = [
-        {"name": "HTML & CSS Basics", "category": "Web Fundamentals", "pct": 85, "change": "+5% ↑", "color": "#4F46E5", "icon": "fa-code"},
-        {"name": "JavaScript (ES6+)", "category": "Programming Core", "pct": 70, "change": "+12% ↑", "color": "#F59E0B", "icon": "fa-js"},
-        {"name": "Python & Data Handling", "category": "Programming Core", "pct": 65, "change": "+8% ↑", "color": "#06B6D4", "icon": "fa-python"},
-        {"name": "Data Structures & Algorithms", "category": "Problem Solving", "pct": 60, "change": "+6% ↑", "color": "#10B981", "icon": "fa-database"},
-        {"name": "Git & Collaborative Workflow", "category": "Version Control", "pct": 75, "change": "+10% ↑", "color": "#EF4444", "icon": "fa-git-alt"}
-    ]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT COUNT(*) as cnt FROM milestones_progress 
+    WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1
+    """, (student_id, student_id))
+    m_row = cursor.fetchone()
+    milestones_done = int(m_row["cnt"]) if m_row and m_row["cnt"] else 0
+
+    cursor.execute("""
+    SELECT AVG(score) as avg_score FROM quiz_attempts
+    WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
+    """, (student_id, student_id))
+    q_row = cursor.fetchone()
+    quiz_avg = float(q_row["avg_score"]) if q_row and q_row["avg_score"] is not None else 0.0
+
+    conn.close()
+
+    base_multiplier = min(1.0, (milestones_done * 0.15) + (quiz_avg / 100.0 * 0.4))
+    
+    if milestones_done == 0 and quiz_avg == 0:
+        skills = [
+            {"name": "HTML & CSS Basics", "category": "Web Fundamentals", "pct": 0, "change": "0%", "color": "#4F46E5", "icon": "fa-code"},
+            {"name": "JavaScript (ES6+)", "category": "Programming Core", "pct": 0, "change": "0%", "color": "#F59E0B", "icon": "fa-js"},
+            {"name": "Python & Data Handling", "category": "Programming Core", "pct": 0, "change": "0%", "color": "#06B6D4", "icon": "fa-python"},
+            {"name": "Data Structures & Algorithms", "category": "Problem Solving", "pct": 0, "change": "0%", "color": "#10B981", "icon": "fa-database"},
+            {"name": "Git & Collaborative Workflow", "category": "Version Control", "pct": 0, "change": "0%", "color": "#EF4444", "icon": "fa-git-alt"}
+        ]
+    else:
+        skills = [
+            {"name": "HTML & CSS Basics", "category": "Web Fundamentals", "pct": min(100, int(85 * base_multiplier)), "change": f"+{min(15, int(15 * base_multiplier))}% ↑", "color": "#4F46E5", "icon": "fa-code"},
+            {"name": "JavaScript (ES6+)", "category": "Programming Core", "pct": min(100, int(70 * base_multiplier)), "change": f"+{min(12, int(12 * base_multiplier))}% ↑", "color": "#F59E0B", "icon": "fa-js"},
+            {"name": "Python & Data Handling", "category": "Programming Core", "pct": min(100, int(65 * base_multiplier)), "change": f"+{min(10, int(10 * base_multiplier))}% ↑", "color": "#06B6D4", "icon": "fa-python"},
+            {"name": "Data Structures & Algorithms", "category": "Problem Solving", "pct": min(100, int(60 * base_multiplier)), "change": f"+{min(8, int(8 * base_multiplier))}% ↑", "color": "#10B981", "icon": "fa-database"},
+            {"name": "Git & Collaborative Workflow", "category": "Version Control", "pct": min(100, int(75 * base_multiplier)), "change": f"+{min(10, int(10 * base_multiplier))}% ↑", "color": "#EF4444", "icon": "fa-git-alt"}
+        ]
     return {
         "success": True,
         "studentId": student_id,
@@ -688,6 +701,34 @@ def get_student_badges(student_id: str):
     except Exception:
         pass
 
+    # Check assessment completion
+    assessment_done = False
+    try:
+        cursor.execute("""
+        SELECT COUNT(*) as cnt FROM basic_info 
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
+        """, (student_id, student_id))
+        r = cursor.fetchone()
+        if r and r["cnt"] and r["cnt"] > 0:
+            assessment_done = True
+    except Exception:
+        pass
+    if quiz_taken:
+        assessment_done = True
+
+    # Check saved careers / explored tracks
+    saved_careers_cnt = 0
+    try:
+        cursor.execute("""
+        SELECT COUNT(*) as cnt FROM saved_careers
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
+        """, (student_id, student_id))
+        r = cursor.fetchone()
+        if r and r["cnt"]:
+            saved_careers_cnt = r["cnt"]
+    except Exception:
+        pass
+
     conn.close()
 
     badges = [
@@ -709,7 +750,7 @@ def get_student_badges(student_id: str):
             "color": "#10B981",
             "isUnlocked": ats_pro_unlocked,
             "category": "Placement",
-            "progress": f"{best_ats_score}/80 pts" if best_ats_score > 0 else "Pending scan"
+            "progress": f"{best_ats_score}/80 pts" if best_ats_score > 0 else "0/80 pts"
         },
         {
             "id": "b_capstone",
@@ -719,7 +760,7 @@ def get_student_badges(student_id: str):
             "color": "#6366F1",
             "isUnlocked": capstone_finisher_unlocked,
             "category": "Projects",
-            "progress": "Reviewed" if capstone_finisher_unlocked else "Pending review"
+            "progress": "Reviewed" if capstone_finisher_unlocked else "Not submitted"
         },
         {
             "id": "b_certified",
@@ -729,7 +770,7 @@ def get_student_badges(student_id: str):
             "color": "#9333EA",
             "isUnlocked": certified_specialist_unlocked,
             "category": "Academics",
-            "progress": "Verified" if certified_specialist_unlocked else "Pending claim"
+            "progress": "Verified" if certified_specialist_unlocked else "Locked"
         },
         {
             "id": "b1",
@@ -737,9 +778,9 @@ def get_student_badges(student_id: str):
             "desc": "Started career assessment and explored pathways",
             "icon": "🧭",
             "color": "#3B82F6",
-            "isUnlocked": True,
+            "isUnlocked": assessment_done,
             "category": "Orientation",
-            "progress": "Complete"
+            "progress": "Complete" if assessment_done else "Not started"
         },
         {
             "id": "b2",
@@ -749,7 +790,7 @@ def get_student_badges(student_id: str):
             "color": "#8B5CF6",
             "isUnlocked": quiz_taken,
             "category": "Assessment",
-            "progress": "Complete"
+            "progress": "Complete" if quiz_taken else "0 quizzes"
         },
         {
             "id": "b3",
@@ -757,9 +798,9 @@ def get_student_badges(student_id: str):
             "desc": "Completed core programming topics in one week",
             "icon": "⚡",
             "color": "#F59E0B",
-            "isUnlocked": True,
+            "isUnlocked": (milestones_done >= 3),
             "category": "Learning",
-            "progress": "Complete"
+            "progress": "Complete" if milestones_done >= 3 else f"{milestones_done}/3 topics"
         },
         {
             "id": "b5",
@@ -767,9 +808,9 @@ def get_student_badges(student_id: str):
             "desc": "Explored 5+ tech career tracks",
             "icon": "💼",
             "color": "#06B6D4",
-            "isUnlocked": True,
+            "isUnlocked": (saved_careers_cnt >= 3),
             "category": "Careers",
-            "progress": "Complete"
+            "progress": "Complete" if saved_careers_cnt >= 3 else f"{saved_careers_cnt}/3 tracks"
         },
         {
             "id": "b6",
@@ -799,7 +840,7 @@ def get_student_badges(student_id: str):
             "color": "#F43F5E",
             "isUnlocked": quiz_master_unlocked,
             "category": "Assessment",
-            "progress": "95% score"
+            "progress": "90%+ score" if quiz_master_unlocked else "0% score"
         },
         {
             "id": "b11",
@@ -904,14 +945,8 @@ def get_recent_activities(
             for r in rows
         ]
     else:
-        acts = [
-            {"id": 1, "actionType": "milestone", "title": "Completed: HTML & CSS Basics", "description": "Roadmap milestone completed", "icon": "fa-check", "color": "green", "timestamp": "Today"},
-            {"id": 2, "actionType": "quiz", "title": "Took Skill Assessment Quiz", "description": "Scored 85% — AI / ML pathway match", "icon": "fa-brain", "color": "purple", "timestamp": "Yesterday"},
-            {"id": 3, "actionType": "bookmark", "title": "Saved: Full-Stack Web Development", "description": "Added to bookmarked career tracks", "icon": "fa-bookmark", "color": "blue", "timestamp": "2 days ago"},
-            {"id": 4, "actionType": "badge", "title": "Badge Earned: Quick Learner 🏅", "description": "Completed 5 topics in one week", "icon": "fa-trophy", "color": "orange", "timestamp": "3 days ago"},
-            {"id": 5, "actionType": "roadmap", "title": "Started AI & Machine Learning Roadmap", "description": "Began personalized learning path", "icon": "fa-map", "color": "green", "timestamp": "1 week ago"}
-        ]
-        total_count = len(acts)
+        acts = []
+        total_count = 0
 
     return {
         "success": True,
@@ -930,25 +965,52 @@ def get_progress_report_summary(student_id: str, track_key: str = "aiml"):
     """
     Generates structured progress report summary card for printable/downloadable review.
     """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT full_name, college, branch, year, career_track FROM users WHERE id = ? OR email = ?", (student_id, student_id))
+    u = cursor.fetchone()
+    name = u["full_name"] if u and u["full_name"] else "Student"
+    college = u["college"] if u and u["college"] else "Oriental Institute of Science & Technology (OIST)"
+    branch = u["branch"] if u and u["branch"] else "Computer Science & Engineering"
+    year = u["year"] if u and u["year"] else "1st Year"
+    track = (u["career_track"] if u and u["career_track"] else track_key).upper()
+
+    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
+    h_row = cursor.fetchone()
+    hours = round(float(h_row["total_hrs"] or 0), 1)
+
+    cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1", (student_id, student_id))
+    m_row = cursor.fetchone()
+    milestones = int(m_row["cnt"]) if m_row and m_row["cnt"] else 0
+
+    cursor.execute("SELECT COUNT(DISTINCT log_date) as cnt FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
+    s_row = cursor.fetchone()
+    streak = int(s_row["cnt"]) if s_row and s_row["cnt"] else 0
+
+    conn.close()
+
+    readiness = min(98, max(0, int(milestones * 12.5) + int(hours * 0.5)))
+
     return {
         "success": True,
         "studentId": student_id,
-        "studentName": "Astha Khade",
-        "college": "Oriental Institute of Science & Technology (OIST)",
-        "branch": "Computer Science & Engineering",
-        "currentYear": "1st Year",
-        "careerTrack": track_key.upper(),
-        "streakDays": 7,
-        "hoursLearned": 34,
-        "readinessScore": 82,
-        "completedMilestones": 3,
+        "studentName": name,
+        "college": college,
+        "branch": branch,
+        "currentYear": year,
+        "careerTrack": track,
+        "streakDays": streak,
+        "hoursLearned": hours,
+        "readinessScore": readiness,
+        "completedMilestones": milestones,
         "totalMilestones": 8,
-        "badgesUnlocked": 5,
+        "badgesUnlocked": 0 if milestones == 0 and hours == 0 else min(12, milestones + (1 if streak >= 7 else 0)),
         "generatedAt": datetime.now().strftime("%B %d, %Y"),
         "keyRecommendations": [
-            "Maintain 7-day daily study habit to stay 2 weeks ahead of curriculum",
-            "Focus next sprint on Vector Embeddings & LangChain integration",
-            "Build capstone project blueprint and document GitHub commit milestones"
+            "Maintain daily study habits to advance through your curriculum milestones",
+            "Engage in hands-on projects and practice challenges",
+            "Take technical assessments to validate skill acquisition"
         ]
     }
 
@@ -980,32 +1042,27 @@ def get_calendar_activity(student_id: str):
         d = today - timedelta(days=i)
         d_str = d.strftime("%Y-%m-%d")
         
-        # Determine intensity
+        # Determine intensity purely based on real recorded activity
         if d_str in active_dates:
             h = active_dates[d_str]
             intensity = "high" if h >= 3.0 else ("medium" if h >= 1.5 else "low")
             active = True
-        elif i < 7:
-            # Active current week streak
-            intensity = "high" if i in (0, 1, 3, 5) else "medium"
-            active = True
         else:
-            # Historical pattern
-            active = (i % 3 != 0)
-            intensity = "high" if (i % 5 == 0) else ("medium" if (i % 2 == 0) else "low")
+            intensity = "none"
+            active = False
 
         days_data.append({
             "date": d_str,
             "daysAgo": i,
             "active": active,
-            "intensity": intensity if active else "none"
+            "intensity": intensity
         })
 
     return {
         "success": True,
         "studentId": student_id,
         "totalDays": 49,
-        "streakDays": 7,
+        "streakDays": len(active_dates),
         "days": days_data
     }
 
@@ -1046,13 +1103,13 @@ def get_leaderboard(college: str = "OIST", branch: str = "CSE"):
         if name in seen_names:
             continue
         seen_names.add(name)
-        total_h = round(float(u["total_hours"] or 0) + 34.0, 1) if "Astha" in name else round(float(u["total_hours"] or 0) + 15.0, 1)
+        total_h = round(float(u["total_hours"] or 0), 1)
         board.append({
             "name": name,
             "avatar": name[0].upper(),
-            "streak": 7 if "Astha" in name else 5,
+            "streak": 0 if total_h == 0 else min(14, max(1, int(total_h / 2.0))),
             "hours": total_h,
-            "score": int(u["top_score"] or 92),
+            "score": int(u["top_score"] or 0),
             "track": (u["career_track"] or "aiml").upper() + " Specialist",
             "isUser": True if "Astha" in name else False
         })
@@ -1458,13 +1515,15 @@ def get_job_readiness_score(student_id: str, track: Optional[str] = None):
     proj_pct = min(100.0, proj_done * 50.0)
 
     # 3. Quiz attempts
-    cursor.execute("SELECT AVG(score) as avg_score FROM quiz_attempts WHERE student_id = ?", (student_id,))
-    quiz_avg = cursor.fetchone()["avg_score"] or 75.0
+    cursor.execute("SELECT AVG(score) as avg_score FROM quiz_attempts WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
+    q_row = cursor.fetchone()
+    quiz_avg = float(q_row["avg_score"]) if q_row and q_row["avg_score"] is not None else 0.0
 
     # 4. Study logs & streak
-    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ?", (student_id,))
-    total_hours = cursor.fetchone()["total_hrs"] or 0.0
-    consistency_pct = min(100.0, 50.0 + (total_hours * 1.5))
+    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
+    s_row = cursor.fetchone()
+    total_hours = float(s_row["total_hrs"]) if s_row and s_row["total_hrs"] is not None else 0.0
+    consistency_pct = min(100.0, total_hours * 2.5) if total_hours > 0 else 0.0
 
     conn.close()
 
@@ -1475,16 +1534,19 @@ def get_job_readiness_score(student_id: str, track: Optional[str] = None):
         (0.20 * quiz_avg) +
         (0.20 * consistency_pct)
     )
-    final_score = min(98, max(50, composite))
-
-    if final_score >= 88:
-        grade = "Elite Job Ready 🔥"
-    elif final_score >= 75:
-        grade = "Industry Ready 💼"
-    elif final_score >= 60:
-        grade = "Intermediate Developer 🚀"
+    if milestones_done == 0 and proj_done == 0 and quiz_avg == 0 and total_hours == 0:
+        final_score = 0
+        grade = "Getting Started 🌱"
     else:
-        grade = "Foundation Stage 📚"
+        final_score = min(98, max(5, composite))
+        if final_score >= 88:
+            grade = "Elite Job Ready 🔥"
+        elif final_score >= 75:
+            grade = "Industry Ready 💼"
+        elif final_score >= 50:
+            grade = "Intermediate Developer 🚀"
+        else:
+            grade = "Foundation Stage 📚"
 
     return {
         "success": True,
@@ -1515,24 +1577,33 @@ def get_dynamic_skills(student_id: str, track: Optional[str] = "aiml"):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE student_id = ? AND is_completed = 1", (student_id,))
-    milestones_done = cursor.fetchone()["cnt"]
+    cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1", (student_id, student_id))
+    m_row = cursor.fetchone()
+    milestones_done = int(m_row["cnt"]) if m_row and m_row["cnt"] else 0
 
-    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ?", (student_id,))
-    total_hours = cursor.fetchone()["total_hrs"] or 0.0
+    cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
+    s_row = cursor.fetchone()
+    total_hours = float(s_row["total_hrs"]) if s_row and s_row["total_hrs"] is not None else 0.0
 
     conn.close()
 
-    boost = min(20, (milestones_done * 4) + int(total_hours * 0.4))
-
     dynamic_skills = []
-    for s in base_skills:
-        final_pct = min(98, max(45, s["basePct"] + boost))
-        dynamic_skills.append({
-            "name": s["name"],
-            "pct": final_pct,
-            "color": s["color"]
-        })
+    if milestones_done == 0 and total_hours == 0:
+        for s in base_skills:
+            dynamic_skills.append({
+                "name": s["name"],
+                "pct": 0,
+                "color": s["color"]
+            })
+    else:
+        multiplier = min(1.0, (milestones_done * 0.15) + (total_hours * 0.02) + 0.3)
+        for s in base_skills:
+            final_pct = min(98, max(5, int(s["basePct"] * multiplier)))
+            dynamic_skills.append({
+                "name": s["name"],
+                "pct": final_pct,
+                "color": s["color"]
+            })
 
     return {
         "success": True,
@@ -1671,15 +1742,23 @@ def get_social_share_card(student_id: Optional[str] = None, payload: Optional[Sh
     
     # 2. Milestones & Study Logs
     cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1", (sid, sid))
-    milestones_done = cursor.fetchone()["cnt"] or 12
+    m_row = cursor.fetchone()
+    milestones_done = int(m_row["cnt"]) if m_row and m_row["cnt"] else 0
 
     cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (sid, sid))
-    hours_logged = cursor.fetchone()["total_hrs"] or 34.0
+    h_row = cursor.fetchone()
+    hours_logged = float(h_row["total_hrs"]) if h_row and h_row["total_hrs"] is not None else 0.0
+
+    cursor.execute("SELECT COUNT(DISTINCT log_date) as cnt FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (sid, sid))
+    s_row = cursor.fetchone()
+    streak_days = int(s_row["cnt"]) if s_row and s_row["cnt"] else 0
 
     conn.close()
 
-    streak_days = 7
-    readiness_score = min(98, max(65, 50 + int(milestones_done * 2.5) + int(hours_logged * 0.5)))
+    if milestones_done == 0 and hours_logged == 0:
+        readiness_score = 0
+    else:
+        readiness_score = min(98, max(5, int(milestones_done * 10) + int(hours_logged * 1.5)))
     badge_id = f"CN-PROG-{sid[:6].upper()}-{int(readiness_score)}"
     track_title = track.replace('_', ' ').title()
     
@@ -1738,13 +1817,22 @@ def get_shareable_svg_badge(student_id: str):
     track = (u["career_track"] if u and u["career_track"] else "AI / Machine Learning").replace('_', ' ').title()
 
     cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1", (student_id, student_id))
-    milestones = cursor.fetchone()["cnt"] or 12
+    m_row = cursor.fetchone()
+    milestones = int(m_row["cnt"]) if m_row and m_row["cnt"] else 0
 
     cursor.execute("SELECT SUM(hours_spent) as total_hrs FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
-    hours = round(cursor.fetchone()["total_hrs"] or 34.0, 1)
+    h_row = cursor.fetchone()
+    hours = round(float(h_row["total_hrs"] or 0), 1)
+
+    cursor.execute("SELECT COUNT(DISTINCT log_date) as cnt FROM study_logs WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)", (student_id, student_id))
+    s_row = cursor.fetchone()
+    streak_cnt = int(s_row["cnt"]) if s_row and s_row["cnt"] else 0
     conn.close()
 
-    score = min(98, max(65, 50 + int(milestones * 2.5) + int(hours * 0.5)))
+    if milestones == 0 and hours == 0:
+        score = 0
+    else:
+        score = min(98, max(5, int(milestones * 10) + int(hours * 1.5)))
 
     svg_code = f"""<svg width="600" height="340" viewBox="0 0 600 340" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1785,7 +1873,7 @@ def get_shareable_svg_badge(student_id: str):
       <g transform="translate(304, 160)">
         <rect width="115" height="64" rx="10" fill="#1E293B" stroke="#334155"/>
         <text x="57" y="24" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="10" font-weight="600" text-anchor="middle">DAY STREAK</text>
-        <text x="57" y="48" fill="#F59E0B" font-family="system-ui, sans-serif" font-size="18" font-weight="800" text-anchor="middle">7 Days 🔥</text>
+        <text x="57" y="48" fill="#F59E0B" font-family="system-ui, sans-serif" font-size="18" font-weight="800" text-anchor="middle">{streak_cnt} Days 🔥</text>
       </g>
 
       <g transform="translate(434, 160)">

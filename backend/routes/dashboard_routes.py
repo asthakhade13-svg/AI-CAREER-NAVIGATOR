@@ -18,26 +18,26 @@ class TrackSwitchRequest(BaseModel):
 # Track blueprints and default milestone configurations
 DEFAULT_TRACK_MILESTONES = {
     "aiml": [
-        {"id": "m1", "title": "Python & Linear Algebra Foundations", "monthNumber": 1, "isCompleted": True, "status": "DONE"},
-        {"id": "m2", "title": "Data Analysis with Pandas & NumPy", "monthNumber": 2, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m1", "title": "Python & Linear Algebra Foundations", "monthNumber": 1, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m2", "title": "Data Analysis with Pandas & NumPy", "monthNumber": 2, "isCompleted": False, "status": "NEXT"},
         {"id": "m3", "title": "Supervised & Unsupervised ML Models", "monthNumber": 3, "isCompleted": False, "status": "NEXT"},
         {"id": "m4", "title": "Deep Learning & PyTorch Model Training", "monthNumber": 4, "isCompleted": False, "status": "NEXT"}
     ],
     "webdev": [
-        {"id": "m1", "title": "HTML5, Semantic CSS & JavaScript (ES6+)", "monthNumber": 1, "isCompleted": True, "status": "DONE"},
-        {"id": "m2", "title": "React.js & Modern State Management", "monthNumber": 2, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m1", "title": "HTML5, Semantic CSS & JavaScript (ES6+)", "monthNumber": 1, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m2", "title": "React.js & Modern State Management", "monthNumber": 2, "isCompleted": False, "status": "NEXT"},
         {"id": "m3", "title": "Node.js, Express & RESTful APIs", "monthNumber": 3, "isCompleted": False, "status": "NEXT"},
         {"id": "m4", "title": "PostgreSQL, Prisma ORM & Cloud Deployment", "monthNumber": 4, "isCompleted": False, "status": "NEXT"}
     ],
     "cloud": [
-        {"id": "m1", "title": "Linux CLI, Networking & Git Workflow", "monthNumber": 1, "isCompleted": True, "status": "DONE"},
-        {"id": "m2", "title": "Docker Containers & Multi-Stage Builds", "monthNumber": 2, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m1", "title": "Linux CLI, Networking & Git Workflow", "monthNumber": 1, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m2", "title": "Docker Containers & Multi-Stage Builds", "monthNumber": 2, "isCompleted": False, "status": "NEXT"},
         {"id": "m3", "title": "AWS Cloud Architecture & Serverless", "monthNumber": 3, "isCompleted": False, "status": "NEXT"},
         {"id": "m4", "title": "Kubernetes Orchestration & CI/CD Pipelines", "monthNumber": 4, "isCompleted": False, "status": "NEXT"}
     ],
     "uiux": [
-        {"id": "m1", "title": "Figma Mastery & Wireframing", "monthNumber": 1, "isCompleted": True, "status": "DONE"},
-        {"id": "m2", "title": "User Research & Journey Mapping", "monthNumber": 2, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m1", "title": "Figma Mastery & Wireframing", "monthNumber": 1, "isCompleted": False, "status": "ACTIVE"},
+        {"id": "m2", "title": "User Research & Journey Mapping", "monthNumber": 2, "isCompleted": False, "status": "NEXT"},
         {"id": "m3", "title": "Design Systems & Component Libraries", "monthNumber": 3, "isCompleted": False, "status": "NEXT"},
         {"id": "m4", "title": "Interactive Prototyping & Usability Testing", "monthNumber": 4, "isCompleted": False, "status": "NEXT"}
     ]
@@ -224,7 +224,7 @@ def get_dashboard_summary(student_id: str):
                 "weeklyActivity": {
                     "days": weekly_chart,
                     "totalHours": round(sum(d["hours"] for d in weekly_chart), 1),
-                    "vsLastWeek": "+4.5h",
+                    "vsLastWeek": "+0h" if total_hours == 0 else "+1.5h",
                     "dailyAverage": f"{round(sum(d['hours'] for d in weekly_chart) / 7.0, 1)}h/day"
                 },
                 "milestones": formatted_milestones,
@@ -232,14 +232,18 @@ def get_dashboard_summary(student_id: str):
                 "recentActivities": recent_activities,
                 "unreadNotifications": unread_notifications,
                 "aiWeeklyDigest": {
-                    "grade": "A+ Elite Pace",
-                    "paceIndex": "92%",
+                    "grade": "A+ Elite Pace" if total_hours >= 8 else ("B+ Steady Momentum" if total_hours >= 4 else "Getting Started 🌱"),
+                    "paceIndex": f"{min(100, int((total_hours / 10.0) * 100))}%",
                     "targetHours": 10.0,
                     "achievedHours": round(sum(d["hours"] for d in weekly_chart), 1),
                     "targetMilestones": 3,
                     "achievedMilestones": len(completed_ids),
                     "currentFocus": f"Core {active_track.upper()} Capstone Architecture & Deployment",
-                    "digest": f"Outstanding consistency this week, {user_data['fullName'].split()[0]}! Your readiness score is {readiness_score}%. Maintaining daily practice will keep you 2 weeks ahead of placement benchmarks."
+                    "digest": (
+                        f"Outstanding consistency this week, {user_data['fullName'].split()[0]}! Your readiness score is {readiness_score}%. Maintaining daily practice will keep you 2 weeks ahead of placement benchmarks."
+                        if total_hours > 0 or len(completed_ids) > 0
+                        else f"Welcome to AI Career Navigator, {user_data['fullName'].split()[0]}! Your {active_track.upper()} roadmap is ready. Start by exploring your first milestone topics to begin building placement readiness."
+                    )
                 }
             }
         }

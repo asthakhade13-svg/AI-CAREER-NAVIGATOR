@@ -1090,9 +1090,12 @@ async function loadQuizHistory() {
                     <span class="badge ${item.score >= 70 ? 'badge-success' : 'badge-warning'}" style="font-weight: 700; font-size: 0.85rem;">${item.score}%</span>
                 </div>
             `).join('');
+        } else {
+            card.style.display = 'none';
         }
     } catch (e) {
         console.warn('Failed to load quiz history:', e);
+        if (card) card.style.display = 'none';
     }
 }
 
