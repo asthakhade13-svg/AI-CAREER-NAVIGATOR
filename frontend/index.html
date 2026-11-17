@@ -1467,6 +1467,22 @@ nav{
 </div>
 
 <script>
+// Deployed backend URL for GitHub Pages split deployment:
+const CLOUD_BACKEND_URL = 'https://ai-career-navigator-vzcm.onrender.com'; // Deployed Render backend
+
+function getBaseUrl(){
+  const custom = localStorage.getItem('CUSTOM_BACKEND_URL');
+  if(custom) return custom.replace(/\/+$/, '');
+  const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const isGhPages = window.location.hostname.endsWith('github.io');
+  if(isLocal){
+    return window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000';
+  }
+  return isGhPages ? CLOUD_BACKEND_URL : (window.location.protocol === 'https:' ? CLOUD_BACKEND_URL : window.location.origin);
+}
+
+let BASE = getBaseUrl();
+
 /* ═══════════════════════════════════════════════════════════════
    REDUCED-MOTION GATE
 ═══════════════════════════════════════════════════════════════ */
@@ -1589,6 +1605,7 @@ function setBackendStatus(online){
   const dot=document.getElementById('backend-dot');
   const txt=document.getElementById('backend-status-text');
   const bar=document.getElementById('backend-status-bar');
+  const isGhPages = (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io'));
   if(bar) bar.style.opacity='1';
   if(online){
     if(dot){
@@ -1596,7 +1613,7 @@ function setBackendStatus(online){
       dot.style.boxShadow='0 0 7px rgba(5,150,105,.55)';
     }
     if(txt){
-      txt.textContent='Backend online · Port 8000';
+      txt.textContent = isGhPages ? 'Backend online · Cloud Engine' : 'Backend online · Port 8000';
       txt.style.color='#059669';
     }
     const btn=document.getElementById('your-journey-btn');
@@ -1607,19 +1624,28 @@ function setBackendStatus(online){
       dot.style.boxShadow='0 0 7px rgba(220,38,38,.45)';
     }
     if(txt){
-      txt.textContent='Backend offline — start the server!';
+      txt.textContent = isGhPages ? 'Backend connecting · Cloud Engine' : 'Backend offline — start the server!';
       txt.style.color='#dc2626';
     }
     const btn=document.getElementById('your-journey-btn');
-    if(btn){btn.style.opacity='0.65';}
+    if(btn){btn.style.opacity='0.85';}
   }
 }
 
 async function pingBackend(){
+  const isGhPages = (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io'));
+  const timeoutMs = isGhPages ? 8000 : 4000;
   try{
-    const r=await fetch(`${BASE}/api/v1/basic_info/questions`,{method:'GET',signal:AbortSignal.timeout(4000)});
+    const r=await fetch(`${BASE}/api/v1/basic_info/questions`,{method:'GET',signal:AbortSignal.timeout(timeoutMs)});
     setBackendStatus(r.ok);
   }catch(e){
+    if(isGhPages){
+      try{
+        const r2=await fetch(`${BASE}/health`,{method:'GET',signal:AbortSignal.timeout(8000)});
+        setBackendStatus(r2.ok);
+        return;
+      }catch(err){}
+    }
     setBackendStatus(false);
   }
 }
@@ -1649,21 +1675,7 @@ setInterval(() => {
 /* ═══════════════════════════════════════════════════════════════
    APP STATE & HELPERS
 ═══════════════════════════════════════════════════════════════ */
-// Deployed backend URL for GitHub Pages split deployment:
-const CLOUD_BACKEND_URL = 'https://ai-career-navigator-vzcm.onrender.com'; // Deployed Render backend
 
-function getBaseUrl(){
-  const custom = localStorage.getItem('CUSTOM_BACKEND_URL');
-  if(custom) return custom.replace(/\/+$/, '');
-  const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const isGhPages = window.location.hostname.endsWith('github.io');
-  if(isLocal){
-    return window.location.port === '8000' ? window.location.origin : 'http://127.0.0.1:8000';
-  }
-  return isGhPages ? CLOUD_BACKEND_URL : (window.location.protocol === 'https:' ? CLOUD_BACKEND_URL : window.location.origin);
-}
-
-let BASE = getBaseUrl();
 
 function saveBackendUrlAndRetry(){
   const input = document.getElementById('backend-url-input');
