@@ -631,7 +631,7 @@
         <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:24px;">
           <div style="background:#EEF2FF; border-radius:12px; padding:12px; text-align:center;">
             <span style="font-size:0.72rem; color:#4338CA; font-weight:600; display:block;">Streak</span>
-            <strong id="repStreak" style="font-size:1.3rem; color:#312E81;">7 Days</strong>
+            <strong id="repStreak" style="font-size:1.3rem; color:#312E81;">0 Days</strong>
           </div>
           <div style="background:#ECFDF5; border-radius:12px; padding:12px; text-align:center;">
             <span style="font-size:0.72rem; color:#065F46; font-weight:600; display:block;">Study Time</span>
@@ -740,11 +740,11 @@
           </div>
           <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
             <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">STREAK</span>
-            <strong id="shareCardStreak" style="font-size:1rem; color:#F59E0B;">7 Days 🔥</strong>
+            <strong id="shareCardStreak" style="font-size:1rem; color:#F59E0B;">0 Days</strong>
           </div>
           <div style="background:#1E293B; border:1.5px solid #4F46E5; border-radius:8px; padding:8px 4px;">
             <span style="font-size:0.65rem; color:#818CF8; font-weight:700; display:block;">READINESS</span>
-            <strong id="shareCardScore" style="font-size:1rem; color:#4ADE80;">82%</strong>
+            <strong id="shareCardScore" style="font-size:1rem; color:#4ADE80;">0%</strong>
           </div>
         </div>
 
@@ -907,12 +907,12 @@ async function loadSkillsProgress(trackKey) {
                       </div>
                     </div>
                     <div class="skill-prog-right">
-                      <span class="skill-pct">${s.pct || s.percentage || 70}%</span>
-                      <span class="skill-change up">${s.change || '+5% ↑'}</span>
+                      <span class="skill-pct">${s.pct || s.percentage || 0}%</span>
+                      <span class="skill-change up">${s.change || '0%'}</span>
                     </div>
                   </div>
                   <div class="skill-track">
-                    <div class="skill-fill animated" style="width:${s.pct || s.percentage || 70}%; background:${s.color?.startsWith('#') ? s.color : 'var(--primary)'}"></div>
+                    <div class="skill-fill animated" style="width:${s.pct || s.percentage || 0}%; background:${s.color?.startsWith('#') ? s.color : 'var(--primary)'}"></div>
                   </div>
                 </div>
             `).join('');
@@ -925,12 +925,12 @@ async function loadSkillsProgress(trackKey) {
 // 3. Badges Earned
 async function loadBadges() {
     try {
-        const studentId = localStorage.getItem('user_id') || 'student_1';
+        const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
         const res = await ProgressAPI.getBadges(studentId);
         const grid = document.getElementById('badgesGrid');
         const badgeCount = document.getElementById('badgesCountBadge');
         if (res && res.badges) {
-            if (badgeCount) badgeCount.textContent = `${res.unlockedCount || 6} / ${res.totalBadges || 12}`;
+            if (badgeCount) badgeCount.textContent = `${res.unlockedCount || 0} / ${res.totalBadges || 12}`;
             if (grid) {
                 grid.innerHTML = res.badges.map(b => {
                     const isEarned = !!b.isUnlocked;
@@ -1432,7 +1432,7 @@ function launchTwitterShare() {
     if (currentShareCardData && currentShareCardData.twitterUrl) {
         window.open(currentShareCardData.twitterUrl, '_blank');
     } else {
-        const text = encodeURIComponent(`🚀 Just hit 82% Job Readiness on @CareerNavigatorAI! Check out my verified progress.`);
+        const text = encodeURIComponent(`🚀 Just started my verified learning journey on @CareerNavigatorAI! Check out my verified progress.`);
         const url = encodeURIComponent('https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html');
         window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
     }

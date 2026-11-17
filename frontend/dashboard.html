@@ -410,7 +410,7 @@
 
             <p>Day Streak</p>
 
-            <h3 id="statStreakDays">7 Days 🔥</h3>
+            <h3 id="statStreakDays">0 Days</h3>
 
           </div>
 
@@ -430,7 +430,7 @@
 
             <p>Milestones Done</p>
 
-            <h3 id="statTasksCount">1 / 4</h3>
+            <h3 id="statTasksCount">0 / 4</h3>
 
           </div>
 
@@ -450,7 +450,7 @@
 
             <p>Readiness Score</p>
 
-            <h3 id="statReadinessScore">82%</h3>
+            <h3 id="statReadinessScore">0%</h3>
 
           </div>
 
@@ -470,7 +470,7 @@
 
             <p>Hours Learned <i class="fas fa-plus-circle" style="color:#D97706; font-size:0.75rem; margin-left:4px;"></i></p>
 
-            <h3 id="statHoursLearned">34 Hours</h3>
+            <h3 id="statHoursLearned">0 Hours</h3>
 
           </div>
 
@@ -1404,7 +1404,7 @@
 
               </div>
 
-              <span class="badge badge-warning sm" id="dashBadgesCountBadge" style="font-weight:700;">6 / 12 Unlocked</span>
+              <span class="badge badge-warning sm" id="dashBadgesCountBadge" style="font-weight:700;">0 / 12 Unlocked</span>
 
             </div>
 
@@ -2536,7 +2536,7 @@ async function loadDashboard() {
 
         let stats = null;
 
-        const studentId = localStorage.getItem('user_id') || 'student_1';
+        const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
         if (typeof DashboardAPI !== 'undefined' && DashboardAPI.getSummary) {
 
@@ -2582,7 +2582,7 @@ async function loadRecentActivityFeed() {
 
 
 
-    const studentId = localStorage.getItem('user_id') || 'student_1';
+    const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
     let activities = [];
 
@@ -2649,26 +2649,18 @@ function updateStatCards(stats) {
     if (!stats) return;
 
     const streakEl = document.getElementById('statStreakDays');
-
-    if (streakEl) streakEl.textContent = `${stats.streakDays || stats.streak || 7} Days 🔥`;
-
-
+    const streakVal = stats.streakDays !== undefined ? stats.streakDays : (stats.streak || 0);
+    if (streakEl) streakEl.textContent = `${streakVal} Days${streakVal > 0 ? ' 🔥' : ''}`;
 
     const taskEl = document.getElementById('statTasksCount');
-
-    if (taskEl) taskEl.textContent = `${stats.completedMilestones !== undefined ? stats.completedMilestones : 1} / ${stats.totalMilestones || 4}`;
-
-
+    const doneMilestones = stats.completedMilestones !== undefined ? stats.completedMilestones : 0;
+    if (taskEl) taskEl.textContent = `${doneMilestones} / ${stats.totalMilestones || 4}`;
 
     const scoreEl = document.getElementById('statReadinessScore');
-
-    if (scoreEl) scoreEl.textContent = `${stats.readinessScore || 82}%`;
-
-
+    if (scoreEl) scoreEl.textContent = `${stats.readinessScore !== undefined ? stats.readinessScore : 0}%`;
 
     const hoursEl = document.getElementById('statHoursLearned');
-
-    if (hoursEl) hoursEl.textContent = `${stats.hoursLearned || 34} Hours`;
+    if (hoursEl) hoursEl.textContent = `${stats.hoursLearned !== undefined ? stats.hoursLearned : 0} Hours`;
 
 }
 
@@ -2680,7 +2672,7 @@ async function handleQuickCheckin() {
 
         if (typeof ProgressAPI !== 'undefined' && ProgressAPI.checkin) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             const res = await ProgressAPI.checkin(studentId);
 
@@ -2760,7 +2752,7 @@ async function handleDashboardSearch(query) {
 
             if (typeof DashboardAPI !== 'undefined' && DashboardAPI.search) {
 
-                const studentId = localStorage.getItem('user_id') || 'student_1';
+                const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
                 const res = await DashboardAPI.search(q, studentId);
 
@@ -3080,7 +3072,7 @@ async function selectCareerAndAdapt(careerName, matchPct) {
 
         if (typeof DashboardAPI !== 'undefined' && DashboardAPI.switchTrack) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             await DashboardAPI.switchTrack(studentId, pathKey);
 
@@ -3178,7 +3170,7 @@ async function adaptDashboardToSelectedCareer() {
 
         if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getDynamicSkills) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             dynamicSkills = await ProgressAPI.getDynamicSkills(studentId, pathKey);
 
@@ -3196,7 +3188,7 @@ async function adaptDashboardToSelectedCareer() {
 
         if (typeof ProgressAPI !== 'undefined' && ProgressAPI.getJobReadiness) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             const rData = await ProgressAPI.getJobReadiness(studentId, pathKey);
 
@@ -3236,7 +3228,7 @@ async function updateTrackResources(resources, trackName) {
 
     const trackKey = getCareerPathKey(trackName);
 
-    const studentId = localStorage.getItem('user_id') || 'student_1';
+    const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
     let completedResourceIds = [];
 
@@ -3300,7 +3292,7 @@ async function handleResourceToggle(resourceId, encodedTitle, trackKey, btnEl) {
 
     const title = decodeURIComponent(encodedTitle);
 
-    const studentId = localStorage.getItem('user_id') || 'student_1';
+    const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
     const isCurrentlyDone = btnEl.querySelector('i').classList.contains('fa-check-circle');
 
@@ -4202,7 +4194,7 @@ async function handleMilestoneStepClick(idx, trackKey) {
 
         if (typeof ProgressAPI !== 'undefined' && ProgressAPI.toggleMilestone) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             await ProgressAPI.toggleMilestone(studentId, `m_${trackKey}_${idx}`, willBeCompleted);
 
@@ -4356,7 +4348,7 @@ async function handleManualStudyLog(e) {
 
         if (typeof ProgressAPI !== 'undefined' && ProgressAPI.logStudy) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             await ProgressAPI.logStudy(studentId, hours, subject, notes);
 
@@ -4508,7 +4500,7 @@ async function saveStopwatchSession() {
 
         if (typeof ProgressAPI !== 'undefined' && ProgressAPI.logStudy) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             await ProgressAPI.logStudy(studentId, hours, subject, 'Recorded via live stopwatch timer');
 
@@ -4750,7 +4742,7 @@ async function loadWeeklyReport() {
 
                 const hoursEl = document.getElementById('weeklyHoursCount');
 
-                if (hoursEl) hoursEl.textContent = `${report.hoursLearnedThisWeek || 8.5} / ${report.targetHours || 10}h`;
+                if (hoursEl) hoursEl.textContent = `${report.hoursLearnedThisWeek || 0} / ${report.targetHours || 10}h`;
 
                 const gradeEl = document.getElementById('weeklyVelocityGrade');
 
@@ -5306,7 +5298,7 @@ async function openProjectModal(projId) {
 
         if (typeof ProjectAPI !== 'undefined' && ProjectAPI.getReviews) {
 
-            const studentId = localStorage.getItem('user_id') || 'student_1';
+            const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
             reviews = await ProjectAPI.getReviews(proj.id, studentId);
 
@@ -5755,7 +5747,7 @@ async function loadDashboardBadges() {
 
     try {
 
-        const studentId = localStorage.getItem('user_id') || 'student_1';
+        const studentId = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().id || UserManager.get().email)) || 'student';
 
         let badgeData = null;
 
@@ -5771,7 +5763,7 @@ async function loadDashboardBadges() {
 
             if (countBadge) {
 
-                countBadge.textContent = `${badgeData.unlockedCount || 6} / ${badgeData.totalBadges || 12} Unlocked`;
+                countBadge.textContent = `${badgeData.unlockedCount || 0} / ${badgeData.totalBadges || 12} Unlocked`;
 
             }
 

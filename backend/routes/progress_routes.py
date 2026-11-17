@@ -48,14 +48,14 @@ def get_progress_stats(student_id: str = "user_001"):
     if not record:
         record = {
             "student_id": student_id,
-            "streak_days": 7,
-            "hours_learned": 34,
-            "skills_learned": 5,
-            "completed_milestones": 12,
-            "total_milestones": 20,
+            "streak_days": 0,
+            "hours_learned": 0,
+            "skills_learned": 0,
+            "completed_milestones": 0,
+            "total_milestones": 8,
             "last_login_date": datetime.now().strftime("%Y-%m-%d"),
-            "completed_milestone_ids": ["m1", "m2", "m3"],
-            "readiness_score": 78
+            "completed_milestone_ids": [],
+            "readiness_score": 0
         }
         _STUDENT_PROGRESS_DB[student_id] = record
 
@@ -83,14 +83,14 @@ def daily_checkin(payload: Optional[CheckinRequest] = None, student_id: Optional
     today_str = datetime.now().strftime("%Y-%m-%d")
     record = _STUDENT_PROGRESS_DB.setdefault(sid, {
         "student_id": sid,
-        "streak_days": 6,
-        "hours_learned": 32,
-        "skills_learned": 5,
-        "completed_milestones": 11,
-        "total_milestones": 20,
+        "streak_days": 1,
+        "hours_learned": 0,
+        "skills_learned": 0,
+        "completed_milestones": 0,
+        "total_milestones": 8,
         "last_login_date": today_str,
-        "completed_milestone_ids": ["m1", "m2"],
-        "readiness_score": 76
+        "completed_milestone_ids": [],
+        "readiness_score": 0
     })
 
     if record["last_login_date"] != today_str:
@@ -508,24 +508,37 @@ def get_weekly_study_activity(student_id: str):
     """
     Returns day-by-day study hours (Mon-Sun), total weekly hours, comparison vs last week, and daily avg.
     """
-    default_days = [
-        {"day": "Mon", "hours": 2.0, "pct": 40},
-        {"day": "Tue", "hours": 3.0, "pct": 60},
-        {"day": "Wed", "hours": 1.5, "pct": 30},
-        {"day": "Thu", "hours": 4.0, "pct": 80},
-        {"day": "Fri", "hours": 2.5, "pct": 50},
-        {"day": "Sat", "hours": 5.0, "pct": 100},
-        {"day": "Sun", "hours": 3.5, "pct": 70},
-    ]
-    total_hours = sum(d["hours"] for d in default_days)
-    daily_avg = round(total_hours / len(default_days), 1)
+    days_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    week_data = {d: 0.0 for d in days_order}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT day_name, SUM(hours_spent) as d_hours
+        FROM study_logs
+        WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?))
+          AND log_date >= date('now', '-7 days')
+        GROUP BY day_name
+        """, (student_id, student_id))
+        rows = cursor.fetchall()
+        for r in rows:
+            d_name = (r["day_name"] or "").strip()[:3].capitalize()
+            if d_name in week_data:
+                week_data[d_name] = round(float(r["d_hours"] or 0), 1)
+        conn.close()
+    except Exception:
+        pass
+
+    days = [{"day": d, "hours": week_data[d], "pct": min(100, int((week_data[d] / 5.0) * 100))} for d in days_order]
+    total_hours = round(sum(d["hours"] for d in days), 1)
+    daily_avg = round(total_hours / len(days), 1) if total_hours > 0 else 0.0
 
     return {
         "success": True,
         "studentId": student_id,
-        "days": default_days,
+        "days": days,
         "totalHours": total_hours,
-        "vsLastWeek": "+4.5h",
+        "vsLastWeek": "+0h" if total_hours == 0 else "+1.5h",
         "dailyAverage": f"{daily_avg}h/day"
     }
 
@@ -566,7 +579,7 @@ def get_student_badges(student_id: str):
     cursor = conn.cursor()
 
     # 1. Check streak (Consistency King)
-    streak_days = 7
+    streak_days = 0
     try:
         cursor.execute("""
         SELECT COUNT(DISTINCT log_date) as days FROM study_logs 
@@ -574,7 +587,7 @@ def get_student_badges(student_id: str):
         """, (student_id, student_id))
         r = cursor.fetchone()
         if r and r["days"]:
-            streak_days = max(streak_days, r["days"])
+            streak_days = r["days"]
     except Exception:
         pass
     consistency_king_unlocked = (streak_days >= 7)
@@ -585,7 +598,7 @@ def get_student_badges(student_id: str):
     try:
         cursor.execute("""
         SELECT MAX(ats_score) as max_score FROM resume_scans 
-        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?) OR student_id = 'user_001'
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
         """, (student_id, student_id))
         r = cursor.fetchone()
         if r and r["max_score"] is not None:
@@ -599,7 +612,7 @@ def get_student_badges(student_id: str):
     try:
         cursor.execute("""
         SELECT COUNT(*) as cnt FROM project_reviews 
-        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?) OR student_id = 'user_001'
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
         """, (student_id, student_id))
         r = cursor.fetchone()
         if r and r["cnt"] and r["cnt"] > 0:
@@ -612,7 +625,7 @@ def get_student_badges(student_id: str):
     try:
         cursor.execute("""
         SELECT COUNT(*) as cnt FROM certificates 
-        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?) OR student_id = 'user_001'
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
         """, (student_id, student_id))
         r = cursor.fetchone()
         if r and r["cnt"] and r["cnt"] > 0:
@@ -621,7 +634,7 @@ def get_student_badges(student_id: str):
         pass
 
     # 5. Check Study Hours (Century Club - 100+ hrs, or Scholar - 20+ hrs)
-    total_hours = 34.0
+    total_hours = 0.0
     try:
         cursor.execute("""
         SELECT SUM(hours_spent) as hrs FROM study_logs 
@@ -634,8 +647,8 @@ def get_student_badges(student_id: str):
         pass
 
     # 6. Check Quiz attempts & score
-    quiz_taken = True
-    quiz_master_unlocked = True
+    quiz_taken = False
+    quiz_master_unlocked = False
     try:
         cursor.execute("""
         SELECT MAX(score) as max_score, COUNT(*) as cnt FROM quiz_attempts 
@@ -650,7 +663,7 @@ def get_student_badges(student_id: str):
         pass
 
     # 7. Check Milestones completed
-    milestones_done = 12
+    milestones_done = 0
     try:
         cursor.execute("""
         SELECT COUNT(*) as cnt FROM roadmap_subtasks 

@@ -1328,12 +1328,12 @@ const ProgressAPI = {
         return {
             status: 200,
             data: {
-                completedMilestones: 2,
+                completedMilestones: 0,
                 totalMilestones: 8,
-                streakDays: 7,
-                hoursLearned: 34,
-                skillsLearned: 5,
-                readinessScore: 78
+                streakDays: 0,
+                hoursLearned: 0,
+                skillsLearned: 0,
+                readinessScore: 0
             }
         };
     },
@@ -1343,7 +1343,7 @@ const ProgressAPI = {
         try {
             return await mlApiCall('/progress/checkin', 'POST', { student_id: studentId });
         } catch(e) {
-            return { status: 200, streakDays: 7 };
+            return { status: 200, streakDays: 1 };
         }
     },
 
@@ -1369,17 +1369,17 @@ const ProgressAPI = {
         } catch(e) {}
         return {
             days: [
-                { day: 'Mon', hours: 2.0, pct: 40 },
-                { day: 'Tue', hours: 3.0, pct: 60 },
-                { day: 'Wed', hours: 1.5, pct: 30 },
-                { day: 'Thu', hours: 4.0, pct: 80 },
-                { day: 'Fri', hours: 2.5, pct: 50 },
-                { day: 'Sat', hours: 5.0, pct: 100 },
-                { day: 'Sun', hours: 3.5, pct: 70 }
+                { day: 'Mon', hours: 0.0, pct: 0 },
+                { day: 'Tue', hours: 0.0, pct: 0 },
+                { day: 'Wed', hours: 0.0, pct: 0 },
+                { day: 'Thu', hours: 0.0, pct: 0 },
+                { day: 'Fri', hours: 0.0, pct: 0 },
+                { day: 'Sat', hours: 0.0, pct: 0 },
+                { day: 'Sun', hours: 0.0, pct: 0 }
             ],
-            totalHours: 21.5,
-            vsLastWeek: '+4.5h',
-            dailyAverage: '3.1h/day'
+            totalHours: 0.0,
+            vsLastWeek: '0h',
+            dailyAverage: '0h/day'
         };
     },
 
@@ -1390,11 +1390,11 @@ const ProgressAPI = {
             if (res.status === 200 && res.data && res.data.skills) return res.data.skills;
         } catch(e) {}
         return [
-            { name: "HTML & CSS Basics", category: "Web Fundamentals", pct: 85, change: "+5% ↑", color: "#4F46E5", icon: "fa-code" },
-            { name: "JavaScript (ES6+)", category: "Programming Core", pct: 70, change: "+12% ↑", color: "#F59E0B", icon: "fa-js" },
-            { name: "Python & Data Handling", category: "Programming Core", pct: 65, change: "+8% ↑", color: "#06B6D4", icon: "fa-python" },
-            { name: "Data Structures & Algorithms", category: "Problem Solving", pct: 60, change: "+6% ↑", color: "#10B981", icon: "fa-database" },
-            { name: "Git & Collaborative Workflow", category: "Version Control", pct: 75, change: "+10% ↑", color: "#EF4444", icon: "fa-git-alt" }
+            { name: "HTML & CSS Basics", category: "Web Fundamentals", pct: 0, change: "0%", color: "#4F46E5", icon: "fa-code" },
+            { name: "JavaScript (ES6+)", category: "Programming Core", pct: 0, change: "0%", color: "#F59E0B", icon: "fa-js" },
+            { name: "Python & Data Handling", category: "Programming Core", pct: 0, change: "0%", color: "#06B6D4", icon: "fa-python" },
+            { name: "Data Structures & Algorithms", category: "Problem Solving", pct: 0, change: "0%", color: "#10B981", icon: "fa-database" },
+            { name: "Git & Collaborative Workflow", category: "Version Control", pct: 0, change: "0%", color: "#EF4444", icon: "fa-git-alt" }
         ];
     },
 
@@ -1406,21 +1406,21 @@ const ProgressAPI = {
             if (res.status === 200 && res.data) return res.data;
         } catch(e) {}
         return {
-            unlockedCount: 6,
+            unlockedCount: 0,
             totalBadges: 12,
             badges: [
-                { id: "b_consistency", name: "Consistency King", desc: "Maintained a 7-day study check-in streak", icon: "🔥", color: "#F59E0B", isUnlocked: true, category: "Streak", progress: "7/7 days" },
-                { id: "b_ats_pro", name: "ATS Pro", desc: "Achieved 80+ points on ATS Resume Evaluation", icon: "🎯", color: "#10B981", isUnlocked: true, category: "Placement", progress: "84/80 pts" },
-                { id: "b_capstone", name: "Capstone Finisher", desc: "GitHub repository validated & reviewed by mentor", icon: "🚀", color: "#6366F1", isUnlocked: true, category: "Projects", progress: "Reviewed" },
-                { id: "b_certified", name: "Certified Specialist", desc: "Claimed Verifiable Professional Specialization Certificate", icon: "🎓", color: "#9333EA", isUnlocked: true, category: "Academics", progress: "Verified" },
-                { id: "b1", name: "First Steps", desc: "Started career assessment and explored pathways", icon: "🧭", color: "#3B82F6", isUnlocked: true, category: "Orientation", progress: "Complete" },
-                { id: "b2", name: "Quiz Taker", desc: "Completed technical milestone skill assessment", icon: "🧠", color: "#8B5CF6", isUnlocked: true, category: "Assessment", progress: "Complete" },
-                { id: "b3", name: "Quick Learner", desc: "Completed core programming topics in one week", icon: "⚡", color: "#F59E0B", isUnlocked: true, category: "Learning", progress: "Complete" },
-                { id: "b5", name: "Job Hunter", desc: "Explored 5+ tech career tracks", icon: "💼", color: "#06B6D4", isUnlocked: true, category: "Careers", progress: "Complete" },
-                { id: "b6", name: "Topic Master", desc: "Complete 10 roadmap milestones", icon: "🏆", color: "#EAB308", isUnlocked: true, category: "Roadmap", progress: "12/10 milestones" },
-                { id: "b8", name: "Go-Getter", desc: "Bookmark 5+ high-impact internships", icon: "📌", color: "#EC4899", isUnlocked: false, category: "Internships", progress: "2/5 saved" },
-                { id: "b9", name: "Quiz Master", desc: "Scored 90%+ on technical assessment", icon: "🌟", color: "#F43F5E", isUnlocked: true, category: "Assessment", progress: "95% score" },
-                { id: "b11", name: "Century Club", desc: "Accumulate 100 study hours on stopwatch ledger", icon: "⏳", color: "#14B8A6", isUnlocked: false, category: "Study", progress: "34/100 hrs" }
+                { id: "b_consistency", name: "Consistency King", desc: "Maintained a 7-day study check-in streak", icon: "🔥", color: "#F59E0B", isUnlocked: false, category: "Streak", progress: "0/7 days" },
+                { id: "b_ats_pro", name: "ATS Pro", desc: "Achieved 80+ points on ATS Resume Evaluation", icon: "🎯", color: "#10B981", isUnlocked: false, category: "Placement", progress: "0/80 pts" },
+                { id: "b_capstone", name: "Capstone Finisher", desc: "GitHub repository validated & reviewed by mentor", icon: "🚀", color: "#6366F1", isUnlocked: false, category: "Projects", progress: "Not submitted" },
+                { id: "b_certified", name: "Certified Specialist", desc: "Claimed Verifiable Professional Specialization Certificate", icon: "🎓", color: "#9333EA", isUnlocked: false, category: "Academics", progress: "Locked" },
+                { id: "b1", name: "First Steps", desc: "Started career assessment and explored pathways", icon: "🧭", color: "#3B82F6", isUnlocked: false, category: "Orientation", progress: "Not started" },
+                { id: "b2", name: "Quiz Taker", desc: "Completed technical milestone skill assessment", icon: "🧠", color: "#8B5CF6", isUnlocked: false, category: "Assessment", progress: "0 quizzes" },
+                { id: "b3", name: "Quick Learner", desc: "Completed core programming topics in one week", icon: "⚡", color: "#F59E0B", isUnlocked: false, category: "Learning", progress: "0/5 topics" },
+                { id: "b5", name: "Job Hunter", desc: "Explored 5+ tech career tracks", icon: "💼", color: "#06B6D4", isUnlocked: false, category: "Careers", progress: "0/5 tracks" },
+                { id: "b6", name: "Topic Master", desc: "Complete 10 roadmap milestones", icon: "🏆", color: "#EAB308", isUnlocked: false, category: "Roadmap", progress: "0/10 milestones" },
+                { id: "b8", name: "Go-Getter", desc: "Bookmark 5+ high-impact internships", icon: "📌", color: "#EC4899", isUnlocked: false, category: "Internships", progress: "0/5 saved" },
+                { id: "b9", name: "Quiz Master", desc: "Scored 90%+ on technical assessment", icon: "🌟", color: "#F43F5E", isUnlocked: false, category: "Assessment", progress: "0% score" },
+                { id: "b11", name: "Century Club", desc: "Accumulate 100 study hours on stopwatch ledger", icon: "⏳", color: "#14B8A6", isUnlocked: false, category: "Study", progress: "0/100 hrs" }
             ]
         };
     },

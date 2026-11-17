@@ -89,7 +89,7 @@ def get_dashboard_summary(student_id: str):
         cursor.execute("SELECT COALESCE(SUM(hours_spent), 0) as total_hours FROM study_logs WHERE student_id = ? OR student_id = ?", (student_id, user_data["email"]))
         study_row = cursor.fetchone()
         raw_hours = float(study_row["total_hours"] or 0)
-        total_hours = round(raw_hours + 34.0, 1) if "astha" in student_id.lower() or "astha" in user_data["fullName"].lower() else round(raw_hours + 12.0, 1)
+        total_hours = round(raw_hours, 1)
 
         # 3. Fetch Completed Milestones
         cursor.execute("""
@@ -98,8 +98,6 @@ def get_dashboard_summary(student_id: str):
         """, (student_id, user_data["email"]))
         completed_milestone_rows = cursor.fetchall()
         completed_ids = set([r["milestone_id"] for r in completed_milestone_rows])
-        if "m1" not in completed_ids and "m0" not in completed_ids:
-            completed_ids.add("m1")
 
         # 4. Fetch Completed Capstone Steps
         cursor.execute("""
@@ -107,7 +105,7 @@ def get_dashboard_summary(student_id: str):
         WHERE (student_id = ? OR student_id = ?) AND is_completed = 1
         """, (student_id, user_data["email"]))
         capstone_row = cursor.fetchone()
-        capstone_done_count = int(capstone_row["capstone_count"] or 1)
+        capstone_done_count = int(capstone_row["capstone_count"] or 0)
 
         # 5. Fetch Latest Quiz Score
         cursor.execute("""
@@ -116,7 +114,7 @@ def get_dashboard_summary(student_id: str):
         ORDER BY created_at DESC LIMIT 1
         """, (student_id, user_data["email"]))
         quiz_row = cursor.fetchone()
-        latest_quiz_score = int(quiz_row["score"]) if quiz_row else 88
+        latest_quiz_score = int(quiz_row["score"]) if quiz_row else 0
 
         # 6. Weighted Production Readiness Score Algorithm
         # Formula: 35% Quiz + 35% Milestones + 15% Study Hours + 15% Capstone
@@ -124,13 +122,16 @@ def get_dashboard_summary(student_id: str):
         hours_pct = min(100.0, (total_hours / 40.0) * 100.0)
         capstone_pct = min(100.0, (capstone_done_count / 3.0) * 100.0)
         
-        computed_readiness = int(round(
-            (0.35 * latest_quiz_score) + 
-            (0.35 * milestone_pct) + 
-            (0.15 * hours_pct) + 
-            (0.15 * capstone_pct)
-        ))
-        readiness_score = max(55, min(98, computed_readiness))
+        if len(completed_ids) == 0 and total_hours == 0 and capstone_done_count == 0 and not quiz_row:
+            readiness_score = 0
+        else:
+            computed_readiness = int(round(
+                (0.35 * latest_quiz_score) + 
+                (0.35 * milestone_pct) + 
+                (0.15 * hours_pct) + 
+                (0.15 * capstone_pct)
+            ))
+            readiness_score = max(0, min(100, computed_readiness))
 
         # 7. ISO-Week Day-by-Day Study Aggregation
         days_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -150,9 +151,7 @@ def get_dashboard_summary(student_id: str):
             if d_name in week_data:
                 week_data[d_name] = round(float(dr["d_hours"] or 0), 1)
 
-        # Realistic default baseline if clean week
-        if sum(week_data.values()) == 0:
-            week_data = {"Mon": 2.0, "Tue": 3.0, "Wed": 1.5, "Thu": 4.0, "Fri": 2.5, "Sat": 5.0, "Sun": 3.5}
+        # Clean baseline for new users (0 hours)
 
         weekly_chart = [
             {"day": d, "hours": week_data[d], "pct": min(100, int((week_data[d] / 5.0) * 100))}
@@ -169,7 +168,7 @@ def get_dashboard_summary(student_id: str):
                 "title": m["title"],
                 "monthNumber": m["monthNumber"],
                 "isCompleted": is_done,
-                "status": "DONE" if is_done else ("ACTIVE" if m["monthNumber"] == 2 else "NEXT")
+                "status": "DONE" if is_done else ("ACTIVE" if (m["monthNumber"] == 1 and not completed_ids) or (m["monthNumber"] == len(completed_ids) + 1) else "NEXT")
             })
 
         # 9. Recent Activity Feed
@@ -195,9 +194,7 @@ def get_dashboard_summary(student_id: str):
             ]
         else:
             recent_activities = [
-                {"actionType": "milestone", "title": "Completed: Core Foundations", "description": "Verified milestone checkpoint in database", "icon": "fa-check", "color": "green", "timestamp": "Today"},
-                {"actionType": "quiz", "title": "Assessment Completed", "description": f"Scored {latest_quiz_score}% in domain readiness", "icon": "fa-brain", "color": "purple", "timestamp": "Yesterday"},
-                {"actionType": "study", "title": "Logged 3.5 Hours Study", "description": "Hands-on implementation and algorithm practice", "icon": "fa-clock", "color": "blue", "timestamp": "2 days ago"}
+                {"actionType": "welcome", "title": "Welcome to Career Navigator!", "description": "Get started by taking your adaptive skill assessment or exploring roadmaps.", "icon": "fa-compass", "color": "indigo", "timestamp": "Just now"}
             ]
 
         # 10. Notifications Count & Preview
@@ -206,7 +203,7 @@ def get_dashboard_summary(student_id: str):
         WHERE (student_id = ? OR student_id = ?) AND is_read = 0
         """, (student_id, user_data["email"]))
         notif_count_row = cursor.fetchone()
-        unread_notifications = int(notif_count_row["unread_count"] or 2) if notif_count_row else 2
+        unread_notifications = int(notif_count_row["unread_count"] or 0) if notif_count_row else 0
 
         conn.close()
 
@@ -216,10 +213,10 @@ def get_dashboard_summary(student_id: str):
             "data": {
                 "user": user_data,
                 "stats": {
-                    "streakDays": 7,
+                    "streakDays": len(day_rows) if day_rows else 0,
                     "hoursLearned": total_hours,
                     "completedMilestones": len(completed_ids),
-                    "totalMilestones": 8,
+                    "totalMilestones": len(track_milestones),
                     "readinessScore": readiness_score,
                     "activeTrack": active_track.upper(),
                     "quizScore": latest_quiz_score

@@ -283,6 +283,7 @@ function goToDashboard(e) {
 
     const dummyToken = 'jwt_token_' + Date.now();
     try {
+        localStorage.clear();
         if (typeof TokenManager !== 'undefined') {
             TokenManager.save(dummyToken);
         } else {

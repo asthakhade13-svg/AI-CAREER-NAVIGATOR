@@ -566,6 +566,7 @@ async function confirmGoogleOneTapLogin(email = 'astha.khade@oist.edu', name = '
     }
 
     try {
+        localStorage.clear();
         if (typeof AuthAPI !== 'undefined' && AuthAPI.loginWithGoogle) {
             const res = await AuthAPI.loginWithGoogle({ email, name });
             if (res && res.data && res.data.token) {
