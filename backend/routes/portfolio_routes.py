@@ -98,7 +98,7 @@ def get_public_portfolio(student_id: str):
     contact_email = (custom_row["contact_email"] if custom_row and custom_row["contact_email"] else "") or email
 
     # 2. Study Streak & Total Hours Logged
-    streak_days = 7
+    streak_days = 0
     try:
         cursor.execute("""
         SELECT COUNT(DISTINCT log_date) as days FROM study_logs 
@@ -110,7 +110,7 @@ def get_public_portfolio(student_id: str):
     except Exception:
         pass
 
-    total_hours = 34.0
+    total_hours = 0.0
     try:
         cursor.execute("""
         SELECT SUM(hours_spent) as hrs FROM study_logs 
@@ -123,7 +123,7 @@ def get_public_portfolio(student_id: str):
         pass
 
     # 3. Roadmap Milestones & Completion Percentage
-    milestones_done = 12
+    milestones_done = 0
     total_milestones = 16
     try:
         cursor.execute("""
@@ -150,12 +150,12 @@ def get_public_portfolio(student_id: str):
     completion_pct = round(min(100.0, (milestones_done / float(total_milestones)) * 100.0), 1)
 
     # 4. ATS Resume Score & Top Skills
-    best_ats_score = 85
-    top_matched_skills = ["Python", "JavaScript", "React", "REST APIs", "Data Structures", "Git"]
+    best_ats_score = 0
+    top_matched_skills = []
     try:
         cursor.execute("""
         SELECT ats_score, matched_skills FROM resume_scans 
-        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?) OR student_id = 'user_001'
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
         ORDER BY scanned_at DESC LIMIT 1
         """, (student_id, student_id))
         r = cursor.fetchone()
@@ -177,7 +177,7 @@ def get_public_portfolio(student_id: str):
         cursor.execute("""
         SELECT certificate_id, track_key, track_title, score_percentage, verification_hash, issued_at 
         FROM certificates 
-        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?) OR student_id = 'user_001'
+        WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
         ORDER BY issued_at DESC
         """, (student_id, student_id))
         cert_rows = cursor.fetchall()
@@ -219,7 +219,7 @@ def get_public_portfolio(student_id: str):
                ps.github_url as repo_url
         FROM project_reviews pr
         LEFT JOIN project_submissions ps ON (pr.student_id = ps.student_id AND pr.project_id = ps.project_id)
-        WHERE pr.student_id = ? OR pr.student_id = (SELECT email FROM users WHERE id = ?) OR pr.student_id = 'user_001'
+        WHERE pr.student_id = ? OR pr.student_id = (SELECT email FROM users WHERE id = ?)
         ORDER BY pr.created_at DESC
         """, (student_id, student_id))
         review_rows = cursor.fetchall()
@@ -239,21 +239,6 @@ def get_public_portfolio(student_id: str):
             })
     except Exception as e:
         logger.warning(f"Capstones lookup notice: {e}")
-
-    # Fallback capstone if none reviewed yet
-    if not capstones:
-        capstones.append({
-            "projectId": f"{track_key}_scalable_microservice",
-            "title": f"Production-Grade {track_key.upper()} Cloud Architecture",
-            "repoUrl": github_url,
-            "status": "Verified & Reviewed",
-            "codeQualityGrade": "A - Modular & Production Ready",
-            "reviewerName": "CareerBot AI Senior Architect",
-            "reviewerRole": "Lead Systems Evaluator (OIST Accreditation)",
-            "feedbackNotes": "Clean modular directory architecture, properly configured asynchronous API handlers, and automated test pipelines.",
-            "suggestions": "Integrate end-to-end telemetry and containerized deployment workflows.",
-            "reviewDate": "Verified 2026"
-        })
 
     # 7. Unlocked Gamification Badges
     badges = [
@@ -285,7 +270,7 @@ def get_public_portfolio(student_id: str):
             "color": "#6366F1",
             "isUnlocked": len(capstones) > 0,
             "category": "Projects",
-            "proof": "Mentor Grade: A"
+            "proof": "Mentor Grade: A" if len(capstones) > 0 else "Not submitted"
         },
         {
             "id": "certified_specialist",
@@ -300,7 +285,10 @@ def get_public_portfolio(student_id: str):
     ]
 
     # Calculate overall Job Readiness Score
-    readiness_score = min(98, max(70, 50 + int(milestones_done * 2.2) + int(total_hours * 0.4)))
+    if milestones_done == 0 and total_hours == 0 and best_ats_score == 0:
+        readiness_score = 0
+    else:
+        readiness_score = min(98, max(0, int(milestones_done * 2.2) + int(total_hours * 0.4) + int(best_ats_score * 0.3)))
 
     conn.close()
 

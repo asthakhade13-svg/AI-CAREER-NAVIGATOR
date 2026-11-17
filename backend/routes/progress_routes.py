@@ -528,9 +528,10 @@ def get_weekly_study_activity(student_id: str):
 
 # ── 2. Dynamic Skill Breakdown Progress ───────────────────────────────────────
 @router.get("/skills/{student_id}")
-def get_student_skills_progress(student_id: str, track_key: str = "aiml"):
+def get_student_skills_progress(student_id: str, track_key: Optional[str] = None, track: Optional[str] = None):
     """
     Calculates dynamic skill mastery percentages based on quizzes & milestones.
+    Supports both progress breakdown view (track_key) and dashboard track skills (track).
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -543,6 +544,13 @@ def get_student_skills_progress(student_id: str, track_key: str = "aiml"):
     milestones_done = int(m_row["cnt"]) if m_row and m_row["cnt"] else 0
 
     cursor.execute("""
+    SELECT SUM(hours_spent) as total_hrs FROM study_logs 
+    WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
+    """, (student_id, student_id))
+    s_row = cursor.fetchone()
+    total_hours = float(s_row["total_hrs"]) if s_row and s_row["total_hrs"] is not None else 0.0
+
+    cursor.execute("""
     SELECT AVG(score) as avg_score FROM quiz_attempts
     WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
     """, (student_id, student_id))
@@ -551,6 +559,36 @@ def get_student_skills_progress(student_id: str, track_key: str = "aiml"):
 
     conn.close()
 
+    # If 'track' parameter is explicitly passed, return track-specific skills for dashboard
+    if track:
+        t_key = track.lower()
+        base_skills = _DEFAULT_TRACK_SKILLS.get(t_key, _DEFAULT_TRACK_SKILLS["webdev"])
+        dynamic_skills = []
+        if milestones_done == 0 and total_hours == 0:
+            for s in base_skills:
+                dynamic_skills.append({
+                    "name": s["name"],
+                    "pct": 0,
+                    "color": s["color"]
+                })
+        else:
+            multiplier = min(1.0, (milestones_done * 0.15) + (total_hours * 0.02) + 0.3)
+            for s in base_skills:
+                final_pct = min(98, max(5, int(s["basePct"] * multiplier)))
+                dynamic_skills.append({
+                    "name": s["name"],
+                    "pct": final_pct,
+                    "color": s["color"]
+                })
+        return {
+            "success": True,
+            "studentId": student_id,
+            "trackKey": t_key,
+            "skills": dynamic_skills
+        }
+
+    # Otherwise return general skill breakdown for progress page
+    t_key = (track_key or "aiml").lower()
     base_multiplier = min(1.0, (milestones_done * 0.15) + (quiz_avg / 100.0 * 0.4))
     
     if milestones_done == 0 and quiz_avg == 0:
@@ -572,7 +610,7 @@ def get_student_skills_progress(student_id: str, track_key: str = "aiml"):
     return {
         "success": True,
         "studentId": student_id,
-        "trackKey": track_key,
+        "trackKey": t_key,
         "skills": skills
     }
 
@@ -1566,7 +1604,7 @@ def get_job_readiness_score(student_id: str, track: Optional[str] = None):
     }
 
 
-@router.get("/skills/{student_id}")
+@router.get("/skills-track/{student_id}")
 def get_dynamic_skills(student_id: str, track: Optional[str] = "aiml"):
     """
     Returns dynamically computed skill proficiency levels boosted by milestones, study hours, and quizzes.

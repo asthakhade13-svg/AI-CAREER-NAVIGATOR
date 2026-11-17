@@ -245,9 +245,9 @@ def get_latest_resume_scan(student_id: str):
     cursor = conn.cursor()
     cursor.execute("""
     SELECT * FROM resume_scans 
-    WHERE student_id = ? OR student_id = 'user_001'
+    WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
     ORDER BY scanned_at DESC LIMIT 1
-    """, (student_id,))
+    """, (student_id, student_id))
     row = cursor.fetchone()
     conn.close()
 

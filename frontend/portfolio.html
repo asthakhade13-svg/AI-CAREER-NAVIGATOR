@@ -317,8 +317,8 @@
         </div>
         <div>
           <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Study Consistency</span>
-          <h3 id="statStreak" style="margin:2px 0 0 0; font-size:1.35rem; font-weight:800; color:#0f172a;">7-Day Streak</h3>
-          <p id="statStudyHours" style="margin:0; font-size:0.75rem; color:#64748b; font-weight:600;">34.0 hrs focused logs</p>
+          <h3 id="statStreak" style="margin:2px 0 0 0; font-size:1.35rem; font-weight:800; color:#0f172a;">0-Day Streak</h3>
+          <p id="statStudyHours" style="margin:0; font-size:0.75rem; color:#64748b; font-weight:600;">0.0 hrs focused logs</p>
         </div>
       </div>
 
@@ -329,8 +329,8 @@
         </div>
         <div>
           <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Roadmap Mastery</span>
-          <h3 id="statRoadmapPct" style="margin:2px 0 0 0; font-size:1.35rem; font-weight:800; color:#0f172a;">75.0%</h3>
-          <p id="statMilestones" style="margin:0; font-size:0.75rem; color:#64748b; font-weight:600;">12 / 16 Milestones Completed</p>
+          <h3 id="statRoadmapPct" style="margin:2px 0 0 0; font-size:1.35rem; font-weight:800; color:#0f172a;">0.0%</h3>
+          <p id="statMilestones" style="margin:0; font-size:0.75rem; color:#64748b; font-weight:600;">0 / 16 Milestones Completed</p>
         </div>
       </div>
 
@@ -536,11 +536,12 @@
         document.getElementById('statPercentile').textContent = certs[0].percentileRank;
       }
 
-      document.getElementById('statStreak').textContent = `${stats.streakDays || 7}-Day Streak`;
-      document.getElementById('statStudyHours').textContent = `${stats.studyHours || 34.0} hrs focused logs`;
-      document.getElementById('statRoadmapPct').textContent = `${stats.roadmapCompletionPercentage || 75.0}%`;
-      document.getElementById('statMilestones').textContent = `${stats.milestonesDone || 12} / ${stats.totalMilestones || 16} Milestones Completed`;
-      document.getElementById('statAtsScore').textContent = `${stats.atsScore || 85} / 100`;
+      const strkVal = stats.streakDays !== undefined ? stats.streakDays : 0;
+      document.getElementById('statStreak').textContent = `${strkVal}-Day Streak`;
+      document.getElementById('statStudyHours').textContent = `${stats.studyHours !== undefined ? stats.studyHours : 0.0} hrs focused logs`;
+      document.getElementById('statRoadmapPct').textContent = `${stats.roadmapCompletionPercentage !== undefined ? stats.roadmapCompletionPercentage : 0.0}%`;
+      document.getElementById('statMilestones').textContent = `${stats.milestonesDone !== undefined ? stats.milestonesDone : 0} / ${stats.totalMilestones || 16} Milestones Completed`;
+      document.getElementById('statAtsScore').textContent = `${stats.atsScore !== undefined ? stats.atsScore : 0} / 100`;
 
       // 3. Certificates List
       const certContainer = document.getElementById('certificatesContainer');
@@ -712,36 +713,23 @@
           branch: "Computer Science & Engineering",
           year: "1st Year",
           careerTrack: "AIML",
-          headline: "Aspiring AI/ML Engineer · B.Tech CSE @ OIST",
-          bio: "Passionate B.Tech Computer Science student specializing in AI/ML and scalable web platforms. Active algorithmic problem solver with verified capstone projects and 7-day study consistency.",
-          githubUrl: "https://github.com/asthakhade13-svg/AI-CAREER-NAVIGATOR",
-          linkedinUrl: "https://linkedin.com/in/asthakhade",
-          contactEmail: "astha@oist.edu"
+          headline: "Aspiring Engineer · Computer Science",
+          bio: "Passionate student focused on mastering computer science fundamentals, hands-on capstone projects, and continuous learning.",
+          githubUrl: "https://github.com",
+          linkedinUrl: "https://linkedin.com",
+          contactEmail: "student@example.com"
         },
         stats: {
-          streakDays: 7,
-          studyHours: 34.0,
-          milestonesDone: 12,
+          streakDays: 0,
+          studyHours: 0.0,
+          milestonesDone: 0,
           totalMilestones: 16,
-          roadmapCompletionPercentage: 75.0,
-          atsScore: 85,
-          topSkills: ["Python", "Machine Learning", "JavaScript", "React", "Data Structures", "Git"]
+          roadmapCompletionPercentage: 0.0,
+          atsScore: 0,
+          topSkills: ["Python", "JavaScript", "Problem Solving", "Git"]
         },
-        certificates: [
-          {
-            certificateId: "CN-2026-AIML-4A7C19",
-            trackKey: "aiml",
-            trackTitle: "Artificial Intelligence & Machine Learning Specialist",
-            scorePercentage: 96,
-            percentileRank: "Top 4% (Rank: 96th Percentile)",
-            verificationHash: "4a7c19f09e2b81d7634ca9b018ef23d",
-            issuedAt: "October 2026",
-            verificationUrl: "verify.html?certId=CN-2026-AIML-4A7C19"
-          }
-        ],
-        capstones: [
-          {
-            projectId: "aiml_satellite_vision_platform",
+        certificates: [],
+        capstones: []
             title: "Autonomous Deep Learning Computer Vision Pipeline",
             repoUrl: "https://github.com/asthakhade13-svg/AI-CAREER-NAVIGATOR",
             status: "Verified & Reviewed",

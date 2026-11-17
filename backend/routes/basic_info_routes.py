@@ -110,9 +110,9 @@ def get_assessment_history(student_id: str):
 
     cursor.execute("""
     SELECT * FROM assessment_history 
-    WHERE student_id = ? OR student_id = 'user_001'
+    WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
     ORDER BY date_taken DESC
-    """, (student_id,))
+    """, (student_id, student_id))
     rows = cursor.fetchall()
     conn.close()
 

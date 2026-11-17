@@ -1265,22 +1265,22 @@ const ChatAPI = {
             studentId: sid,
             trackKey: track || 'webdev',
             trackTitle: 'Full-Stack Web Engineering',
-            milestoneIndex: 1,
-            milestoneNumber: 2,
-            milestoneTitle: 'JavaScript Fundamentals & DOM',
-            milestoneWeek: 'Week 3 – 4',
-            percentComplete: 25.0,
-            completedSubtasks: 2,
+            milestoneIndex: 0,
+            milestoneNumber: 1,
+            milestoneTitle: 'HTML & CSS Basics',
+            milestoneWeek: 'Week 1 – 2',
+            percentComplete: 0.0,
+            completedSubtasks: 0,
             totalSubtasks: 8,
-            pendingTopics: ['Variables & scoping', 'Higher-order array methods', 'Async/await', 'DOM event listeners'],
+            pendingTopics: ['HTML tags & structure', 'CSS selectors & properties', 'Flexbox & Grid layout', 'Responsive design basics'],
             practiceProblem: {
-                title: 'Practice Challenge: JavaScript Fundamentals',
-                description: 'Build an async task filtering function using map, filter, and reduce to calculate study completion metrics.',
+                title: 'Practice Challenge: HTML & CSS Structure',
+                description: 'Build a responsive semantic card layout using flexbox and accessible tags.',
                 language: 'javascript',
-                starterCode: `// Milestone 2 Challenge: Array Transformation & Statistics\nconst learningTasks = [\n    { title: "Flexbox Froggy", completed: true, timeMinutes: 30 },\n    { title: "DOM Event Delegation", completed: true, timeMinutes: 45 },\n    { title: "Fetch API & JSON", completed: false, timeMinutes: 60 }\n];\n\nfunction analyzeRoadmapTasks(tasks) {\n    const completed = tasks.filter(t => t.completed);\n    return {\n        completedCount: completed.length,\n        totalTimeMinutes: completed.reduce((sum, t) => sum + t.timeMinutes, 0)\n    };\n}\n\nconsole.log(analyzeRoadmapTasks(learningTasks));`
+                starterCode: `// Milestone 1 Challenge: Basic Setup & Semantic DOM\nfunction initCardLayout() {\n    return { status: "Ready", progress: 0 };\n}\nconsole.log(initCardLayout());`
             },
-            suggestedPracticePrompt: "I'm currently working on Milestone 2 (JavaScript Fundamentals) in my Web Development roadmap. Can you give me a hands-on coding challenge with starter code?",
-            suggestedExplanationPrompt: "Can you explain the core concepts of Milestone 2: JavaScript Fundamentals & DOM with clean code examples?"
+            suggestedPracticePrompt: "I'm currently starting Milestone 1 (HTML & CSS Basics) in my Web Development roadmap. Can you give me a beginner hands-on exercise with starter code?",
+            suggestedExplanationPrompt: "Can you explain the core fundamentals of Milestone 1: HTML & Modern CSS with clean code examples?"
         };
     },
 
@@ -1485,11 +1485,13 @@ const ProgressAPI = {
             const res = await mlApiCall(`/progress/leaderboard?college=${encodeURIComponent(college)}&branch=${encodeURIComponent(branch)}`, 'GET');
             if (res.status === 200 && res.data && res.data.leaderboard) return res.data.leaderboard;
         } catch(e) {}
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
+        const userName = user.fullName || 'You';
         return [
-            { rank: 1, name: "Aarav Sharma", avatar: "A", streak: 28, hours: 86, score: 96, track: "AI / ML Engineer", isUser: false },
-            { rank: 2, name: "Astha Khade", avatar: "A", streak: 7, hours: 34, score: 92, track: "AI / ML Engineer", isUser: true },
-            { rank: 3, name: "Rohan Patel", avatar: "R", streak: 14, hours: 31, score: 88, track: "Full Stack Dev", isUser: false },
-            { rank: 4, name: "Priya Verma", avatar: "P", streak: 12, hours: 27, score: 85, track: "Cloud Architect", isUser: false }
+            { rank: 1, name: "Aarav Sharma", avatar: "A", streak: 14, hours: 22, score: 96, track: "AI / ML Engineer", isUser: false },
+            { rank: 2, name: "Rohan Patel", avatar: "R", streak: 9, hours: 18, score: 88, track: "Full Stack Dev", isUser: false },
+            { rank: 3, name: "Priya Verma", avatar: "P", streak: 7, hours: 15, score: 85, track: "Cloud Architect", isUser: false },
+            { rank: 4, name: userName, avatar: userName.charAt(0).toUpperCase() || 'U', streak: 0, hours: 0, score: 0, track: user.careerTrack || "AI / Machine Learning", isUser: true }
         ];
     },
 

@@ -464,9 +464,9 @@ def get_student_resumes(student_id: str):
     cursor.execute("""
     SELECT id, file_name, track_key, ats_score, matched_skills, scanned_at
     FROM resume_scans
-    WHERE student_id = ? OR student_id = 'user_001'
+    WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
     ORDER BY scanned_at DESC LIMIT 5
-    """, (student_id,))
+    """, (student_id, student_id))
     rows = cursor.fetchall()
     conn.close()
 
@@ -520,19 +520,19 @@ def generate_cover_letter(payload: CoverLetterRequest):
     if not student_name:
         cursor.execute("SELECT full_name FROM users WHERE id = ? OR LOWER(email) = LOWER(?)", (payload.student_id, payload.student_id))
         user_row = cursor.fetchone()
-        student_name = user_row["full_name"] if user_row else "Astha Khade"
+        student_name = user_row["full_name"] if user_row else "Applicant"
 
     cursor.execute("""
     SELECT file_name, ats_score, matched_skills
     FROM resume_scans
-    WHERE student_id = ? OR student_id = 'user_001'
+    WHERE student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)
     ORDER BY scanned_at DESC LIMIT 1
-    """, (payload.student_id,))
+    """, (payload.student_id, payload.student_id))
     scan_row = cursor.fetchone()
     conn.close()
 
-    ats_score = scan_row["ats_score"] if scan_row else 85
-    resume_file = scan_row["file_name"] if scan_row else f"{student_name.split()[0]}_Resume.pdf"
+    ats_score = scan_row["ats_score"] if scan_row else 0
+    resume_file = scan_row["file_name"] if scan_row else ("Resume.pdf" if student_name == "Applicant" else f"{student_name.split()[0]}_Resume.pdf")
 
     role_skills = payload.skills or ["Software Engineering", "System Design", "Problem Solving"]
     skills_highlight = ", ".join(role_skills[:3]) if role_skills else "Software Engineering"

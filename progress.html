@@ -127,7 +127,7 @@
             <i class="fas fa-check-circle"></i>
           </div>
           <div class="prog-stat-info">
-            <h3>34</h3>
+            <h3>0</h3>
             <p>Hours Learned</p>
           </div>
           <div class="prog-stat-chart">
@@ -617,7 +617,7 @@
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
           <div>
             <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; font-weight:600;">Student</span>
-            <h4 id="repStudentName" style="margin:2px 0 0 0; font-size:1.05rem; color:#0f172a;">Astha Khade</h4>
+            <h4 id="repStudentName" style="margin:2px 0 0 0; font-size:1.05rem; color:#0f172a;">Student</h4>
             <p id="repTrackName" style="margin:2px 0 0 0; font-size:0.8rem; color:#4F46E5; font-weight:500;">AI / Machine Learning Engineer Track</p>
           </div>
           <div style="text-align:right;">
@@ -635,15 +635,15 @@
           </div>
           <div style="background:#ECFDF5; border-radius:12px; padding:12px; text-align:center;">
             <span style="font-size:0.72rem; color:#065F46; font-weight:600; display:block;">Study Time</span>
-            <strong id="repHours" style="font-size:1.3rem; color:#064E3B;">34 hrs</strong>
+            <strong id="repHours" style="font-size:1.3rem; color:#064E3B;">0 hrs</strong>
           </div>
           <div style="background:#EFF6FF; border-radius:12px; padding:12px; text-align:center;">
             <span style="font-size:0.72rem; color:#1E40AF; font-weight:600; display:block;">Milestones</span>
-            <strong id="repMilestones" style="font-size:1.3rem; color:#1E3A8A;">12 / 20</strong>
+            <strong id="repMilestones" style="font-size:1.3rem; color:#1E3A8A;">0 / 20</strong>
           </div>
           <div style="background:#FEF3C7; border-radius:12px; padding:12px; text-align:center;">
             <span style="font-size:0.72rem; color:#92400E; font-weight:600; display:block;">Badges</span>
-            <strong id="repBadges" style="font-size:1.3rem; color:#78350F;">5 / 12</strong>
+            <strong id="repBadges" style="font-size:1.3rem; color:#78350F;">0 / 12</strong>
           </div>
         </div>
 
@@ -732,11 +732,11 @@
         <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:14px; text-align:center;">
           <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
             <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">MILESTONES</span>
-            <strong id="shareCardMilestones" style="font-size:1rem; color:#F8FAFC;">12 Done</strong>
+            <strong id="shareCardMilestones" style="font-size:1rem; color:#F8FAFC;">0 Done</strong>
           </div>
           <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
             <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">STUDY TIME</span>
-            <strong id="shareCardHours" style="font-size:1rem; color:#F8FAFC;">34h</strong>
+            <strong id="shareCardHours" style="font-size:1rem; color:#F8FAFC;">0h</strong>
           </div>
           <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:8px 4px;">
             <span style="font-size:0.65rem; color:#94A3B8; font-weight:600; display:block;">STREAK</span>
@@ -783,7 +783,7 @@ let currentTrackKey = 'aiml';
 // Load progress data from live API and SQLite
 async function loadProgress() {
     const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
-    const name = user?.fullName || 'Astha Khade';
+    const name = user?.fullName || 'Student';
     currentTrackKey = user?.careerTrack || localStorage.getItem('selected_career') || 'aiml';
 
     try {
@@ -792,15 +792,15 @@ async function loadProgress() {
         if (statsRes && statsRes.data) {
             const data = statsRes.data;
             const statHeaders = document.querySelectorAll('.prog-stat-info h3');
-            if (statHeaders[0]) statHeaders[0].textContent = data.streakDays || '7';
-            if (statHeaders[1]) statHeaders[1].textContent = data.hoursLearned || '34';
-            if (statHeaders[2]) statHeaders[2].textContent = `${data.completedMilestones || 12}/${data.totalMilestones || 20}`;
-            if (statHeaders[3]) statHeaders[3].textContent = data.skillsLearned || '5';
+            if (statHeaders[0]) statHeaders[0].textContent = data.streakDays !== undefined ? data.streakDays : '0';
+            if (statHeaders[1]) statHeaders[1].textContent = data.hoursLearned !== undefined ? data.hoursLearned : '0';
+            if (statHeaders[2]) statHeaders[2].textContent = `${data.completedMilestones !== undefined ? data.completedMilestones : 0}/${data.totalMilestones || 20}`;
+            if (statHeaders[3]) statHeaders[3].textContent = data.skillsLearned !== undefined ? data.skillsLearned : '0';
 
             const sBadge = document.getElementById('streakBadgeText');
-            if (sBadge) sBadge.textContent = `${data.streakDays || 7} Day Streak`;
+            if (sBadge) sBadge.textContent = `${data.streakDays || 0} Day Streak`;
 
-            const done = data.completedMilestones || 12;
+            const done = data.completedMilestones !== undefined ? data.completedMilestones : 0;
             const total = data.totalMilestones || 20;
             const pct = Math.round((done / total) * 100);
             const pText = document.getElementById('overallPercentText');
@@ -808,9 +808,9 @@ async function loadProgress() {
             const sDone = document.getElementById('overallStepsDone');
             if (sDone) sDone.textContent = done;
             const sProg = document.getElementById('overallStepsProgress');
-            if (sProg) sProg.textContent = Math.max(1, total - done > 0 ? 1 : 0);
+            if (sProg) sProg.textContent = Math.max(0, total - done > 0 ? (done > 0 ? 1 : 0) : 0);
             const sRem = document.getElementById('overallStepsRemain');
-            if (sRem) sRem.textContent = Math.max(0, total - done - 1);
+            if (sRem) sRem.textContent = Math.max(0, total - done);
         }
     } catch(e) {
         console.warn('Progress stats notice:', e);
@@ -1128,8 +1128,8 @@ async function handleStudySubmit(e) {
 
 // Weekly goals
 let goals = [
-    { text: "Complete 1 active roadmap milestone project", done: true },
-    { text: "Log 2+ hours in coding or algorithmic problem solving", done: true },
+    { text: "Complete 1 active roadmap milestone project", done: false },
+    { text: "Log 2+ hours in coding or algorithmic problem solving", done: false },
     { text: "Ask CareerBot AI Mentor for technical feedback", done: false },
     { text: "Review career milestone blueprint in Figma/GitHub", done: false },
     { text: "Claim and verify your track progress certificate", done: false },
@@ -1234,7 +1234,7 @@ async function openProgressReportModal() {
     if (!modal) return;
     
     const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
-    const name = user?.fullName || 'Astha Khade';
+    const name = user?.fullName || 'Student';
     const track = user?.careerTrack || localStorage.getItem('selected_career_name') || 'AI / Machine Learning Engineer';
     
     const nameEl = document.getElementById('repStudentName');
@@ -1244,20 +1244,38 @@ async function openProgressReportModal() {
     const dateEl = document.getElementById('repIssueDate');
     if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
+    // Populate live metrics inside report
+    try {
+        const statsRes = await ProgressAPI.getStats();
+        if (statsRes && statsRes.data) {
+            const data = statsRes.data;
+            const strk = document.getElementById('repStreak');
+            if (strk) strk.textContent = `${data.streakDays || 0} Days`;
+            const hrs = document.getElementById('repHours');
+            if (hrs) hrs.textContent = `${data.hoursLearned !== undefined ? data.hoursLearned : 0} hrs`;
+            const mls = document.getElementById('repMilestones');
+            if (mls) mls.textContent = `${data.completedMilestones !== undefined ? data.completedMilestones : 0} / ${data.totalMilestones || 20}`;
+            const bdg = document.getElementById('repBadges');
+            if (bdg) bdg.textContent = `${data.unlockedBadges !== undefined ? data.unlockedBadges : 0} / 12`;
+        }
+    } catch(e) {}
+
     // Populate skills inside report
     try {
         const skills = await ProgressAPI.getSkillsProgress(currentTrackKey);
         const sContainer = document.getElementById('repSkillsList');
         if (sContainer && skills) {
-            sContainer.innerHTML = skills.slice(0, 4).map(s => `
+            sContainer.innerHTML = skills.slice(0, 4).map(s => {
+                const pct = s.pct !== undefined ? s.pct : (s.percentage !== undefined ? s.percentage : 0);
+                return `
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem;">
                   <span style="color:#334155; font-weight:600;"><i class="fas ${s.icon || 'fa-code'}" style="margin-right:6px; color:#4F46E5;"></i> ${s.name}</span>
-                  <span style="color:#64748b; font-weight:600;">${s.pct || s.percentage || 75}%</span>
+                  <span style="color:#64748b; font-weight:600;">${pct}%</span>
                 </div>
                 <div style="width:100%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
-                  <div style="width:${s.pct || s.percentage || 75}%; height:100%; background:#4F46E5; border-radius:3px;"></div>
+                  <div style="width:${pct}%; height:100%; background:#4F46E5; border-radius:3px;"></div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
     } catch(e) {}
 
@@ -1377,18 +1395,20 @@ async function openShareModal() {
             const data = await ProgressAPI.getSocialShareCard(studentId);
             if (data) {
                 currentShareCardData = data;
+                const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
                 const nameEl = document.getElementById('shareCardStudentName');
-                if (nameEl) nameEl.textContent = data.name || 'Astha Khade';
+                if (nameEl) nameEl.textContent = data.name || (user?.fullName || 'Student');
                 const trackEl = document.getElementById('shareCardTrack');
-                if (trackEl) trackEl.textContent = `${data.track || 'AI / Machine Learning'} Track`;
+                if (trackEl) trackEl.textContent = `${data.track || (user?.careerTrack || 'AI / Machine Learning')} Track`;
                 const milEl = document.getElementById('shareCardMilestones');
-                if (milEl) milEl.textContent = `${data.milestonesCompleted || 12} Done`;
+                if (milEl) milEl.textContent = `${data.milestonesCompleted !== undefined ? data.milestonesCompleted : 0} Done`;
                 const hrsEl = document.getElementById('shareCardHours');
-                if (hrsEl) hrsEl.textContent = `${data.studyHours || 34}h`;
+                if (hrsEl) hrsEl.textContent = `${data.studyHours !== undefined ? data.studyHours : 0}h`;
                 const strkEl = document.getElementById('shareCardStreak');
-                if (strkEl) strkEl.textContent = `${data.streakDays || 7} Days 🔥`;
+                const strkVal = data.streakDays !== undefined ? data.streakDays : 0;
+                if (strkEl) strkEl.textContent = `${strkVal} Days${strkVal > 0 ? ' 🔥' : ''}`;
                 const scoreEl = document.getElementById('shareCardScore');
-                if (scoreEl) scoreEl.textContent = `${data.readinessScore || 82}%`;
+                if (scoreEl) scoreEl.textContent = `${data.readinessScore !== undefined ? data.readinessScore : 0}%`;
                 const badgeIdEl = document.getElementById('shareCardBadgeId');
                 if (badgeIdEl) badgeIdEl.textContent = `ID: ${data.badgeId || 'CN-PROG-2026'}`;
                 const textEl = document.getElementById('sharePostText');
