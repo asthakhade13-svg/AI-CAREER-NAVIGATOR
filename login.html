@@ -174,16 +174,16 @@
       </p>
 
       <!-- Account Selection Pill -->
-      <div class="google-account-pill" onclick="confirmGoogleOneTapLogin('astha.khade@oist.edu', 'Astha Khade')">
-        <div class="google-user-avatar">A</div>
+      <div class="google-account-pill" onclick="confirmGoogleOneTapLogin()">
+        <div class="google-user-avatar" id="googlePillAvatar">G</div>
         <div class="google-user-info">
-          <strong>Astha Khade</strong>
-          <p>astha.khade@oist.edu</p>
+          <strong id="googlePillName">Google Account</strong>
+          <p id="googlePillEmail">Sign in with Google</p>
         </div>
       </div>
 
-      <button type="button" class="btn-google-blue" id="googleOneTapConfirmBtn" onclick="confirmGoogleOneTapLogin('astha.khade@oist.edu', 'Astha Khade')">
-        <i class="fab fa-google"></i> Continue as Astha
+      <button type="button" class="btn-google-blue" id="googleOneTapConfirmBtn" onclick="confirmGoogleOneTapLogin()">
+        <i class="fab fa-google"></i> Continue with Google
       </button>
 
       <div style="margin-top:16px; text-align:center;">
@@ -484,7 +484,7 @@ async function handleResetPassword(e) {
 
         // Establish login session for the student
         const userObj = {
-            fullName: 'Astha Khade',
+            fullName: '',
             email: activeResetEmail,
             role: 'STUDENT'
         };
@@ -558,7 +558,7 @@ function closeGoogleOneTapModal() {
     if (modal) modal.style.display = 'none';
 }
 
-async function confirmGoogleOneTapLogin(email = 'astha.khade@oist.edu', name = 'Astha Khade') {
+async function confirmGoogleOneTapLogin(email = '', name = '') {
     const confirmBtn = document.getElementById('googleOneTapConfirmBtn');
     if (confirmBtn) {
         confirmBtn.disabled = true;

@@ -2439,9 +2439,9 @@ function updateSidebarUser() {
 
 
 
-    const name = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+    const name = user?.fullName || localStorage.getItem('user_fullname') || 'Student';
 
-    const initial = name.charAt(0).toUpperCase() || 'A';
+    const initial = name.charAt(0).toUpperCase() || 'S';
 
     const branch = user?.branch || 'CSE';
 
@@ -3930,7 +3930,7 @@ function openSettingsModal() {
 
   pendingAvatarBase64 = null;
 
-  const name = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+  const name = user?.fullName || localStorage.getItem('user_fullname') || 'Student';
 
   document.getElementById('settingFullName').value = name;
 
@@ -3986,7 +3986,7 @@ async function saveSettings(e) {
 
   
 
-  const fullName = document.getElementById('settingFullName').value.trim() || 'Astha Khade';
+  const fullName = document.getElementById('settingFullName').value.trim() || 'Student';
 
   const currentYear = document.getElementById('settingYear').value;
 
@@ -4716,7 +4716,7 @@ async function loadWeeklyReport() {
 
         const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
 
-        const name = user?.fullName || 'Astha Khade';
+        const name = user?.fullName || 'Student';
 
         const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
 
@@ -4849,7 +4849,7 @@ async function openCertificateModal() {
 
     const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
 
-    const name = user?.fullName || localStorage.getItem('user_fullname') || 'Astha Khade';
+    const name = user?.fullName || localStorage.getItem('user_fullname') || 'Student';
 
     const rawSelected = localStorage.getItem('selected_career_name') || 'AI / Machine Learning';
 

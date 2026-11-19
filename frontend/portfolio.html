@@ -268,7 +268,7 @@
             </span>
           </div>
 
-          <h1 id="heroStudentName" style="font-size:2rem; font-weight:800; margin:0 0 6px 0; letter-spacing:-0.5px;">Astha Khade</h1>
+          <h1 id="heroStudentName" style="font-size:2rem; font-weight:800; margin:0 0 6px 0; letter-spacing:-0.5px;">Student</h1>
           <p id="heroHeadline" style="font-size:1rem; color:#94a3b8; margin:0 0 12px 0; font-weight:500;">
             Aspiring Software Engineer &amp; ML Practitioner · B.Tech CSE @ Oriental Institute of Science &amp; Technology
           </p>
@@ -279,10 +279,10 @@
 
           <!-- Contact & Social Pills -->
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <a id="heroContactBtn" href="mailto:astha@oist.edu" class="btn sm" style="background:#ffffff; color:#0f172a; font-weight:700; border-radius:10px; text-decoration:none; padding:8px 16px; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
+            <a id="heroContactBtn" href="mailto:" class="btn sm" style="background:#ffffff; color:#0f172a; font-weight:700; border-radius:10px; text-decoration:none; padding:8px 16px; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
               <i class="fas fa-envelope" style="color:#4F46E5;"></i> Contact Student
             </a>
-            <a id="heroGithubLink" href="https://github.com/asthakhade13-svg" target="_blank" class="btn btn-outline sm" style="border-color:rgba(255,255,255,0.3); color:#ffffff; font-weight:600; border-radius:10px; text-decoration:none; padding:8px 14px; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
+            <a id="heroGithubLink" href="https://github.com" target="_blank" class="btn btn-outline sm" style="border-color:rgba(255,255,255,0.3); color:#ffffff; font-weight:600; border-radius:10px; text-decoration:none; padding:8px 14px; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
               <i class="fab fa-github"></i> GitHub
             </a>
             <a id="heroLinkedinLink" href="https://linkedin.com" target="_blank" class="btn btn-outline sm" style="border-color:rgba(255,255,255,0.3); color:#ffffff; font-weight:600; border-radius:10px; text-decoration:none; padding:8px 14px; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
@@ -410,7 +410,7 @@
         <a href="verify.html" class="btn btn-outline sm" style="border-radius:10px; font-weight:600; text-decoration:none;">
           <i class="fas fa-search"></i> Recruiter Verification Portal
         </a>
-        <a id="footerEmailBtn" href="mailto:astha@oist.edu" class="btn btn-primary sm" style="border-radius:10px; font-weight:600; text-decoration:none;">
+        <a id="footerEmailBtn" href="mailto:" class="btn btn-primary sm" style="border-radius:10px; font-weight:600; text-decoration:none;">
           <i class="fas fa-paper-plane"></i> Schedule Interview
         </a>
       </div>
@@ -508,7 +508,7 @@
       const stats = data.stats || {};
 
       // 1. Hero details
-      document.getElementById('heroStudentName').textContent = prof.name || 'Astha Khade';
+      document.getElementById('heroStudentName').textContent = prof.name || 'Student';
       document.getElementById('heroHeadline').textContent = prof.headline || `Aspiring Engineer · B.Tech @ ${prof.college || 'OIST'}`;
       document.getElementById('heroBio').textContent = prof.bio || 'Computer Science student with strong problem-solving and software engineering skills.';
       document.getElementById('heroTrackBadge').textContent = (prof.careerTrack || 'AI/ML') + ' SPECIALIST';
@@ -704,20 +704,21 @@
     }
 
     function getFallbackPortfolio() {
+      const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
       return {
         studentId: currentStudentId,
         profile: {
-          name: "Astha Khade",
-          email: "astha@oist.edu",
-          college: "Oriental Institute of Science & Technology (OIST)",
-          branch: "Computer Science & Engineering",
-          year: "1st Year",
-          careerTrack: "AIML",
-          headline: "Aspiring Engineer · Computer Science",
-          bio: "Passionate student focused on mastering computer science fundamentals, hands-on capstone projects, and continuous learning.",
-          githubUrl: "https://github.com",
-          linkedinUrl: "https://linkedin.com",
-          contactEmail: "student@example.com"
+          name: user?.fullName || user?.name || 'Student',
+          email: user?.email || '',
+          college: user?.collegeName || user?.college || '',
+          branch: user?.branch || 'Computer Science & Engineering',
+          year: user?.currentYear || user?.year || '1st Year',
+          careerTrack: 'AIML',
+          headline: 'Aspiring Engineer · Computer Science',
+          bio: 'Passionate student focused on mastering computer science fundamentals, hands-on capstone projects, and continuous learning.',
+          githubUrl: 'https://github.com',
+          linkedinUrl: 'https://linkedin.com',
+          contactEmail: user?.email || 'student@example.com'
         },
         stats: {
           streakDays: 0,
@@ -726,26 +727,15 @@
           totalMilestones: 16,
           roadmapCompletionPercentage: 0.0,
           atsScore: 0,
-          topSkills: ["Python", "JavaScript", "Problem Solving", "Git"]
+          topSkills: []
         },
         certificates: [],
-        capstones: []
-            title: "Autonomous Deep Learning Computer Vision Pipeline",
-            repoUrl: "https://github.com/asthakhade13-svg/AI-CAREER-NAVIGATOR",
-            status: "Verified & Reviewed",
-            codeQualityGrade: "A - Modular & Production Ready",
-            reviewerName: "CareerBot AI Senior Architect",
-            reviewerRole: "Lead Systems Evaluator (OIST Campus Accreditation)",
-            feedbackNotes: "Modular pipeline design, asynchronous evaluation APIs, and robust model weight checkpoints.",
-            suggestions: "Incorporate containerized continuous integration pipelines.",
-            reviewDate: "October 2026"
-          }
-        ],
+        capstones: [],
         badges: [
-          { name: "Consistency King", desc: "Maintained 7-day continuous study check-in streak", icon: "🔥", isUnlocked: true, proof: "7 Days Streak" },
-          { name: "ATS Pro", desc: "Achieved 80+ points on ATS Resume Evaluation", icon: "🎯", isUnlocked: true, proof: "Score: 85/100" },
-          { name: "Capstone Finisher", desc: "GitHub repository validated & reviewed by mentor", icon: "🚀", isUnlocked: true, proof: "Mentor Grade: A" },
-          { name: "Certified Specialist", desc: "Claimed Verifiable Professional Specialization Certificate", icon: "🎓", isUnlocked: true, proof: "1 Credential" }
+          { name: 'Consistency King', desc: 'Maintained 7-day continuous study check-in streak', icon: '🔥', isUnlocked: false, proof: '0 Days Streak' },
+          { name: 'ATS Pro', desc: 'Achieved 80+ points on ATS Resume Evaluation', icon: '🎯', isUnlocked: false, proof: 'Score: 0/100' },
+          { name: 'Capstone Finisher', desc: 'GitHub repository validated & reviewed by mentor', icon: '🚀', isUnlocked: false, proof: 'No review yet' },
+          { name: 'Certified Specialist', desc: 'Claimed Verifiable Professional Specialization Certificate', icon: '🎓', isUnlocked: false, proof: '0 Credentials' }
         ]
       };
     }

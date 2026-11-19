@@ -1689,7 +1689,7 @@ function saveBackendUrlAndRetry(){
     startQuestionnaire();
   }
 }
-const STUDENT_ID='user_001';
+const STUDENT_ID = localStorage.getItem('user_id') || (typeof UserManager !== 'undefined' && UserManager.get() && (UserManager.get().email || UserManager.get().id)) || '';
 let quizType='adaptive',questions=[],answers={},currentQ=0,radarChart=null;
 let adaptiveSessionId=null,adaptiveCurrentQuestion=null,adaptiveQuestionNum=1,adaptiveTotalQuestions=30,adaptiveSelectedAnswer=null;
 let questionnaireSections=[],currentSectionIdx=0,questionnaireAnswers={},classifiedQuizType='general';

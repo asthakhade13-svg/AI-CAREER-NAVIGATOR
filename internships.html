@@ -772,7 +772,7 @@
           company: currentModalItem.company,
           role_title: currentModalItem.title,
           skills: currentModalItem.skills || [],
-          student_name: user?.fullName || user?.name || 'Astha Khade'
+          student_name: user?.fullName || user?.name || 'Student'
         });
 
         if (res && res.data && res.data.coverLetter) {
@@ -876,7 +876,7 @@
       try {
         const user = typeof UserManager !== 'undefined' ? UserManager.get() : null;
         if (user) {
-          const name = user.fullName || user.username || 'Astha Khade';
+          const name = user.fullName || user.username || 'Student';
           const nameEl = document.getElementById('sidebarUserName');
           if (nameEl) nameEl.textContent = name;
           const avEl = document.getElementById('sidebarAvatar');

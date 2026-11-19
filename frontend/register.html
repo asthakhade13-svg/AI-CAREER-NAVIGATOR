@@ -377,18 +377,18 @@ async function continueWithGoogle() {
         }
 
         const mockGoogleProfile = {
-            email: 'astha.khade@oist.edu',
-            name: 'Astha Khade'
+            email: '',
+            name: ''
         };
         if (typeof AuthAPI !== 'undefined' && AuthAPI.loginWithGoogle) {
             await AuthAPI.loginWithGoogle(mockGoogleProfile);
         } else {
             TokenManager.save('jwt_google_' + Date.now());
-            UserManager.save({ fullName: 'Astha Khade', email: 'astha.khade@oist.edu', role: 'STUDENT' });
+            UserManager.save({ fullName: '', email: '', role: 'STUDENT' });
         }
     } catch(err) {
         TokenManager.save('jwt_google_fallback');
-        UserManager.save({ fullName: 'Astha Khade', email: 'astha.khade@oist.edu', role: 'STUDENT' });
+        UserManager.save({ fullName: '', email: '', role: 'STUDENT' });
     }
 
     window.location.replace('dashboard.html');

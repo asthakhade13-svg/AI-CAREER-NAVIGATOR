@@ -234,12 +234,12 @@
           </div>
           <span class="badge badge-success"
                 id="progressBadge">
-            25% Complete
+            0% Complete
           </span>
         </div>
         <div class="op-bar">
           <div class="op-fill" id="opFill"
-               style="width: 25%">
+               style="width: 0%">
           </div>
         </div>
       </div>
@@ -2325,7 +2325,7 @@ console.log("Hello from CareerNav Scratchpad! 🚀");`
 
     const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {};
     const nameInput = document.getElementById('claimStudentNameInput');
-    if (nameInput) nameInput.value = user.fullName || user.name || 'Astha Khade';
+    if (nameInput) nameInput.value = user.fullName || user.name || 'Student';
 
     document.getElementById('claimCertFormSection').style.display = 'block';
     document.getElementById('claimCertSuccessSection').style.display = 'none';
@@ -2340,7 +2340,7 @@ console.log("Hello from CareerNav Scratchpad! 🚀");`
 
   async function submitCertificateClaim() {
     const nameInput = document.getElementById('claimStudentNameInput');
-    const studentName = (nameInput ? nameInput.value.trim() : '') || 'Astha Khade';
+    const studentName = (nameInput ? nameInput.value.trim() : '') || 'Student';
     const confirmBtn = document.getElementById('confirmClaimBtn');
     if (confirmBtn) {
       confirmBtn.disabled = true;
