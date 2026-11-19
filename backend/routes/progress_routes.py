@@ -67,7 +67,7 @@ def daily_checkin(payload: Optional[CheckinRequest] = None, student_id: Optional
     """
     Increments student learning streak and logs checkin.
     """
-    sid = (payload.student_id if payload and payload.student_id else student_id) or "user_001"
+    sid = (payload.student_id if payload and payload.student_id else student_id) or ""
     today_str = datetime.now().strftime("%Y-%m-%d")
     record = _STUDENT_PROGRESS_DB.setdefault(sid, {
         "student_id": sid,
@@ -185,7 +185,7 @@ def get_student_milestones(student_id: str, track_key: Optional[str] = None):
 def get_weekly_report(
     student_id: str = Query("user_001"),
     track_key: str = Query("aiml"),
-    user_name: str = Query("Astha")
+    user_name: str = Query("Student")
 ):
     """
     Returns automated weekly AI performance digest, velocity index, and recommended goals.
@@ -202,9 +202,9 @@ def get_weekly_report(
 
 
 class WeeklyDigestEmailRequest(BaseModel):
-    student_id: str = "user_001"
-    email: Optional[str] = "astha.khade@oist.edu"
-    user_name: Optional[str] = "Astha Khade"
+    student_id: str = ""
+    email: Optional[str] = None
+    user_name: Optional[str] = None
     track_key: Optional[str] = "aiml"
 
 
@@ -219,14 +219,14 @@ def send_digest_email(payload: WeeklyDigestEmailRequest):
     try:
         report = get_weekly_ai_report(student_id=payload.student_id, track_key=payload.track_key or "aiml", user_name=payload.user_name or "Student")
         res = send_weekly_digest_email(
-            to_email=payload.email or "astha.khade@oist.edu",
+            to_email=payload.email or "",
             user_name=payload.user_name or "Student",
             weekly_data={
                 "track": payload.track_key or "aiml",
-                "hours": report.get("hours_spent", 8.5),
-                "streak": report.get("current_streak", 7),
-                "milestonesCompleted": report.get("milestones_completed", 2),
-                "readinessScore": report.get("job_readiness_score", 82)
+                "hours": report.get("hours_spent", 0),
+                "streak": report.get("current_streak", 0),
+                "milestonesCompleted": report.get("milestones_completed", 0),
+                "readinessScore": report.get("job_readiness_score", 0)
             }
         )
         return {
@@ -1149,7 +1149,7 @@ def get_leaderboard(college: str = "OIST", branch: str = "CSE"):
             "hours": total_h,
             "score": int(u["top_score"] or 0),
             "track": (u["career_track"] or "aiml").upper() + " Specialist",
-            "isUser": True if "Astha" in name else False
+            "isUser": student_id in (name, u.get("email", ""), u.get("id", ""))
         })
 
     # Benchmark community peers
@@ -1766,7 +1766,7 @@ def get_social_share_card(student_id: Optional[str] = None, payload: Optional[Sh
     Generates personalized dynamic social share card data, pre-formatted copy for LinkedIn & Twitter/X,
     and visual SVG preview badge metadata.
     """
-    sid = (payload.student_id if payload and payload.student_id else student_id) or "user_001"
+    sid = (payload.student_id if payload and payload.student_id else student_id) or ""
     
     conn = get_db_connection()
     cursor = conn.cursor()

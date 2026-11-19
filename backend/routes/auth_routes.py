@@ -367,8 +367,8 @@ def google_auth_callback(req: GoogleLoginRequest):
         except Exception as e:
             logger.info(f"Google tokeninfo live verification note (using signed payload): {e}")
 
-    email = (email or req.email or "astha.khade@oist.edu").lower().strip()
-    name = name or req.name or "Astha Khade"
+    email = (email or req.email or "").lower().strip()
+    name = name or req.name or "Student"
 
     conn = get_db_connection()
     cursor = conn.cursor()

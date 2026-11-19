@@ -74,9 +74,9 @@ def get_dashboard_summary(student_id: str):
         else:
             user_data = {
                 "id": student_id,
-                "fullName": "Astha Khade",
+                "fullName": "Student",
                 "email": student_id,
-                "college": "Oriental Institute of Science & Technology (OIST)",
+                "college": "",
                 "branch": "Computer Science & Engineering",
                 "year": "1st Year",
                 "careerTrack": "aiml",
