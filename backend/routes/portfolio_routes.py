@@ -79,10 +79,10 @@ def get_public_portfolio(student_id: str):
         )
         avatar_url = user_row["avatar_url"] or ""
     else:
-        # Default baseline for demo/guest student IDs
-        name = "Astha Khade"
-        email = student_id if "@" in student_id else f"{student_id}@oist.edu"
-        college = "Oriental Institute of Science & Technology (OIST)"
+        # Default baseline for new/guest users with no account yet
+        name = "Student"
+        email = student_id if "@" in student_id else ""
+        college = ""
         branch = "Computer Science & Engineering (CSE)"
         year = "1st Year"
         track_key = "aiml"

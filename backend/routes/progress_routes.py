@@ -1231,7 +1231,7 @@ def update_student_profile(payload: ProfileUpdatePayload):
         "success": True,
         "message": "Profile updated successfully!",
         "profile": {
-            "fullName": payload.full_name or "Astha Khade",
+            "fullName": payload.full_name or "Student",
             "college": payload.college or "Oriental Institute of Science & Technology (OIST)",
             "branch": payload.branch or "Computer Science & Engineering",
             "year": payload.year or "1st Year",
@@ -1774,9 +1774,9 @@ def get_social_share_card(student_id: Optional[str] = None, payload: Optional[Sh
     # 1. Student info
     cursor.execute("SELECT id, full_name, email, career_track, college, branch FROM users WHERE id = ? OR email = ?", (sid, sid))
     user_row = cursor.fetchone()
-    name = user_row["full_name"] if user_row and user_row["full_name"] else "Astha Khade"
+    name = user_row["full_name"] if user_row and user_row["full_name"] else "Student"
     track = user_row["career_track"] if user_row and user_row["career_track"] else "AI / Machine Learning"
-    college = user_row["college"] if user_row and user_row["college"] else "OIST"
+    college = user_row["college"] if user_row and user_row["college"] else ""
     
     # 2. Milestones & Study Logs
     cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1", (sid, sid))
@@ -1851,7 +1851,7 @@ def get_shareable_svg_badge(student_id: str):
     cursor = conn.cursor()
     cursor.execute("SELECT full_name, career_track FROM users WHERE id = ? OR email = ?", (student_id, student_id))
     u = cursor.fetchone()
-    name = u["full_name"] if u and u["full_name"] else "Astha Khade"
+    name = u["full_name"] if u and u["full_name"] else "Student"
     track = (u["career_track"] if u and u["career_track"] else "AI / Machine Learning").replace('_', ' ').title()
 
     cursor.execute("SELECT COUNT(*) as cnt FROM milestones_progress WHERE (student_id = ? OR student_id = (SELECT email FROM users WHERE id = ?)) AND is_completed = 1", (student_id, student_id))
