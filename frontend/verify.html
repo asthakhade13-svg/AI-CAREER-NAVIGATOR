@@ -165,7 +165,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px;">
         <div>
           <span style="font-size: 0.78rem; text-transform: uppercase; color: #64748b; font-weight: 700;">Recipient Student</span>
-          <h3 id="resStudentName" style="font-size: 1.35rem; color: #1e293b; margin: 4px 0;">Astha Khade</h3>
+          <h3 id="resStudentName" style="font-size: 1.35rem; color: #1e293b; margin: 4px 0;">Student</h3>
           <p style="font-size: 0.85rem; color: #64748b;">Oriental Institute of Science & Technology (OIST)</p>
         </div>
 
@@ -263,7 +263,7 @@
               AI & Machine Learning Specialization
             </h3>
             <p id="previewCardStudent" style="font-size: 0.92rem; color: #c7d2fe; margin: 0 0 12px 0;">
-              Conferred to <strong style="color: #ffffff;">Astha Khade</strong>
+              Conferred to <strong style="color: #ffffff;">Student</strong>
             </p>
 
             <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
@@ -379,7 +379,7 @@
           certData = {
             isValid: true,
             certificateId: input,
-            studentName: 'Astha Khade',
+            studentName: 'Student',
             trackTitle: trackTitle,
             issuedAt: '2026-09-26',
             verificationHash: 'SHA256-' + input.substring(8),
@@ -392,7 +392,7 @@
         if (certData) {
           currentCertData = certData;
           currentVerifiedCertId = certData.certificateId || input;
-          document.getElementById('resStudentName').textContent = certData.studentName || 'Astha Khade';
+          document.getElementById('resStudentName').textContent = certData.studentName || 'Student';
           document.getElementById('resTrackTitle').textContent = certData.trackTitle || 'Professional Engineering Specialization';
           document.getElementById('resIssueDate').textContent = 'Issued on: ' + (certData.issuedAt || 'Sep 26, 2026');
           document.getElementById('resCertId').textContent = currentVerifiedCertId;
@@ -473,7 +473,7 @@
     function openSharePreviewModal() {
       if (!currentVerifiedCertId) return;
       const trackTitle = document.getElementById('resTrackTitle')?.textContent || 'Professional Specialization';
-      const studentName = document.getElementById('resStudentName')?.textContent || 'Astha Khade';
+      const studentName = document.getElementById('resStudentName')?.textContent || 'Student';
       const hashVal = document.getElementById('resHash')?.textContent || 'SHA256-VALID';
       const verifyUrl = window.location.origin + window.location.pathname + '?certId=' + encodeURIComponent(currentVerifiedCertId);
 
@@ -536,7 +536,7 @@
         canvas.height = 1080;
         const ctx = canvas.getContext('2d');
 
-        const studentName = document.getElementById('resStudentName')?.textContent || 'Astha Khade';
+        const studentName = document.getElementById('resStudentName')?.textContent || 'Student';
         const trackTitle = document.getElementById('resTrackTitle')?.textContent || 'AI & Machine Learning Specialization';
         const issueDate = document.getElementById('resIssueDate')?.textContent.replace('Issued on: ', '') || 'Sep 26, 2026';
         const certId = currentVerifiedCertId;

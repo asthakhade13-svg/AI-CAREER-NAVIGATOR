@@ -77,10 +77,10 @@
 
     <!-- User Profile at bottom -->
     <div class="sidebar-user">
-      <div class="user-avatar" id="sidebarAvatar">A</div>
+      <div class="user-avatar" id="sidebarAvatar">S</div>
       <div class="user-info">
-        <strong id="sidebarUserName">Astha Khade</strong>
-        <p id="sidebarUserSub">1st Year · CSE · OIST</p>
+        <strong id="sidebarUserName">Student</strong>
+        <p id="sidebarUserSub">B.Tech · CSE</p>
       </div>
 
       <a href="#" title="Logout" onclick="logout()">
@@ -109,8 +109,8 @@
           <i class="fas fa-moon theme-icon"></i>
         </button>
         <div class="user-pill" onclick="window.location.href='dashboard.html'" style="cursor:pointer;">
-          <div class="user-avatar sm" id="topbarAvatar">A</div>
-          <span id="topbarUserName">Astha Khade</span>
+          <div class="user-avatar sm" id="topbarAvatar">S</div>
+          <span id="topbarUserName">Student</span>
         </div>
       </div>
     </header>
@@ -522,18 +522,18 @@
 
     function initPageSettings() {
       const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || {
-        name: 'Astha Khade',
-        email: 'astha@oist.edu',
-        college: 'Oriental Institute of Science & Technology (OIST)',
+        name: '',
+        email: '',
+        college: '',
         branch: 'Computer Science & Engineering (CSE)',
         year: '1st Year'
       };
 
-      const name = user.name || user.full_name || 'Astha Khade';
-      const email = user.email || 'astha@oist.edu';
-      const college = user.college || 'Oriental Institute of Science & Technology (OIST)';
+      const name = user.name || user.full_name || user.fullName || '';
+      const email = user.email || '';
+      const college = user.college || user.collegeName || '';
       const branch = user.branch || 'CSE';
-      const year = user.year || '1st Year';
+      const year = user.year || user.currentYear || '1st Year';
 
       document.getElementById('pageFullName').value = name;
       document.getElementById('pageEmail').value = email;

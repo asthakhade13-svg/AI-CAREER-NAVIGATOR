@@ -341,8 +341,8 @@ const AuthAPI = {
     },
 
     uploadAvatar: async (fileOrBase64) => {
-        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
-        const sid = user.email || user.id || 'user_001';
+        const user = UserManager.get() || { email: '' };
+        const sid = user.email || user.id || '';
 
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const backendBase = isLocal ? 'http://127.0.0.1:8000' : 'https://ai-career-navigator-vzcm.onrender.com';
@@ -381,8 +381,8 @@ const AuthAPI = {
     },
 
     changePassword: async (oldPassword, newPassword) => {
-        const user = UserManager.get() || { email: 'astha.khade@oist.edu' };
-        const sid = user.email || user.id || 'user_001';
+        const user = UserManager.get() || { email: '' };
+        const sid = user.email || user.id || '';
         try {
             return await mlApiCall('/auth/change-password', 'POST', {
                 student_id: sid,
@@ -1103,9 +1103,9 @@ const RoadmapAPI = {
     },
 
     claimCertificate: async (trackKey, studentName = null, studentId = null) => {
-        const user = UserManager.get() || { name: 'Astha Khade', email: 'user_001' };
-        const sid = studentId || user.email || user.id || 'user_001';
-        const sName = studentName || user.fullName || user.name || 'Astha Khade';
+        const user = UserManager.get() || { name: '', email: '' };
+        const sid = studentId || user.email || user.id || '';
+        const sName = studentName || user.fullName || user.name || 'Student';
         try {
             const res = await mlApiCall('/roadmap/claim-certificate', 'POST', {
                 student_id: sid,
@@ -2154,9 +2154,9 @@ const ReportAPI = {
 // ============================================
 const CertificateAPI = {
     generateCertificate: async (trackKey = 'aiml', score = 95) => {
-        const user = UserManager.get() || { fullName: 'Astha Khade', email: 'astha.khade@oist.edu' };
-        const sid = user.email || user.id || 'user_001';
-        const name = user.fullName || 'Astha Khade';
+        const user = UserManager.get() || { fullName: '', email: '' };
+        const sid = user.email || user.id || '';
+        const name = user.fullName || 'Student';
         try {
             const res = await mlApiCall('/certificates/generate', 'POST', {
                 student_id: sid,
@@ -2449,7 +2449,7 @@ function updateSidebarUser() {
 
     document.querySelectorAll('.user-info strong')
         .forEach(function(el) {
-            el.textContent = user.fullName || user.full_name || 'Astha Khade';
+            el.textContent = user.fullName || user.full_name || 'Student';
         });
 
     const avatarUrl = user.avatarUrl || user.avatar_url || localStorage.getItem('user_avatar') || localStorage.getItem('avatarUrl');
@@ -2833,7 +2833,7 @@ function openProfileModal() {
         document.body.appendChild(modal);
     }
 
-    const user = UserManager.get() || { fullName: 'Astha Khade', email: 'astha.khade@oist.edu', college: 'OIST', branch: 'CSE', year: '1st Year', careerTrack: 'aiml' };
+    const user = UserManager.get() || { fullName: '', email: '', college: '', branch: 'CSE', year: '1st Year', careerTrack: 'aiml' };
 
     modal.innerHTML = `
         <div style="background: white; max-width: 460px; width: 100%; border-radius: 20px; padding: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; font-family: inherit;">
@@ -2929,8 +2929,8 @@ function bindSidebarUserClicks() {
 // ============================================
 const UserPreferencesAPI = {
     getPreferences: async (studentId = null) => {
-        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || { email: 'astha.khade@oist.edu' };
-        const sid = studentId || user.email || user.id || 'user_001';
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || { email: '' };
+        const sid = studentId || user.email || user.id || '';
         try {
             const res = await mlApiCall(`/auth/preferences/${encodeURIComponent(sid)}`, 'GET');
             if (res.status === 200 && res.data && res.data.preferences) {
@@ -2941,8 +2941,8 @@ const UserPreferencesAPI = {
     },
 
     savePreferences: async (prefs) => {
-        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || { email: 'astha.khade@oist.edu' };
-        const sid = user.email || user.id || 'user_001';
+        const user = (typeof UserManager !== 'undefined' ? UserManager.get() : null) || { email: '' };
+        const sid = user.email || user.id || '';
         try {
             const payload = {
                 student_id: sid,
