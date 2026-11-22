@@ -80,6 +80,135 @@
 
     }
 
+    /* Active Track Hero Banner */
+    .hero-track-card {
+      background: linear-gradient(135deg, rgba(238, 242, 255, 0.85), rgba(240, 253, 244, 0.85));
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);
+      padding: 24px;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    [data-theme="dark"] .hero-track-card,
+    body.dark-mode .hero-track-card,
+    [data-theme="dark"] #activeTrackHeroCard,
+    body.dark-mode #activeTrackHeroCard {
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+      border: 1px solid rgba(99, 102, 241, 0.45) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    [data-theme="dark"] .hero-track-card h3,
+    body.dark-mode .hero-track-card h3,
+    [data-theme="dark"] #activeTrackHeroCard h3,
+    body.dark-mode #activeTrackHeroCard h3 {
+      color: #F8FAFC !important;
+    }
+
+    [data-theme="dark"] .hero-track-card p,
+    body.dark-mode .hero-track-card p,
+    [data-theme="dark"] #activeTrackHeroCard p,
+    body.dark-mode #activeTrackHeroCard p {
+      color: #94A3B8 !important;
+    }
+
+    [data-theme="dark"] .hero-track-card .hero-engine-label,
+    body.dark-mode .hero-track-card .hero-engine-label,
+    [data-theme="dark"] #activeTrackHeroCard .hero-engine-label,
+    body.dark-mode #activeTrackHeroCard .hero-engine-label {
+      color: #94A3B8 !important;
+    }
+
+    [data-theme="dark"] .hero-track-card .badge,
+    body.dark-mode .hero-track-card .badge,
+    [data-theme="dark"] #activeTrackHeroCard .badge,
+    body.dark-mode #activeTrackHeroCard .badge {
+      background: rgba(99, 102, 241, 0.3) !important;
+      color: #C7D2FE !important;
+      border: 1px solid rgba(129, 140, 248, 0.5) !important;
+    }
+
+    [data-theme="dark"] .hero-track-card .btn-outline,
+    body.dark-mode .hero-track-card .btn-outline,
+    [data-theme="dark"] #activeTrackHeroCard .btn-outline,
+    body.dark-mode #activeTrackHeroCard .btn-outline {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(99, 102, 241, 0.6) !important;
+      color: #C7D2FE !important;
+    }
+
+    [data-theme="dark"] .hero-track-card .btn-outline:hover,
+    body.dark-mode .hero-track-card .btn-outline:hover,
+    [data-theme="dark"] #activeTrackHeroCard .btn-outline:hover,
+    body.dark-mode #activeTrackHeroCard .btn-outline:hover {
+      background: rgba(99, 102, 241, 0.25) !important;
+      border-color: #818CF8 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Active Track Pill */
+    .active-track-pill {
+      font-size: 0.7rem;
+      color: #4F46E5;
+      background: #EEF2FF;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 6px;
+      font-weight: 700;
+      display: inline-block;
+      vertical-align: middle;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    [data-theme="dark"] .active-track-pill,
+    body.dark-mode .active-track-pill {
+      color: #A5B4FC !important;
+      background: rgba(99, 102, 241, 0.25) !important;
+      border: 1px solid rgba(99, 102, 241, 0.5) !important;
+    }
+
+    .selected-career-item {
+      background: rgba(99, 102, 241, 0.08) !important;
+      border: 1.5px solid rgba(99, 102, 241, 0.4) !important;
+    }
+
+    [data-theme="dark"] .selected-career-item,
+    body.dark-mode .selected-career-item {
+      background: rgba(99, 102, 241, 0.18) !important;
+      border: 1.5px solid rgba(129, 140, 248, 0.55) !important;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15) !important;
+    }
+
+    /* Other Gradient Cards in Dark Mode */
+    [data-theme="dark"] #weeklyDigestCard,
+    body.dark-mode #weeklyDigestCard,
+    [data-theme="dark"] #verifiableCertCard,
+    body.dark-mode #verifiableCertCard,
+    [data-theme="dark"] #capstoneBlueprintsCard,
+    body.dark-mode #capstoneBlueprintsCard,
+    [data-theme="dark"] #hackathonsCard,
+    body.dark-mode #hackathonsCard,
+    [data-theme="dark"] #badgesShowcaseCard,
+    body.dark-mode #badgesShowcaseCard {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+      color: #F8FAFC !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    [data-theme="dark"] #weeklyDigestCard h4,
+    body.dark-mode #weeklyDigestCard h4,
+    [data-theme="dark"] #verifiableCertCard h4,
+    body.dark-mode #verifiableCertCard h4,
+    [data-theme="dark"] #capstoneBlueprintsCard h4,
+    body.dark-mode #capstoneBlueprintsCard h4,
+    [data-theme="dark"] #hackathonsCard h4,
+    body.dark-mode #hackathonsCard h4,
+    [data-theme="dark"] #badgesShowcaseCard h4,
+    body.dark-mode #badgesShowcaseCard h4 {
+      color: #F8FAFC !important;
+    }
+
   </style>
 
 </head>
@@ -336,7 +465,7 @@
 
       <!-- ===== 1. AI CAREER NAVIGATOR ML MODEL HERO CARD ===== -->
 
-      <div class="card mb-3" style="background:linear-gradient(135deg, rgba(238,242,255,0.85), rgba(240,253,244,0.85)); border:1px solid rgba(99,102,241,0.25); box-shadow:0 8px 24px rgba(99,102,241,0.08); padding:24px;">
+      <div id="activeTrackHeroCard" class="card mb-3 hero-track-card">
 
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
 
@@ -354,7 +483,7 @@
 
                 <span class="badge badge-primary" style="font-size:0.75rem; padding:3px 10px; text-transform:uppercase; letter-spacing:0.06em;">AI Assessment &amp; Career Match</span>
 
-                <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">Random Forest ML Engine</span>
+                <span class="hero-engine-label" style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">Random Forest ML Engine</span>
 
               </div>
 
@@ -522,7 +651,7 @@
 
                 <div class="career-info" style="flex:1;">
 
-                  <strong>UI/UX Design <span style="font-size:0.7rem; color:#4F46E5; background:#EEF2FF; padding:2px 6px; border-radius:10px; margin-left:6px;">Active Track</span></strong>
+                  <strong>UI/UX Design <span class="active-track-pill">Active Track</span></strong>
 
                   <p>Product Design &amp; Prototyping</p>
 
@@ -756,7 +885,7 @@
 
           <!-- Weekly AI Progress Digest & Goal Setter -->
 
-          <div class="card mt-3" style="background:linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,249,255,0.95)); border:1px solid rgba(14,165,233,0.25);">
+          <div id="weeklyDigestCard" class="card mt-3" style="background:linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,249,255,0.95)); border:1px solid rgba(14,165,233,0.25);">
 
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
 
@@ -848,7 +977,7 @@
 
           <!-- Verifiable Certificate Card -->
 
-          <div class="card mt-3" style="background:linear-gradient(135deg, #FAF5FF, #F3E8FF); border:1px solid rgba(168,85,247,0.3);">
+          <div id="verifiableCertCard" class="card mt-3" style="background:linear-gradient(135deg, #FAF5FF, #F3E8FF); border:1px solid rgba(168,85,247,0.3);">
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
 
@@ -1236,7 +1365,7 @@
 
           <!-- AI Portfolio & Capstone Blueprints Card -->
 
-          <div class="card mt-3" style="border: 1.5px solid rgba(79,70,229,0.25); background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(245,243,255,0.98));">
+          <div id="capstoneBlueprintsCard" class="card mt-3" style="border: 1.5px solid rgba(79,70,229,0.25); background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(245,243,255,0.98));">
 
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
 
@@ -1364,7 +1493,7 @@
 
           <!-- Upcoming Tech Hackathons & Coding Contests Card -->
 
-          <div class="card mt-3" style="border: 1px solid rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(254, 242, 242, 0.95));">
+          <div id="hackathonsCard" class="card mt-3" style="border: 1px solid rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(254, 242, 242, 0.95));">
 
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
 
@@ -1392,7 +1521,7 @@
 
           <!-- 🏆 Badges & Trophies Showcase Card -->
 
-          <div class="card mt-3" style="border: 1.5px solid rgba(245, 158, 11, 0.3); background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(254, 243, 199, 0.35));">
+          <div id="badgesShowcaseCard" class="card mt-3" style="border: 1.5px solid rgba(245, 158, 11, 0.3); background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(254, 243, 199, 0.35));">
 
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
 
@@ -3022,7 +3151,7 @@ function updateCareerList(careers) {
 
             <div class="career-info" style="flex:1;">
 
-                <strong>${c.careerName} ${isSelected ? '<span style="font-size:0.7rem; color:#4F46E5; background:#EEF2FF; padding:2px 6px; border-radius:10px; margin-left:6px;">Active Track</span>' : ''}</strong>
+                <strong>${c.careerName} ${isSelected ? '<span class="active-track-pill">Active Track</span>' : ''}</strong>
 
                 <p>${c.difficultyLevel || 'AI Recommended Pathway'}</p>
 
