@@ -8,7 +8,7 @@
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20%7C%20MongoDB-003B57?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Tests Passing](https://img.shields.io/badge/Tests-50%2F50%20(100%25)-success?style=flat&logo=pytest&logoColor=white)](#-automated-testing-suite)
 [![Frontend](https://img.shields.io/badge/Frontend-GitHub%20Pages-222222?style=flat&logo=github&logoColor=white)](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/)
-[![Backend](https://img.shields.io/badge/Backend-Railway-0B0D0E?style=flat&logo=railway&logoColor=white)](https://railway.app/)
+[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat&logo=render&logoColor=white)](https://ai-career-navigator-vzcm.onrender.com)
 
 > An enterprise-grade, AI-driven career guidance, skill acceleration, and cryptographic credentialing platform tailored for Computer Science undergraduates, engineering students, and first-generation tech professionals.
 
@@ -19,9 +19,9 @@
 | Portal | URL | Description |
 | :--- | :--- | :--- |
 | 🌐 **Live Web Application** | [asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/) | Public Single-Page Application & Student Hub |
-| 📚 **Interactive Swagger API** | [ai-career-navigator-production-b369.up.railway.app/docs](https://ai-career-navigator-production-b369.up.railway.app/docs) | OpenAPI 3.0 Documentation & Live API Playground |
+| 📚 **Interactive Swagger API** | [ai-career-navigator-vzcm.onrender.com/docs](https://ai-career-navigator-vzcm.onrender.com/docs) | OpenAPI 3.0 Documentation & Live API Playground |
 | 🛡️ **Recruiter Credential Verifier** | [asthakhade13-svg.github.io/.../verify.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId=CN-2026-AIML-783E4B) | Public Cryptographic Verification Ledger |
-| 👤 **Public Student Showcase** | [asthakhade13-svg.github.io/.../portfolio.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/portfolio.html?studentId=user_001) | Shareable Recruiter Portfolio & Capstones |
+| 👤 **Public Student Showcase** | [asthakhade13-svg.github.io/.../portfolio.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/portfolio.html) | Shareable Recruiter Portfolio & Capstones |
 
 ---
 
@@ -189,7 +189,7 @@
 | **Databases** | SQLite3 (Zero-downtime local persistence), MongoDB / Atlas (pymongo) |
 | **Networking & Realtime** | WebSockets, Outbound SMTP (Email OTP & Digests), Feedparser (RSS) |
 | **Testing** | Comprehensive Automated Verification Suite (50 integration test suites) |
-| **Deployment** | GitHub Pages (Frontend), Railway / Render (Cloud API Backend) |
+| **Deployment** | GitHub Pages (Frontend), Render (Cloud API Backend) |
 
 ---
 
@@ -365,6 +365,7 @@ AI-CAREER-NAVIGATOR/
 ├── chatbot.html                 # AI Mentor with TTS voice & roadmap memory
 ├── quiz.html                    # Adaptive testing & mistake review engine
 ├── internships.html             # Tech internships portal & 1-click apply
+├── interview.html               # AI Mock Interview Simulator (4-round STAR + DSA)
 ├── portfolio.html               # Public student showcase & recruiter portfolio
 ├── verify.html                  # Credential verification & LinkedIn 1-click add
 ├── login.html                   # Auth with Google One-Tap & SMTP OTP reset
