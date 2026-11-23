@@ -19,9 +19,11 @@
 | Portal | URL | Description |
 | :--- | :--- | :--- |
 | 🌐 **Live Web Application** | [asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/) | Public Single-Page Application & Student Hub |
+| 🤖 **AI Mock Interview Simulator** | [asthakhade13-svg.github.io/.../interview.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/interview.html) | 4-Round STAR + DSA + Technical Live Interview |
 | 📚 **Interactive Swagger API** | [ai-career-navigator-vzcm.onrender.com/docs](https://ai-career-navigator-vzcm.onrender.com/docs) | OpenAPI 3.0 Documentation & Live API Playground |
-| 🛡️ **Recruiter Credential Verifier** | [asthakhade13-svg.github.io/.../verify.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId=CN-2026-AIML-783E4B) | Public Cryptographic Verification Ledger |
+| 🛡️ **Recruiter Credential Verifier** | [asthakhade13-svg.github.io/.../verify.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html) | Public Cryptographic Verification Ledger |
 | 👤 **Public Student Showcase** | [asthakhade13-svg.github.io/.../portfolio.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/portfolio.html) | Shareable Recruiter Portfolio & Capstones |
+| 📊 **Progress & Analytics** | [asthakhade13-svg.github.io/.../progress.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/progress.html) | Study tracker, leaderboard & weekly digest |
 
 ---
 
@@ -77,7 +79,19 @@
 
 ---
 
-### 5. 📄 Resume ATS Scanner & Tech Internships Portal
+### 5. 🎤 AI Mock Interview Simulator (`interview.html`)
+* **4-Round Structured Interview Pipeline**:
+  * **Round 1 — Behavioral (STAR)**: Situational & leadership questions scored against the STAR framework.
+  * **Round 2 — Technical Depth**: Domain-specific conceptual questions (DSA, System Design, OS, DBMS).
+  * **Round 3 — Live Coding & DSA**: Real-time coding challenge with in-browser code execution and runtime benchmarks.
+  * **Round 4 — Scorecard & Roadmap**: AI-generated rubric scorecard with per-round grades and targeted remediation links.
+* **Role & Company Tier Selection**: Choose from 5 career roles (Full-Stack, AI/ML, Data Science, Cloud/DevOps, Cybersecurity) × 3 hiring tiers (FAANG, High-Growth Startup, Global IT MNC).
+* **Session Persistence**: Interview state saved to `sessionStorage` — survives page refresh mid-session.
+* **Dark Mode Aware**: Full theme support via `[data-theme="dark"]` CSS variables.
+
+---
+
+### 6. 📄 Resume ATS Scanner & Tech Internships Portal
 * **Resume ATS Scanner**:
   * Semantic keyword density and industry gap detection.
   * Instant ATS compatibility score (0–100%) and actionable formatting suggestions.
@@ -364,8 +378,10 @@ AI-CAREER-NAVIGATOR/
 ├── roadmap.html                 # Milestone roadmap, scratchpad & code runner
 ├── chatbot.html                 # AI Mentor with TTS voice & roadmap memory
 ├── quiz.html                    # Adaptive testing & mistake review engine
-├── internships.html             # Tech internships portal & 1-click apply
 ├── interview.html               # AI Mock Interview Simulator (4-round STAR + DSA)
+├── internships.html             # Tech internships portal & 1-click apply
+├── careers.html                 # Career exploration & track discovery
+├── progress.html                # Study analytics, leaderboard & weekly digest
 ├── portfolio.html               # Public student showcase & recruiter portfolio
 ├── verify.html                  # Credential verification & LinkedIn 1-click add
 ├── login.html                   # Auth with Google One-Tap & SMTP OTP reset
@@ -380,16 +396,24 @@ AI-CAREER-NAVIGATOR/
 │   ├── database.py              # SQLite & MongoDB database interfaces
 │   ├── test_all_features.py     # 50/50 Comprehensive automated test suite
 │   ├── routes/                  # Modular FastAPI routers
-│   │   ├── auth_routes.py       # Authentication, 2FA, GDPR & sessions
-│   │   ├── basic_info_routes.py # 19-Question assessment endpoints
-│   │   ├── certificate_routes.py# Verifiable credentials & LinkedIn payloads
-│   │   ├── chatbot_routes.py    # LLM conversation & voice transcription
-│   │   ├── internship_routes.py # Internships, RSS scraper & cover letters
-│   │   ├── portfolio_routes.py  # Public recruiter showcase endpoints
-│   │   ├── progress_routes.py   # Badges, study stopwatch & analytics
-│   │   ├── quiz_routes.py       # Adaptive assessment engine
-│   │   ├── roadmap_routes.py    # Roadmaps, code runner & milestone notes
-│   │   └── websocket_routes.py  # Real-time peer study room sockets
+│   │   ├── auth_routes.py           # Authentication, 2FA, GDPR & sessions
+│   │   ├── basic_info_routes.py     # 19-Question assessment endpoints
+│   │   ├── adaptive_quiz_routes.py  # Adaptive quiz engine (difficulty calibration)
+│   │   ├── quiz_routes.py           # Quiz history & attempt logging
+│   │   ├── certificate_routes.py    # Verifiable credentials & LinkedIn payloads
+│   │   ├── chatbot_routes.py        # LLM conversation & voice transcription
+│   │   ├── career_routes.py         # Career exploration & track discovery
+│   │   ├── dashboard_routes.py      # Dashboard stats & omnisearch
+│   │   ├── interview_routes.py      # AI Mock Interview sessions & scoring
+│   │   ├── internship_routes.py     # Internships, RSS scraper & cover letters
+│   │   ├── notification_routes.py   # Notification center & mark-read
+│   │   ├── portfolio_routes.py      # Public recruiter showcase endpoints
+│   │   ├── progress_routes.py       # Badges, study stopwatch & analytics
+│   │   ├── project_routes.py        # Capstone projects & peer reviews
+│   │   ├── recommendation_routes.py # ML career recommendation engine
+│   │   ├── resume_routes.py         # ATS resume scanner
+│   │   ├── roadmap_routes.py        # Roadmaps, code runner & milestone notes
+│   │   └── websocket_routes.py      # Real-time peer study room sockets
 │   ├── services/                # Business logic & ML integrations
 │   │   ├── auth_service.py      # SQLite tables, password hashing & JWT
 │   │   ├── certificate_service.py# Cryptographic signatures & SHA-256
