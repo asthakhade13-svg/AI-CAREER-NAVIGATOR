@@ -18,12 +18,36 @@
 
 | Portal | URL | Description |
 | :--- | :--- | :--- |
-| 🌐 **Live Web Application** | [asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/) | Public Single-Page Application & Student Hub |
+| 🌐 **Live Web Application** | [asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/) | Public landing page & student hub |
+| 🔑 **Login** | [asthakhade13-svg.github.io/.../login.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/login.html) | Student login → auto-redirects to ML Assessment |
+| 🧠 **ML Career Assessment** | [asthakhade13-svg.github.io/.../index.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/index.html) | Random Forest career match → choose Adaptive Test or Dashboard |
+| 📊 **Student Dashboard** | [asthakhade13-svg.github.io/.../dashboard.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/dashboard.html) | Main analytics, roadmap & progress hub |
 | 🤖 **AI Mock Interview Simulator** | [asthakhade13-svg.github.io/.../interview.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/interview.html) | 4-Round STAR + DSA + Technical Live Interview |
 | 📚 **Interactive Swagger API** | [ai-career-navigator-vzcm.onrender.com/docs](https://ai-career-navigator-vzcm.onrender.com/docs) | OpenAPI 3.0 Documentation & Live API Playground |
 | 🛡️ **Recruiter Credential Verifier** | [asthakhade13-svg.github.io/.../verify.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html) | Public Cryptographic Verification Ledger |
 | 👤 **Public Student Showcase** | [asthakhade13-svg.github.io/.../portfolio.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/portfolio.html) | Shareable Recruiter Portfolio & Capstones |
-| 📊 **Progress & Analytics** | [asthakhade13-svg.github.io/.../progress.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/progress.html) | Study tracker, leaderboard & weekly digest |
+| 📈 **Progress & Analytics** | [asthakhade13-svg.github.io/.../progress.html](https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/progress.html) | Study tracker, leaderboard & weekly digest |
+
+---
+
+## 🗺️ User Journey Flow
+
+```
+┌─────────────┐     ┌──────────────────────────────────┐
+│  login.html │────▶│  index.html?start=1               │
+│  register   │     │  🧠 ML Career Assessment           │
+└─────────────┘     │  (Random Forest · 19 Questions)   │
+                    └─────────────────┬────────────────-─┘
+                                      │  Results ready
+                          ┌───────────┴───────────┐
+                          ▼                       ▼
+               ⚡ quiz.html             📊 dashboard.html
+               Adaptive Test           Student Dashboard
+               (AI difficulty          (Roadmap, Progress,
+                calibration)            Certificates...)
+```
+
+> **Returning users** who already completed the ML assessment see a **Welcome Back modal** with the two choices — no need to redo the full questionnaire. A "Retake ML Assessment" link is available if they want to re-evaluate.
 
 ---
 
