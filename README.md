@@ -129,7 +129,13 @@
 ---
 
 ### 7. 🛡️ Recruiter Verification & Official LinkedIn Certification (`verify.html`)
-* **Tamper-Proof Cryptographic Ledger**: Every certificate is stamped with an immutable **SHA-256 cryptographic verification hash**.
+* **Dual Verification Modes**:
+  * **Lookup by Certificate ID**: Direct verification against the immutable ledger returning student identity, track title, skills mastered, and metadata verification hash.
+  * **Document Tamper Detection via File Upload**: Upload the exported certificate file (PNG, JPG, or PDF). The client pre-computes the SHA-256 hash via Web Cryptography API (`crypto.subtle`), and the backend verifies the byte-level payload against the registered fingerprint.
+* **SHA-256 Cryptographic Tamper Detection**:
+  * **Original Registration**: When a certificate is generated and exported, our system calculates a unique 256-bit SHA-256 document fingerprint and registers it in the tamper-proof ledger (`POST /api/v1/certificates/register-file-hash`).
+  * **Integrity Comparison**: When an employer or recruiter uploads a certificate (`POST /api/v1/certificates/verify-file`), the backend computes the uploaded file's hash and compares it bit-for-bit with the stored original.
+  * **Instant Verification**: If both hashes match exactly, the credential's integrity is verified (Authentic). Any modification or document tampering produces a hash mismatch (Tampered).
 * **1-Click "Add to LinkedIn Profile"**:
   * Direct integration launching LinkedIn's official Certification flow pre-filled with:
     * `startTask=CERTIFICATION_NAME`
@@ -143,6 +149,7 @@
 * **High-Resolution PNG Export (1920×1080 Full HD)**:
   * Pure client-side HTML5 Canvas rasterization (zero external library or CORS dependencies).
   * Rendered with ornamental navy & gold borders, central watermark, gold accreditation seal, competencies pills, and curriculum director signature.
+  * Auto-registers document SHA-256 hash upon export for zero-friction tamper protection.
 * **Print-Ready PDF Certificate**: Official printable certificate equipped with a recruiter verification QR code.
 
 ---
@@ -279,6 +286,8 @@
 | `POST` | `/api/v1/certificates/generate` | Generate cryptographically signed certificate |
 | `GET`  | `/api/v1/certificates/verify/{cert_id}` | Public cryptographic verification lookup |
 | `GET`  | `/api/v1/certificates/user/{student_id}` | Retrieve all student certificates |
+| `POST` | `/api/v1/certificates/register-file-hash` | Register original file SHA-256 fingerprint |
+| `POST` | `/api/v1/certificates/verify-file` | Upload certificate file to verify SHA-256 integrity |
 | `GET`  | `/api/v1/certificates/share-payload/{cert_id}` | Pre-formatted LinkedIn 1-click & feed URLs |
 | `GET`  | `/api/v1/certificates/share-card/{cert_id}` | Structured social embed card metadata |
 | `GET`  | `/api/v1/certificates/download-pdf/{cert_id}` | Printable PDF with recruiter QR code |
