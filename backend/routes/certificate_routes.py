@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
@@ -7,7 +7,9 @@ import logging
 from services.certificate_service import (
     generate_certificate_record,
     verify_certificate_id,
-    get_student_certificates
+    get_student_certificates,
+    register_document_hash,
+    verify_document_hash
 )
 
 logger = logging.getLogger(__name__)
@@ -248,4 +250,71 @@ def download_certificate_pdf(cert_id: str):
 </html>"""
 
     return HTMLResponse(content=html_content)
+
+
+# ── Document-level SHA-256 tamper detection endpoints ─────────────────────────
+
+@router.post("/register-file-hash")
+async def register_file_hash(
+    cert_id: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """
+    Registers the SHA-256 fingerprint of the original exported certificate file.
+    Call this once when the student first downloads/exports their certificate.
+    Subsequent uploads by any party can then be verified against this fingerprint.
+    """
+    try:
+        file_bytes = await file.read()
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+        if len(file_bytes) > 20 * 1024 * 1024:  # 20 MB max
+            raise HTTPException(status_code=400, detail="File too large (max 20 MB).")
+
+        result = register_document_hash(cert_id, file_bytes)
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("error", "Registration failed."))
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"register-file-hash error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/verify-file")
+async def verify_file(
+    cert_id: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """
+    Accepts an uploaded certificate file and a Certificate ID.
+    Computes SHA-256 of the uploaded file and compares it against
+    the stored document fingerprint to detect tampering.
+
+    Returns:
+      - isAuthentic: true  → file matches original (untampered)
+      - isAuthentic: false → file has been modified (tampered)
+    """
+    try:
+        file_bytes = await file.read()
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+        if len(file_bytes) > 20 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large (max 20 MB).")
+
+        result = verify_document_hash(cert_id, file_bytes)
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=404 if "not found" in result.get("error", "").lower() else 400,
+                detail=result.get("error", "Verification failed.")
+            )
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"verify-file error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 

@@ -7,6 +7,22 @@ from services.auth_service import get_db_connection
 
 logger = logging.getLogger(__name__)
 
+# ── Ensure document_hash column exists (safe migration) ───────────────────────
+def _ensure_document_hash_column():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(certificates)")
+        cols = [row["name"] for row in cursor.fetchall()]
+        if "document_hash" not in cols:
+            cursor.execute("ALTER TABLE certificates ADD COLUMN document_hash TEXT DEFAULT NULL")
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"document_hash migration: {e}")
+
+_ensure_document_hash_column()
+
 TRACK_SKILLS_MAP = {
     "aiml": [
         "Python for Data Science", "Supervised & Unsupervised ML",
@@ -155,3 +171,108 @@ def get_student_certificates(student_id: str) -> List[Dict[str, Any]]:
             "verificationUrl": f"https://asthakhade13-svg.github.io/AI-CAREER-NAVIGATOR/verify.html?certId={r['certificate_id']}"
         })
     return results
+
+
+# ── Document-level SHA-256 tamper detection ───────────────────────────────────
+
+def register_document_hash(cert_id: str, file_bytes: bytes) -> Dict[str, Any]:
+    """
+    Computes SHA-256 of the uploaded certificate file and stores it
+    as the official document fingerprint for future tamper detection.
+    Called when the student first downloads/exports their certificate.
+    """
+    doc_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT certificate_id, document_hash FROM certificates WHERE certificate_id = ?",
+        (cert_id.strip(),)
+    )
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return {"success": False, "error": "Certificate ID not found"}
+
+    if row["document_hash"]:
+        # Already registered — return existing fingerprint (don't overwrite)
+        conn.close()
+        return {
+            "success": True,
+            "certId": cert_id,
+            "documentHash": row["document_hash"],
+            "alreadyRegistered": True,
+            "message": "Document fingerprint already registered for this certificate."
+        }
+
+    cursor.execute(
+        "UPDATE certificates SET document_hash = ? WHERE certificate_id = ?",
+        (doc_hash, cert_id.strip())
+    )
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "certId": cert_id,
+        "documentHash": doc_hash,
+        "alreadyRegistered": False,
+        "message": "Document fingerprint registered successfully."
+    }
+
+
+def verify_document_hash(cert_id: str, file_bytes: bytes) -> Dict[str, Any]:
+    """
+    Computes SHA-256 of an uploaded file and compares it against
+    the stored document fingerprint to detect tampering.
+    Returns is_authentic=True only when hashes match exactly.
+    """
+    uploaded_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT certificate_id, student_name, track_title, verification_hash, document_hash FROM certificates WHERE certificate_id = ?",
+        (cert_id.strip(),)
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return {
+            "success": False,
+            "certId": cert_id,
+            "error": "Certificate ID not found in ledger."
+        }
+
+    stored_doc_hash = row["document_hash"]
+
+    if not stored_doc_hash:
+        return {
+            "success": False,
+            "certId": cert_id,
+            "uploadedHash": uploaded_hash,
+            "error": "No document fingerprint registered for this certificate yet. "
+                     "The original file must be registered first via the export flow."
+        }
+
+    is_authentic = (uploaded_hash == stored_doc_hash)
+
+    return {
+        "success": True,
+        "certId": cert_id,
+        "studentName": row["student_name"],
+        "trackTitle": row["track_title"],
+        "isAuthentic": is_authentic,
+        "uploadedHash": uploaded_hash,
+        "storedHash": stored_doc_hash,
+        "metadataHash": row["verification_hash"],
+        "tamperStatus": "AUTHENTIC" if is_authentic else "TAMPERED",
+        "message": (
+            "✅ Document integrity verified. File matches the original registered certificate."
+            if is_authentic else
+            "❌ Document mismatch detected. This file has been modified or is not the original certificate."
+        )
+    }
+

@@ -123,7 +123,21 @@
 
   <main class="verify-container">
 
-    <!-- Search Section -->
+    <!-- ═══ VERIFY TABS ═══ -->
+    <div style="display:flex; gap:12px; margin-bottom:20px; justify-content:center;">
+      <button id="tabIdBtn" onclick="switchVerifyTab('id')" style="
+        padding:10px 24px; border-radius:12px; font-weight:700; font-size:0.9rem;
+        background:#4F46E5; color:#fff; border:none; cursor:pointer; transition:all 0.2s;
+      ">🔍 Verify by Certificate ID</button>
+      <button id="tabFileBtn" onclick="switchVerifyTab('file')" style="
+        padding:10px 24px; border-radius:12px; font-weight:700; font-size:0.9rem;
+        background:rgba(79,70,229,0.1); color:#4F46E5; border:1.5px solid rgba(79,70,229,0.3);
+        cursor:pointer; transition:all 0.2s;
+      ">📄 Verify by File Upload</button>
+    </div>
+
+    <!-- Search Section (Tab: ID) -->
+    <div id="tabIdPanel" class="verify-search-card">
     <div class="verify-search-card">
       <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(79,70,229,0.1); color: #4F46E5; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 16px auto;">
         <i class="fas fa-shield-alt"></i>
@@ -139,7 +153,53 @@
           <i class="fas fa-search"></i> Verify
         </button>
       </div>
-    </div>
+    </div><!-- /tabIdPanel -->
+
+    <!-- File Upload Section (Tab: File) -->
+    <div id="tabFilePanel" class="verify-search-card" style="display:none;">
+      <div style="width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,0.1);color:#10B981;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px;">
+        <i class="fas fa-file-shield"></i>
+      </div>
+      <h2 style="font-size:1.5rem;font-weight:800;color:#1e293b;margin-bottom:6px;">Document Tamper Detection</h2>
+      <p style="color:#64748b;font-size:0.9rem;max-width:480px;margin:0 auto 20px;">
+        Upload your exported certificate file (PNG or PDF). We compute its SHA-256 fingerprint
+        and compare it against the original registered hash to detect any modifications.
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:480px;margin:0 auto;">
+        <input type="text" id="fileCertIdInput" placeholder="Certificate ID  e.g. CN-2026-AIML-783E4B"
+          style="padding:12px 16px;border-radius:12px;border:1.5px solid #e2e8f0;font-size:0.95rem;width:100%;box-sizing:border-box;"/>
+
+        <!-- Drop zone -->
+        <div id="fileDropZone" onclick="document.getElementById('certFileInput').click()"
+          ondragover="event.preventDefault();this.style.borderColor='#4F46E5';"
+          ondragleave="this.style.borderColor='#cbd5e1';"
+          ondrop="handleFileDrop(event)"
+          style="border:2px dashed #cbd5e1;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:border-color 0.2s;">
+          <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:#94a3b8;margin-bottom:10px;display:block;"></i>
+          <p style="color:#64748b;font-size:0.9rem;margin:0;">
+            <strong style="color:#4F46E5;">Click to browse</strong> or drag & drop<br/>
+            <span style="font-size:0.8rem;">PNG, JPG or PDF · Max 20 MB</span>
+          </p>
+          <div id="fileSelectedName" style="margin-top:10px;font-size:0.85rem;color:#4F46E5;font-weight:600;"></div>
+        </div>
+        <input type="file" id="certFileInput" accept=".png,.jpg,.jpeg,.pdf" style="display:none;" onchange="onFileSelected(this)"/>
+
+        <!-- Hash preview -->
+        <div id="fileHashPreview" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <p style="font-size:0.78rem;color:#64748b;margin:0 0 4px;">SHA-256 of selected file:</p>
+          <code id="fileHashValue" style="font-size:0.75rem;color:#4F46E5;word-break:break-all;"></code>
+        </div>
+
+        <button onclick="submitFileVerification()" id="fileVerifyBtn"
+          style="padding:14px;border-radius:12px;background:#4F46E5;color:#fff;border:none;font-size:0.95rem;font-weight:700;cursor:pointer;">
+          <i class="fas fa-fingerprint"></i> Verify Document Integrity
+        </button>
+      </div>
+
+      <!-- File verify result -->
+      <div id="fileVerifyResult" style="display:none;margin-top:24px;border-radius:16px;padding:24px;text-align:center;"></div>
+    </div><!-- /tabFilePanel -->
 
     <!-- Verification Loading -->
     <div id="verifyLoading" style="display: none; text-align: center; margin-top: 30px;">
@@ -337,6 +397,127 @@
   <script>
     let currentVerifiedCertId = null;
     let currentCertData = null;
+    let selectedFileForVerification = null;
+
+    // ── Tab switcher ─────────────────────────────────────────────────────────
+    function switchVerifyTab(tab) {
+      const isId = tab === 'id';
+      document.getElementById('tabIdPanel').style.display   = isId ? '' : 'none';
+      document.getElementById('tabFilePanel').style.display = isId ? 'none' : '';
+      document.getElementById('tabIdBtn').style.background   = isId ? '#4F46E5' : 'rgba(79,70,229,0.1)';
+      document.getElementById('tabIdBtn').style.color        = isId ? '#fff' : '#4F46E5';
+      document.getElementById('tabFileBtn').style.background = isId ? 'rgba(79,70,229,0.1)' : '#4F46E5';
+      document.getElementById('tabFileBtn').style.color      = isId ? '#4F46E5' : '#fff';
+      // hide results when switching tabs
+      document.getElementById('fileVerifyResult').style.display = 'none';
+    }
+
+    // ── File selection & SHA-256 computation ─────────────────────────────────
+    function handleFileDrop(e) {
+      e.preventDefault();
+      document.getElementById('fileDropZone').style.borderColor = '#cbd5e1';
+      const file = e.dataTransfer.files[0];
+      if (file) processSelectedFile(file);
+    }
+
+    function onFileSelected(input) {
+      if (input.files[0]) processSelectedFile(input.files[0]);
+    }
+
+    async function processSelectedFile(file) {
+      selectedFileForVerification = file;
+      document.getElementById('fileSelectedName').textContent = '📎 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+      // Compute SHA-256 client-side
+      const buf = await file.arrayBuffer();
+      const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+      const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      document.getElementById('fileHashValue').textContent = hashHex;
+      document.getElementById('fileHashPreview').style.display = 'block';
+    }
+
+    // ── Submit file verification to backend ──────────────────────────────────
+    async function submitFileVerification() {
+      const certId = document.getElementById('fileCertIdInput').value.trim().toUpperCase();
+      const resultEl = document.getElementById('fileVerifyResult');
+
+      if (!certId) { alert('Please enter the Certificate ID.'); return; }
+      if (!selectedFileForVerification) { alert('Please select a certificate file to verify.'); return; }
+
+      const btn = document.getElementById('fileVerifyBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Computing hash & verifying...';
+      resultEl.style.display = 'none';
+
+      try {
+        const BASE = (typeof API_BASE !== 'undefined' ? API_BASE :
+          (window.location.hostname.includes('github.io')
+            ? 'https://ai-career-navigator-vzcm.onrender.com'
+            : 'http://localhost:8000'));
+
+        const formData = new FormData();
+        formData.append('cert_id', certId);
+        formData.append('file', selectedFileForVerification);
+
+        const res = await fetch(`${BASE}/api/v1/certificates/verify-file`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          // No document fingerprint registered yet — show info
+          resultEl.style.display = 'block';
+          resultEl.style.background = '#FEF3C7';
+          resultEl.style.border = '1.5px solid #F59E0B';
+          resultEl.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="color:#F59E0B;font-size:2rem;margin-bottom:10px;display:block;"></i>
+            <strong style="color:#92400E;font-size:1.05rem;">No Fingerprint Registered</strong>
+            <p style="color:#78350F;font-size:0.88rem;margin-top:8px;">${data.detail || 'This certificate has no document fingerprint on record. The student must export and register the original file first.'}</p>
+            <p style="font-size:0.8rem;color:#92400E;margin-top:6px;">Certificate ID: <code>${certId}</code></p>
+          `;
+        } else if (data.isAuthentic) {
+          resultEl.style.display = 'block';
+          resultEl.style.background = 'linear-gradient(135deg, #ECFDF5, #D1FAE5)';
+          resultEl.style.border = '1.5px solid #10B981';
+          resultEl.innerHTML = `
+            <i class="fas fa-check-circle" style="color:#10B981;font-size:2.5rem;margin-bottom:10px;display:block;"></i>
+            <strong style="color:#065F46;font-size:1.15rem;">✅ Document Authentic — Untampered</strong>
+            <p style="color:#047857;font-size:0.9rem;margin:8px 0 0;">This file matches the original registered certificate exactly.</p>
+            <div style="margin-top:16px;text-align:left;background:rgba(255,255,255,0.7);border-radius:10px;padding:14px;font-size:0.82rem;">
+              <div><strong>Certificate ID:</strong> <code>${data.certId}</code></div>
+              <div><strong>Student:</strong> ${data.studentName || '—'}</div>
+              <div><strong>Track:</strong> ${data.trackTitle || '—'}</div>
+              <div style="margin-top:8px;"><strong>File SHA-256:</strong><br/><code style="word-break:break-all;color:#10B981;">${data.uploadedHash}</code></div>
+              <div style="margin-top:4px;"><strong>Stored SHA-256:</strong><br/><code style="word-break:break-all;color:#10B981;">${data.storedHash}</code></div>
+            </div>
+          `;
+        } else {
+          resultEl.style.display = 'block';
+          resultEl.style.background = 'linear-gradient(135deg, #FEF2F2, #FEE2E2)';
+          resultEl.style.border = '1.5px solid #EF4444';
+          resultEl.innerHTML = `
+            <i class="fas fa-times-circle" style="color:#EF4444;font-size:2.5rem;margin-bottom:10px;display:block;"></i>
+            <strong style="color:#7F1D1D;font-size:1.15rem;">❌ Tampered Document Detected</strong>
+            <p style="color:#991B1B;font-size:0.9rem;margin:8px 0 0;">This file does NOT match the original registered certificate. It may have been modified.</p>
+            <div style="margin-top:16px;text-align:left;background:rgba(255,255,255,0.7);border-radius:10px;padding:14px;font-size:0.82rem;">
+              <div><strong>Certificate ID:</strong> <code>${data.certId}</code></div>
+              <div style="margin-top:8px;"><strong>Uploaded SHA-256:</strong><br/><code style="word-break:break-all;color:#EF4444;">${data.uploadedHash}</code></div>
+              <div style="margin-top:4px;"><strong>Original SHA-256:</strong><br/><code style="word-break:break-all;color:#10B981;">${data.storedHash}</code></div>
+              <div style="margin-top:8px;color:#991B1B;font-weight:600;">⚠️ The two hashes do not match. Report this credential as potentially fraudulent.</div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        resultEl.style.display = 'block';
+        resultEl.style.background = '#FEF2F2';
+        resultEl.style.border = '1px solid #F87171';
+        resultEl.innerHTML = `<p style="color:#991B1B;">Error: ${err.message}</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-fingerprint"></i> Verify Document Integrity';
+      }
+    }
 
     // Extract query parameter if provided
     document.addEventListener('DOMContentLoaded', () => {
@@ -763,8 +944,8 @@
         ctx.fillStyle = '#64748b';
         ctx.fillText('Verify online at ' + verifyUrl, 960, 1020);
 
-        // Export to PNG blob and trigger download
-        canvas.toBlob(blob => {
+        // Export to PNG blob and trigger download + auto-register document hash
+        canvas.toBlob(async blob => {
           if (!blob) {
             // Fallback to toDataURL
             const dataUrl = canvas.toDataURL('image/png');
@@ -783,6 +964,20 @@
             link.click();
             document.body.removeChild(link);
             setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            // Auto-register SHA-256 fingerprint of the exported PNG
+            try {
+              const BASE = (typeof API_BASE !== 'undefined' ? API_BASE :
+                (window.location.hostname.includes('github.io')
+                  ? 'https://ai-career-navigator-vzcm.onrender.com'
+                  : 'http://localhost:8000'));
+              const formData = new FormData();
+              formData.append('cert_id', certId);
+              formData.append('file', blob, `CareerNav_Certificate_${certId}.png`);
+              await fetch(`${BASE}/api/v1/certificates/register-file-hash`, {
+                method: 'POST', body: formData
+              });
+            } catch(e) { /* silent — doesn't block download */ }
           }
 
           if (btn) {
