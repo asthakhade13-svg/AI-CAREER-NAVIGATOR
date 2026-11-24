@@ -340,8 +340,8 @@ function goToDashboard(e) {
         }
     } catch(err) {}
 
-    // Immediate instant redirect to journey / dashboard
-    window.location.replace('dashboard.html');
+    // Immediate instant redirect → ML assessment (auto-starts questionnaire)
+    window.location.replace('index.html?start=1');
     return false;
 }
 
@@ -496,7 +496,7 @@ async function handleResetPassword(e) {
 
         setTimeout(() => {
             closeForgotModal();
-            window.location.replace('dashboard.html');
+            window.location.replace('index.html?start=1');
         }, 1400);
 
     } catch(err) {
@@ -579,12 +579,12 @@ async function confirmGoogleOneTapLogin(email = '', name = '') {
         }
 
         closeGoogleOneTapModal();
-        window.location.replace('dashboard.html');
+        window.location.replace('index.html?start=1');
     } catch(e) {
         console.error('Google One-Tap error:', e);
         TokenManager.save('jwt_google_fallback');
         UserManager.save({ fullName: name, email: email, role: 'STUDENT' });
-        window.location.replace('dashboard.html');
+        window.location.replace('index.html?start=1');
     }
 }
 

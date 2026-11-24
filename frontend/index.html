@@ -1658,11 +1658,74 @@ window.addEventListener('load', () => {
   // Auto-launch assessment if redirected from registration or login
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('start') === '1' || urlParams.get('autostart') === 'true') {
-    setTimeout(() => {
-      startQuestionnaire();
-    }, 500);
+    // If user has already completed the ML assessment, show choice modal instead
+    const hasCareer = localStorage.getItem('selected_career');
+    const hasRecs   = localStorage.getItem('career_recommendations');
+    if (hasCareer && hasRecs) {
+      setTimeout(() => showReturnUserModal(), 400);
+    } else {
+      setTimeout(() => startQuestionnaire(), 500);
+    }
   }
 });
+
+// ── Returning-user choice modal ──────────────────────────────────────────────
+function showReturnUserModal() {
+  const careerName = localStorage.getItem('selected_career_name') || 'your track';
+  // Build modal HTML
+  const overlay = document.createElement('div');
+  overlay.id = 'returnUserModal';
+  overlay.style.cssText = `
+    position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,0.65); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  `;
+  overlay.innerHTML = `
+    <div style="
+      background: var(--surface, #0f172a);
+      border: 1.5px solid rgba(109,40,217,0.5);
+      border-radius: 24px;
+      padding: 40px 36px;
+      max-width: 480px; width:100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    ">
+      <div style="font-size:2.5rem; margin-bottom:12px;">👋</div>
+      <h2 style="font-size:1.45rem; font-weight:800; color:#f1f5f9; margin-bottom:8px;">
+        Welcome back!
+      </h2>
+      <p style="color:#94a3b8; font-size:0.92rem; margin-bottom:6px;">
+        Your ML model has already matched you to
+      </p>
+      <p style="color:#a78bfa; font-weight:700; font-size:1.05rem; margin-bottom:28px;">
+        🎯 ${careerName}
+      </p>
+      <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:28px;">
+        What would you like to do next?
+      </p>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <button onclick="window.location.href='quiz.html'" style="
+          background: linear-gradient(135deg,#4f46e5,#7c3aed);
+          color:#fff; border:none; border-radius:14px;
+          padding:14px 24px; font-size:0.95rem; font-weight:700;
+          cursor:pointer; transition:opacity .2s;
+        ">⚡ Launch Adaptive Test →</button>
+        <button onclick="window.location.href='dashboard.html'" style="
+          background: rgba(99,102,241,0.15);
+          color:#c7d2fe; border:1.5px solid rgba(99,102,241,0.4);
+          border-radius:14px; padding:14px 24px;
+          font-size:0.95rem; font-weight:700;
+          cursor:pointer; transition:opacity .2s;
+        ">📊 Go to Student Dashboard →</button>
+        <button onclick="document.getElementById('returnUserModal').remove(); startQuestionnaire();" style="
+          background:none; color:#64748b; border:none;
+          font-size:0.82rem; cursor:pointer; padding:4px; text-decoration:underline;
+        ">Retake ML Assessment</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
 
 // ── Rotate nav coords ──
 const coords = ["RA 05h 34m · DEC +22° 00'", "RA 12h 21m · DEC -15° 30'"];
